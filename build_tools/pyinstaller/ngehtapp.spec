@@ -40,6 +40,6 @@ coll = COLLECT(exe,Tree('../src'),
                name='ngehtapp')
 app = BUNDLE(coll,
              name='ngehtapp.app',
-             icon='./ngehtapp/images/ngeht.ico',
+             icon='./src/images/ngeht.ico',
              bundle_identifier=None,
              info_plist={'NSHighResolutionCapable': 'True'})
