@@ -13,7 +13,7 @@ ScreenManager:
             id: home_screen
             
         CircularRippleButton:
-            source: "../images/ngeht_medallion2.png"
+            source: "./images/ngeht_medallion2.png"
             size_hint: 0.4,None
             height: self.width
             pos_hint: {"center": (0.5,0.3)}            
@@ -35,7 +35,7 @@ ScreenManager:
                 size_hint: None, None
                 size: '16dp', '80dp'
                 text: '<'
-                icon: "../images/left_chevron.png"
+                icon: "./images/left_chevron.png"
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
@@ -48,7 +48,7 @@ ScreenManager:
                 size_hint: None, None
                 size: '16dp', '80dp'
                 text: '>'
-                icon: "../images/right_chevron.png"
+                icon: "./images/right_chevron.png"
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
@@ -72,7 +72,7 @@ ScreenManager:
                 size_hint: None, None
                 size: '16dp', '80dp'
                 text: '<'
-                icon: "../images/left_chevron.png"
+                icon: "./images/left_chevron.png"
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
@@ -85,7 +85,7 @@ ScreenManager:
                 size_hint: None, None
                 size: '16dp', '80dp'
                 text: '>'
-                icon: "../images/right_chevron.png"
+                icon: "./images/right_chevron.png"
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
@@ -108,7 +108,7 @@ ScreenManager:
                 size_hint: None, None
                 size: '16dp', '80dp'
                 text: '<'
-                icon: "../images/left_chevron.png"
+                icon: "./images/left_chevron.png"
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
@@ -125,7 +125,7 @@ ScreenManager:
                 size_hint: None, None
                 size: '16dp', '80dp'
                 text: '>'
-                icon: "../images/right_chevron.png"
+                icon: "./images/right_chevron.png"
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
@@ -158,18 +158,18 @@ ScreenManager:
                 Rectangle:
                     size: self.width,self.height
 
-            Video:
-                source: "../movies/ngEHT.mp4"
-                state: "play"
-                volume: 0
-                size_hint: 1,1
-                pos_hint: {"center": (0.5,0.5)}
-            # Image:
-            #     id: bkgnd
-            #     source: "../images/ngEHT_screen_cap3.png"
-            #     allow_stretch: True
+            # Video:
+            #     source: "./movies/ngEHT.mp4"
+            #     state: "play"
+            #     volume: 0
             #     size_hint: 1,1
             #     pos_hint: {"center": (0.5,0.5)}
+            Image:
+                id: bkgnd
+                source: "./images/ngEHT_screen_cap3.png"
+                allow_stretch: True
+                size_hint: 1,1
+                pos_hint: {"center": (0.5,0.5)}
                 
 <DataSetSelectionScreen>:
     orientation: "vertical"
@@ -199,7 +199,7 @@ ScreenManager:
             on_text:
                 self.select_dataset()
         Image:
-            source: "../images/ngeht_white_on_gold2.png"
+            source: "./images/ngeht_white_on_gold2.png"
             allow_stretch: True
             size_hint: 1,0.5
             pos_hint: {'top': 0.6 }
@@ -237,7 +237,7 @@ ScreenManager:
         size_hint: 1,1
         md_bg_color: 0.14,0.14,0.14,1
         specific_text_color: 0.77,0.55,0.17,1
-        left_action_items: [["../images/ngeht_medallion_gold_on_white.png", lambda x: app.null_func ]]
+        left_action_items: [["./images/ngeht_medallion_gold_on_white.png", lambda x: app.null_func ]]
         right_action_items: [["menu", lambda x: root.callback(x)]]
     BoxLayout:
         size_hint: 1,None
@@ -595,7 +595,7 @@ ScreenManager:
                 size_hint: 1,None
                 height: "18sp"
             Image:
-                source: "../images/ngeht_medallion_grey_on_white.png"
+                source: "./images/ngeht_medallion_grey_on_white.png"
                 stretch: True
                 size_hint: 1,None
                 height: "80dp"
@@ -623,12 +623,12 @@ ScreenManager:
                 # padding: 50
                 # spacing: 20
                 Image:
-                    source: "../logos/perimeter_stacked_black.png"
+                    source: "./logos/perimeter_stacked_black.png"
                     stretch: True 
                     size_hint: 1,1
                     # pos_hint: {'top':1}
                 Image:
-                    source: "../logos/UniversityOfWaterloo_logo_horiz_rgb.png"
+                    source: "./logos/UniversityOfWaterloo_logo_horiz_rgb.png"
                     stretch: True
                     size_hint: 1,1
                     # pos_hint: {'top':1}
@@ -669,7 +669,7 @@ ScreenManager:
                 height: "18sp"
             
             Image:
-                source: "../images/ngeht_medallion_grey_on_white.png"
+                source: "./images/ngeht_medallion_grey_on_white.png"
                 stretch: True
                 size_hint: 1,None
                 height: "80dp"

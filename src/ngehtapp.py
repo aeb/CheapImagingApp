@@ -72,16 +72,16 @@ _stationdicts={}
 # _stationdicts['EHT 2022']=ci.read_array('./arrays/eht2022_230_ehtim.txt',existing_station_list=_existing_station_list)
 
 _stationdicts={}
-_stationdicts['ngEHT ref1']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'../arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
-_stationdicts['EHT 2017']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'../arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
-_stationdicts['EHT 2022']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'../arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
+_stationdicts['ngEHT ref1']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
+_stationdicts['EHT 2017']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
+_stationdicts['EHT 2022']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
 
 
 _array = list(_stationdicts.keys())[0]
 _array_index = 0
 
 _statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
-_datadict=ci.read_data(path.abspath(path.join(path.dirname(__file__),'../data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
+_datadict=ci.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 
 
 class ReconstructionPlot(BoxLayout) :
@@ -866,10 +866,10 @@ class SimpleDataSetSelection(Spinner) :
         super().__init__(**kwargs)
         
         self.datasets = {}
-        self.datasets['M87 230 GHz']={'file':'../data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat'}
-        self.datasets['Sgr A* 230 GHz']={'file':'../data/V_SGRA_ngeht_ref1_230_perfect_scanavg_tygtd.dat'}    
-        self.datasets['M87 345 GHz']={'file':'../data/V_M87_ngeht_ref1_345_perfect_scanavg_tygtd.dat'}
-        self.datasets['Sgr A* 345 GHz']={'file':'../data/V_SGRA_ngeht_ref1_345_perfect_scanavg_tygtd.dat'}
+        self.datasets['M87 230 GHz']={'file':'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat'}
+        self.datasets['Sgr A* 230 GHz']={'file':'data/V_SGRA_ngeht_ref1_230_perfect_scanavg_tygtd.dat'}    
+        self.datasets['M87 345 GHz']={'file':'data/V_M87_ngeht_ref1_345_perfect_scanavg_tygtd.dat'}
+        self.datasets['Sgr A* 345 GHz']={'file':'data/V_SGRA_ngeht_ref1_345_perfect_scanavg_tygtd.dat'}
 
         # Set values
         self.values = []
