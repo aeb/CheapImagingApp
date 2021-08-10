@@ -4,8 +4,8 @@
 block_cipher = None
 
 
-a = Analysis(['./ngehtapp/ngehtapp.py'],
-             pathex=['../ngehtapp'],
+a = Analysis(['./src/ngehtapp.py'],
+             pathex=['../src'],
              binaries=[],
              datas=[],
              hiddenimports=['pkg_resources.py2_warn'],
@@ -30,7 +30,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True)
-coll = COLLECT(exe,Tree('../ngehtapp'),
+coll = COLLECT(exe,Tree('../src'),
                a.binaries,
                a.zipfiles,
                a.datas, 
