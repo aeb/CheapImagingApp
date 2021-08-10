@@ -1,4 +1,0 @@
-#!/bin/bash
-
-
-build_dir = "./build_tools/pyinstaller"
