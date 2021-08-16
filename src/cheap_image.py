@@ -267,7 +267,6 @@ class CheapImageReconstruction :
         x,y = np.meshgrid(-x1d,-y1d)
 
         # Compute image estimate via FFT
-        #I = np.maximum(0.0,np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(V2)))))
         I = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(V2))))
         
         # Return
