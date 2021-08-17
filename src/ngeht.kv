@@ -40,7 +40,7 @@ ScreenManager:
                 background_color: 1,1,1,0.25
                 on_release:
                     sm.transition.direction = 'right'
-                    sm.current = 'screen2'
+                    sm.current = 'screen3'
             
         AnchorLayout:
             anchor_x: "right"
@@ -130,8 +130,44 @@ ScreenManager:
                 background_color: 1,1,1,0.25
                 on_release:
                     sm.transition.direction = 'left'
+                    sm.current = 'screen3'
+
+    Screen:
+        name: 'screen3'
+
+        MapsScreen:
+            id: maps_screen
+
+        AnchorLayout:
+            anchor_x: "left"
+            ActionButton:
+                size_hint: None, None
+                size: '16dp', '80dp'
+                text: '<'
+                icon: "./images/left_chevron.png"
+                color: 1,1,1,0.5
+                background_color: 1,1,1,0.25
+                on_release:
+                    sm.transition.direction = 'right'
+                    sm.current = 'screen2'
+                    reconstruction_screen.ddm_id.refresh()
+                    reconstruction_screen.otm_id.refresh()
+                    reconstruction_screen.menu_id.refresh()
+                    reconstruction_screen.plot_id.refresh()
+
+        AnchorLayout:
+            anchor_x: "right"
+            ActionButton:
+                size_hint: None, None
+                size: '16dp', '80dp'
+                text: '>'
+                icon: "./images/right_chevron.png"
+                color: 1,1,1,0.5
+                background_color: 1,1,1,0.25
+                on_release:
+                    sm.transition.direction = 'left'
                     sm.current = 'screen0'
-        
+                    
     Screen:
         name: 'news'
 
@@ -224,6 +260,15 @@ ScreenManager:
     TopBanner:
     RelativeLayout:
         InteractiveBaselinesPlot:
+            id: iplot
+
+<MapsScreen>:
+    orientation: "vertical"
+    menu_id: iplot.menu_id
+    plot_id: iplot.plot_id
+    TopBanner:
+    RelativeLayout:
+        InteractiveMapsPlot:
             id: iplot
 
 <TopBanner>:
@@ -396,6 +441,63 @@ ScreenManager:
         height: dp(40)+dp(15)
         closed_height: dp(40)+dp(15)
 
+
+<InteractiveMapsPlot>:
+    orientation: "vertical"
+    menu_id: sme
+    plot_id: plot
+    MapsPlot:
+        id: plot
+        size_hint: 1.0,1.0
+    BoxLayout:
+        orientation: "vertical"
+        size_hint: None,None
+        size: dp(40),dp(80)
+        pos: root.width-dp(40),root.height-dp(80)
+        Button:
+            text: "+"
+            font_size: "20sp"
+            size_hint: None,None
+            size: "40dp","40dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0
+            on_press: plot.zoom_in()
+        Button:
+            text: "-"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "40dp","40dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0
+            on_press: plot.zoom_out()
+
+
+    DiameterMenu:
+        id: ddm
+        plot: plot
+        size_hint: 1.0,None
+        opened_height: dp(80)+otm.height
+        height: ( otm.height + dp(80) if self.is_open else otm.height )
+        closed_height: otm.height
+        current_opened_height: self.opened_height
+            
+    ObsTimeMenu:
+        id: otm
+        plot: plot
+        size_hint: 1.0,None
+        opened_height: dp(80)+sme.height
+        height: ( sme.height + dp(80) if self.is_open else sme.height )
+        closed_height: sme.height
+        current_opened_height: self.opened_height
+
+    StationMenu:
+        id: sme
+        rpp: plot
+        ddm_id: ddm
+        size_hint: 1.0,None
+        height: dp(40)+dp(15)
+        closed_height: dp(40)+dp(15)
+        
 
 <DiameterMenu>:
     id: ddm

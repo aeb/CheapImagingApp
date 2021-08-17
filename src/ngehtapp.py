@@ -374,6 +374,144 @@ class BaselinesPlot(BoxLayout) :
             self.snr_cut = 0
         _snr_cut = self.snr_cut
         self.replot()
+
+
+
+class MapsPlot(BoxLayout) :
+
+    plot_vmaxsize = 90
+    plot_hmaxsize = 90
+    plot_center = np.array([0.0,0.0])
+
+    mp = ci.MapPlots()
+    menu_id = ObjectProperty(None)
+
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+
+        self.fig=plt.figure(figsize=(6,6))
+        self.axs=plt.axes([0,0,1,1])
+
+        limits = np.array([-1,1,-1,1])*self.plot_vmaxsize
+        limits[:2] = limits[:2] + self.plot_center[0]
+        limits[2:] = limits[2:] + self.plot_center[1]
+        
+        self.mp.plot_map(self.axs,_statdict,limits=limits)
+        self.add_widget(FigureCanvasKivyAgg(self.fig))
+
+        self.sdict = _statdict
+
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+
+        self.freeze_plot = False
+
+
+    def update(self,datadict,statdict) :
+        self.sdict = statdict
+        self.replot()
+        
+    def replot(self) :
+        if (self.width==0 or self.height==0) :
+            self.clear()
+            return
+
+        if (self.fig is None) :
+            self.fig=plt.figure()
+            self.axs=plt.axes([0,0,1,1])
+
+        limits = np.array([-self.plot_hmaxsize,self.plot_hmaxsize,-self.plot_vmaxsize,self.plot_vmaxsize])
+        if (self.width==0 or self.height==0) :
+            pass
+        elif (self.width/self.height>self.plot_vmaxsize/self.plot_hmaxsize) :
+            limits[:2] = limits[:2] + self.plot_center[0]
+            limits[2:] = float(self.height)/float(self.width)*limits[:2] + self.plot_center[1]
+        else :
+            limits[:2] = float(self.width)/float(self.height)*limits[2:] + self.plot_center[0]
+            limits[2:] = limits[2:] + self.plot_center[1]
+
+        if (limits[1]-limits[0]>360.0) :
+            old_hsize = limits[1]-limits[0]
+            old_ratio = (limits[3]-limits[2])/(limits[1]-limits[0])
+            limits[0] = self.plot_center[0] - 180.0
+            limits[1] = self.plot_center[0] + 180.0
+            limits[2] = - old_ratio * 180.0 + self.plot_center[1]
+            limits[3] = old_ratio * 180.0 + self.plot_center[1]
+            self.plot_hmaxsize = 180.0
+            self.plot_vmaxsize = old_ratio*180.0
+            
+        self.axs.cla()
+        self.clear_widgets()
+        self.mp.plot_map(self.axs,self.sdict,limits=limits,window_size=[self.width,self.height])
+        self.add_widget(FigureCanvasKivyAgg(self.fig))
+        
+    def refresh(self):
+        if (self.width==0 or self.height==0) :
+            self.clear()
+            return
+
+        if (self.fig is None) :
+            self.fig=plt.figure()
+            self.axs=plt.axes([0,0,1,1])
+
+        limits = np.array([-self.plot_hmaxsize,self.plot_hmaxsize,-self.plot_vmaxsize,self.plot_vmaxsize])
+        if (self.width==0 or self.height==0) :
+            pass
+        elif (self.width/self.height>self.plot_vmaxsize/self.plot_hmaxsize) :
+            limits[:2] = limits[:2] + self.plot_center[0]
+            limits[2:] = float(self.height)/float(self.width)*limits[:2] + self.plot_center[1]
+        else :
+            limits[:2] = float(self.width)/float(self.height)*limits[2:] + self.plot_center[0]
+            limits[2:] = limits[2:] + self.plot_center[1]
+
+        if (limits[1]-limits[0]>360.0) :
+            old_hsize = limits[1]-limits[0]
+            old_ratio = (limits[3]-limits[2])/(limits[1]-limits[0])
+            limits[0] = self.plot_center[0] - 180.0
+            limits[1] = self.plot_center[0] + 180.0
+            limits[2] = - old_ratio * 180.0 + self.plot_center[1]
+            limits[3] = old_ratio * 180.0 + self.plot_center[1]
+            self.plot_hmaxsize = 180.0
+            self.plot_vmaxsize = old_ratio*180.0
+            
+        self.axs.cla()
+        self.clear_widgets()
+        self.mp.replot(self.axs,limits=limits,window_size=[self.width,self.height])
+        self.add_widget(FigureCanvasKivyAgg(self.fig))
+        
+    def resize(self,widget,newsize) :
+        self.refresh()
+            
+    def on_touch_move(self,touch) :
+        if (not self.freeze_plot) :
+            self.plot_center[0] = self.plot_center[0] - touch.dpos[0]*2.0*float(self.plot_hmaxsize)/float(self.width)
+            self.plot_center[1] = self.plot_center[1] - touch.dpos[1]*2.0*float(self.plot_vmaxsize)/float(self.height)
+            self.refresh()
+
+    def on_touch_down(self,touch) :
+        if (touch.is_double_tap) :
+            self.plot_vmaxsize = 90.0
+            self.plot_hmaxsize = self.width/self.height * self.plot_vmaxsize
+            # print("imp:",self.plot_vmaxsize,self.plot_hmaxsize,self.width,self.height)
+            self.plot_center = np.array([0,0])
+            self.refresh()
+
+    def zoom_out(self) :
+        self.plot_vmaxsize = self.plot_vmaxsize * 1.414
+        self.plot_hmaxsize = self.plot_hmaxsize * 1.414
+        self.refresh()
+
+    def zoom_in(self) :
+        self.plot_vmaxsize = self.plot_vmaxsize * 0.707
+        self.plot_hmaxsize = self.plot_hmaxsize * 0.707
+        self.refresh()
+
+    def clear(self) :
+        if (not self.fig is None) :
+            plt.close(self.fig)
+            self.fig=None
+        self.clear_widgets()
+
         
 
 class DynamicBoxLayout(BoxLayout):
@@ -600,10 +738,10 @@ class SMESpinner(Spinner):
         self.text = self.sme_id.array_name
 
         if (self.text in _existing_arrays) :
-            print("SME: Disabling slider",self.ddm_id.ddm_id)
+            # print("SME: Disabling slider",self.ddm_id.ddm_id)
             self.ddm_id.ddm_id.dms.disabled = True
         else :
-            print("SME: Enabling slider")
+            # print("SME: Enabling slider")
             self.ddm_id.ddm_id.dms.disabled = False
 
 
@@ -924,19 +1062,31 @@ class InteractiveBaselinesPlot(FloatLayout) :
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
 
-class BaselinesScreen(BoxLayout) :
+class InteractiveMapsPlot(FloatLayout) :
     ddm_id = ObjectProperty(None)
     otm_id = ObjectProperty(None)
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
-
+    
 class ReconstructionScreen(BoxLayout) :
     ddm_id = ObjectProperty(None)
     otm_id = ObjectProperty(None)
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
     
+class BaselinesScreen(BoxLayout) :
+    ddm_id = ObjectProperty(None)
+    otm_id = ObjectProperty(None)
+    menu_id = ObjectProperty(None)
+    plot_id = ObjectProperty(None)
 
+class MapsScreen(BoxLayout) :
+    ddm_id = ObjectProperty(None)
+    otm_id = ObjectProperty(None)
+    menu_id = ObjectProperty(None)
+    plot_id = ObjectProperty(None)
+
+    
 class TopBanner(MDBoxLayout) :
     
     def __init__(self,**kwargs) :
