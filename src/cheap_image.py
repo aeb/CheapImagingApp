@@ -41,7 +41,7 @@ def read_data(v_file_name) :
 def read_array(array_file_name,existing_station_list=None) :
 
     if (existing_station_list is None) :
-        existing_station_list = ['PV','AZ','SM','LM','AA','SP','JC','GL','PB','KP','HA']
+        existing_station_list = ['PV','AZ','SM','LM','AA','AP','SP','JC','GL','PB','KP','HA']
     
     stations = np.loadtxt(array_file_name,usecols=[0],dtype=str)
     locs = np.loadtxt(array_file_name,usecols=[1,2,3])

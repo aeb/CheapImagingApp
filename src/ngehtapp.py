@@ -1,5 +1,7 @@
 __version__ = "0.5"
 
+__mydebug__ = False
+
 from kivy.app import App
 from kivymd.app import MDApp
 from kivy.lang import Builder
@@ -117,14 +119,33 @@ class ReconstructionPlot(BoxLayout) :
 
         self.freeze_plot = False
 
+        if __mydebug__ :
+            print("rp.__init__: finished")
+        
 
     def update(self,datadict,statdict) :
-        self.ddict = datadict
-        self.sdict = statdict
+        global _datadict, _statdict
+        _datadict = datadict
+        _statdict = statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+
+        if __mydebug__ :
+            print("rp.update:",self.sdict.keys(),self.fig,self.size)
+            print("         :",_statdict.keys(),self.fig,self.size)
+        
         self.replot()
         
         
     def replot(self) :
+        global _datadict, _statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+        
+        if __mydebug__ :
+            print("rp.replot:",self.sdict.keys(),self.fig,self.size)
+            print("         :",_statdict.keys(),self.fig,self.size)
+
         if (self.width==0 or self.height==0) :
             self.clear()
             return
@@ -149,6 +170,9 @@ class ReconstructionPlot(BoxLayout) :
         self.add_widget(FigureCanvasKivyAgg(self.fig))
 
     def refresh(self) :
+        if __mydebug__ :
+            print("rp.refresh:",self.sdict.keys(),self.fig,self.size)
+            print("          :",_statdict.keys(),self.fig,self.size)
         
         if (self.width==0 or self.height==0) :
             self.clear()
@@ -175,7 +199,10 @@ class ReconstructionPlot(BoxLayout) :
 
         
     def resize(self,widget,newsize) :
-        self.refresh()
+        if __mydebug__ :
+            print("rp.resize:",newsize)
+        # self.refresh()
+        self.replot()
             
     def on_touch_move(self,touch) :
         if (not self.freeze_plot) :
@@ -262,13 +289,33 @@ class BaselinesPlot(BoxLayout) :
 
         self.freeze_plot = False
 
+        if __mydebug__ :
+            print("bp.__init__: finished")
 
+        
     def update(self,datadict,statdict) :
-        self.ddict = datadict
-        self.sdict = statdict
+        global _datadict, _statdict
+        _datadict = datadict
+        _statdict = statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+        
+        if __mydebug__ :
+            print("bp.update:",self.sdict.keys(),self.fig,self.size)
+            print("         :",_statdict.keys(),self.fig,self.size)
+        
         self.replot()
         
     def replot(self) :
+        global _datadict, _statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+        
+        # Why is this not updating the self.sdict properly until we swap twice?
+        if __mydebug__ :
+            print("bp.replot:",self.sdict.keys(),self.fig,self.size)
+            print("         :",_statdict.keys(),self.fig,self.size)
+        
         if (self.width==0 or self.height==0) :
             self.clear()
             return
@@ -294,6 +341,10 @@ class BaselinesPlot(BoxLayout) :
         self.add_widget(FigureCanvasKivyAgg(self.fig))
         
     def refresh(self):
+        if __mydebug__ :
+            print("bp.refresh:",self.sdict.keys(),self.fig,self.size)
+            print("          :",_statdict.keys(),self.fig,self.size)
+
         if (self.width==0 or self.height==0) :
             self.clear()
             return
@@ -320,7 +371,10 @@ class BaselinesPlot(BoxLayout) :
         self.add_widget(FigureCanvasKivyAgg(self.fig))
         
     def resize(self,widget,newsize) :
-        self.refresh()
+        if __mydebug__ :
+            print("bp.resize:",newsize)
+        # self.refresh()
+        self.replot()
             
     def on_touch_move(self,touch) :
         if (not self.freeze_plot) :
@@ -389,6 +443,11 @@ class MapsPlot(BoxLayout) :
     def __init__(self,**kwargs) :
         super().__init__(**kwargs)
 
+        self.time_range = _time_range
+        self.ngeht_diameter = _ngeht_diameter
+        self.snr_cut = _snr_cut
+
+        
         self.fig=plt.figure(figsize=(6,6))
         self.axs=plt.axes([0,0,1,1])
 
@@ -406,12 +465,30 @@ class MapsPlot(BoxLayout) :
 
         self.freeze_plot = False
 
+        if __mydebug__ :
+            print("mp.__init__: finished")
+        
 
     def update(self,datadict,statdict) :
-        self.sdict = statdict
+        global _statdict
+        _statdict = statdict
+        self.sdict = _statdict
+
+        if __mydebug__ :
+            print("mp.update:",self.sdict.keys(),self.fig,self.size)
+            print("         :",_statdict.keys(),self.fig,self.size)
+        
         self.replot()
         
     def replot(self) :
+        global _statdict
+        self.sdict = _statdict
+
+        if __mydebug__ :
+            print("mp.replot:",self.sdict.keys(),self.fig,self.size)
+            print("         :",_statdict.keys(),self.fig,self.size)
+
+
         if (self.width==0 or self.height==0) :
             self.clear()
             return
@@ -446,6 +523,10 @@ class MapsPlot(BoxLayout) :
         self.add_widget(FigureCanvasKivyAgg(self.fig))
         
     def refresh(self):
+        if __mydebug__ :
+            print("mp.refresh:",self.sdict.keys())
+            print("          :",_statdict.keys())
+
         if (self.width==0 or self.height==0) :
             self.clear()
             return
@@ -480,7 +561,10 @@ class MapsPlot(BoxLayout) :
         self.add_widget(FigureCanvasKivyAgg(self.fig))
         
     def resize(self,widget,newsize) :
-        self.refresh()
+        if __mydebug__ :
+            print("mp.resize:",newsize)
+        #self.refresh()
+        self.replot()
             
     def on_touch_move(self,touch) :
         if (not self.freeze_plot) :
@@ -511,6 +595,29 @@ class MapsPlot(BoxLayout) :
             plt.close(self.fig)
             self.fig=None
         self.clear_widgets()
+
+    def set_start_time(self,val) :
+        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
+        self.time_range[0] = val
+        # self.replot()
+        
+    def set_obs_time(self,val) :
+        self.time_range[1] = self.time_range[0] + val
+        # self.replot()
+
+    def set_ngeht_diameter(self,val) :
+        global _ngeht_diameter
+        self.ngeht_diameter = val
+        _ngeht_diameter = self.ngeht_diameter
+        # self.replot()
+
+    def set_snr_cut(self,val) :
+        global _snr_cut
+        self.snr_cut = val
+        if (val is None) :
+            self.snr_cut = 0
+        _snr_cut = self.snr_cut
+        # self.replot()
 
         
 
@@ -606,11 +713,14 @@ class VariableToggleList(StackLayout) :
         self.clear_widgets()
         self.bs = []
         for s in np.sort(list(self.sdict.keys())) :
-            b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_on_color,background_color=self.bkgnd_color)
+            if (self.sdict[s]['on']) :
+                b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_on_color,background_color=self.bkgnd_color)
+            else :
+                b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_off_color,background_color=self.bkgnd_color)
             b.bind(on_press=self.on_toggle)
             self.add_widget(b)
             self.bs.append(b)
-            self.sdict[s]['on']=True
+            #self.sdict[s]['on']=True
 
         self.rpp.update(_datadict,self.sdict)
         
@@ -632,6 +742,10 @@ class VariableToggleList(StackLayout) :
         self.rpp.update(_datadict,self.sdict)
         
     def on_toggle(self,val) :
+
+        if __mydebug__ :
+            print("VariableToggleList.on_toggle:",self.rpp,self.sdict)
+
         for b in self.bs :
             if b.state == "normal" :
                 b.color = _on_color
@@ -639,8 +753,12 @@ class VariableToggleList(StackLayout) :
             else :
                 b.color = _off_color
                 self.sdict[b.text]['on']=False
-
+                
         self.rpp.update(_datadict,self.sdict)        
+
+        if __mydebug__ :
+            print("                            :",self.rpp,self.sdict)
+
         
     def turn_all_stations_on(self) :
         for b in self.bs:
@@ -691,13 +809,26 @@ class StationMenu(DynamicBoxLayout) :
         self.reset_state()
 
     def select_array(self,array_index) :
-        global _array_index
+
+        if __mydebug__ :
+            print("StationMenu.select_array:",self.rpp,array_index)
+        
+        global _array_index,_statdict
         _array_index = array_index
         self.array_name = list(_stationdicts.keys())[_array_index]
+        #_statdict = _stationdicts[self.array_name]
         self.submenu_id.remake(_stationdicts[self.array_name])
         self.reset_state()
+
+        if __mydebug__ :
+            print("                        :",self.rpp,array_index)
+        
         
     def refresh(self) :
+
+        if __mydebug__ :
+            print("StationMenu.refresh",self.rpp)
+        
         self.array_name = list(_stationdicts.keys())[_array_index]
         self.submenu_id.refresh(_stationdicts[self.array_name])
         self.reset_state()
@@ -734,6 +865,10 @@ class SMESpinner(Spinner):
 
             
     def on_selection(self,text) :
+        
+        if __mydebug__ :
+            print("SMESpinner.on_selection:",self.text,text)
+            
         self.sme_id.select_array(self.array_index_dict[text])
         self.text = self.sme_id.array_name
 
@@ -752,6 +887,10 @@ class ObsTimeMenu(DynamicBoxLayout) :
         super().__init__(**kwargs)
 
     def refresh(self) :
+
+        if __mydebug__ :
+            print("ObsTimeMenu.refresh",self.plot)
+        
         self.ots_id.refresh()
         
     
@@ -873,6 +1012,10 @@ class DiameterMenu(DynamicBoxLayout) :
         super().__init__(**kwargs)
 
     def refresh(self) :
+
+        if __mydebug__ :
+            print("DiameterMenu.refresh",self.plot)
+        
         self.ddm_id.refresh()
         
     

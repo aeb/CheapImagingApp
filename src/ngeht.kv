@@ -1,6 +1,7 @@
 #:import Factory kivy.factory.Factory
 #:import RiseInTransition kivy.uix.screenmanager.RiseInTransition
 #:import images_path kivymd.images_path
+#:import Clock kivy.clock.Clock
 
 ScreenManager:
     id: sm
@@ -20,7 +21,9 @@ ScreenManager:
             allow_stretch: True
             ripple_duration_in_fast: 0.1
             on_release:
+                print("--> From home to data")
                 self.delayed_switch_to_imaging(delay=0.2)
+                print("<-- From home to data")
 
                 
     Screen:
@@ -39,8 +42,15 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From data to map")
                     sm.transition.direction = 'right'
                     sm.current = 'screen3'
+                    maps_screen.ddm_id.refresh()
+                    maps_screen.otm_id.refresh()                    
+                    maps_screen.menu_id.refresh()
+                    maps_screen.plot_id.replot()
+                    print("<-- From data to map")
+                    
             
         AnchorLayout:
             anchor_x: "right"
@@ -52,12 +62,15 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From data to reconstruction")
                     sm.transition.direction = 'left'
                     sm.current = 'screen1'
                     reconstruction_screen.ddm_id.refresh()
-                    reconstruction_screen.otm_id.refresh()                    
+                    reconstruction_screen.otm_id.refresh()    
                     reconstruction_screen.menu_id.refresh()
                     reconstruction_screen.plot_id.replot()
+                    print("<-- From data to reconstruction")
+                    
 
     Screen:
         name: 'screen1'
@@ -76,8 +89,10 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From reconstruction to data")
                     sm.transition.direction = 'right'
                     sm.current = 'screen0'
+                    print("<-- From reconstruction to data")
 
         AnchorLayout:
             anchor_x: "right"
@@ -89,12 +104,15 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From reconstruction to baselines")
                     sm.transition.direction = 'left'
                     sm.current = 'screen2'
                     baselines_screen.ddm_id.refresh()
                     baselines_screen.otm_id.refresh()
                     baselines_screen.menu_id.refresh()
-                    baselines_screen.plot_id.refresh()
+                    baselines_screen.plot_id.replot()
+                    print("<-- From reconstruction to baselines")
+                    
                     
     Screen:
         name: 'screen2'
@@ -112,12 +130,14 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From baselines to reconstruction")
                     sm.transition.direction = 'right'
                     sm.current = 'screen1'
                     reconstruction_screen.ddm_id.refresh()
                     reconstruction_screen.otm_id.refresh()
                     reconstruction_screen.menu_id.refresh()
-                    reconstruction_screen.plot_id.refresh()
+                    reconstruction_screen.plot_id.replot()
+                    print("<-- From baselines to reconstruction")
 
         AnchorLayout:
             anchor_x: "right"
@@ -129,8 +149,15 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From baselines to map")
                     sm.transition.direction = 'left'
                     sm.current = 'screen3'
+                    maps_screen.ddm_id.refresh()
+                    maps_screen.otm_id.refresh()                    
+                    maps_screen.menu_id.refresh()
+                    maps_screen.plot_id.replot()
+                    print("<-- From baselines to map")
+                    
 
     Screen:
         name: 'screen3'
@@ -148,12 +175,15 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From map to baselines")
                     sm.transition.direction = 'right'
                     sm.current = 'screen2'
-                    reconstruction_screen.ddm_id.refresh()
-                    reconstruction_screen.otm_id.refresh()
-                    reconstruction_screen.menu_id.refresh()
-                    reconstruction_screen.plot_id.refresh()
+                    baselines_screen.ddm_id.refresh()
+                    baselines_screen.otm_id.refresh()
+                    baselines_screen.menu_id.refresh()
+                    baselines_screen.plot_id.replot()
+                    print("<-- From map to baselines")
+
 
         AnchorLayout:
             anchor_x: "right"
@@ -165,8 +195,10 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
+                    print("--> From map to data")
                     sm.transition.direction = 'left'
                     sm.current = 'screen0'
+                    print("<-- From map to data")
                     
     Screen:
         name: 'news'
@@ -242,34 +274,36 @@ ScreenManager:
         
 <ReconstructionScreen>:
     orientation: "vertical"
-    ddm_id: iplot.ddm_id
-    otm_id: iplot.otm_id
-    menu_id: iplot.menu_id
-    plot_id: iplot.plot_id
+    ddm_id: irplot.ddm_id
+    otm_id: irplot.otm_id
+    menu_id: irplot.menu_id
+    plot_id: irplot.plot_id
     TopBanner:
     RelativeLayout:
         InteractiveReconstructionPlot:
-            id: iplot
+            id: irplot
                 
 <BaselinesScreen>:
     orientation: "vertical"
-    ddm_id: iplot.ddm_id
-    otm_id: iplot.otm_id
-    menu_id: iplot.menu_id
-    plot_id: iplot.plot_id
+    ddm_id: ibplot.ddm_id
+    otm_id: ibplot.otm_id
+    menu_id: ibplot.menu_id
+    plot_id: ibplot.plot_id
     TopBanner:
     RelativeLayout:
         InteractiveBaselinesPlot:
-            id: iplot
+            id: ibplot
 
 <MapsScreen>:
     orientation: "vertical"
-    menu_id: iplot.menu_id
-    plot_id: iplot.plot_id
+    ddm_id: implot.ddm_id
+    otm_id: implot.otm_id
+    menu_id: implot.menu_id
+    plot_id: implot.plot_id
     TopBanner:
     RelativeLayout:
         InteractiveMapsPlot:
-            id: iplot
+            id: implot
 
 <TopBanner>:
     orientation: "vertical"
@@ -444,6 +478,8 @@ ScreenManager:
 
 <InteractiveMapsPlot>:
     orientation: "vertical"
+    ddm_id: ddm
+    otm_id: otm
     menu_id: sme
     plot_id: plot
     MapsPlot:
