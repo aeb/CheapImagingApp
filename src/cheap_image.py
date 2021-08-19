@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mi
-import scipy.interpolate as si
+# import scipy.interpolate as si
+import matplotlib.tri as tri
 import copy
 from os import path
 
@@ -257,9 +258,23 @@ class CheapImageReconstruction :
         umax = np.max(ddnew['u'])
         vmax = np.max(ddnew['v'])
         u2,v2 = np.meshgrid(np.linspace(-f*umax,f*umax,256),np.linspace(-f*vmax,f*vmax,256))
-        pts = np.array([ddnew['u'],ddnew['v']]).T
-        V2r = si.griddata(pts,np.real(ddnew['V']),(u2,v2),method=method,fill_value=0.0)
-        V2i = si.griddata(pts,np.imag(ddnew['V']),(u2,v2),method=method,fill_value=0.0)
+
+        # SciPy
+        # pts = np.array([ddnew['u'],ddnew['v']]).T
+        # V2r = si.griddata(pts,np.real(ddnew['V']),(u2,v2),method=method,fill_value=0.0)
+        # V2i = si.griddata(pts,np.imag(ddnew['V']),(u2,v2),method=method,fill_value=0.0)
+
+        # Maptlotlib
+        triang = tri.Triangulation(ddnew['u'], ddnew['v'])
+        if (method=='linear') :
+            V2r = np.array(np.ma.fix_invalid(tri.LinearTriInterpolator(triang, np.real(ddnew['V']))(u2,v2),fill_value=0.0))
+            V2i = np.array(np.ma.fix_invalid(tri.LinearTriInterpolator(triang, np.imag(ddnew['V']))(u2,v2),fill_value=0.0))
+        elif (method=='cubic') :
+            V2r = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, np.real(ddnew['V']),kind='geom')(u2,v2),fill_value=0.0))
+            V2i = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, np.imag(ddnew['V']),kind='geom')(u2,v2),fill_value=0.0))
+        else :
+            print("ERROR: method %s not implemented"%(method))
+        
         V2 = V2r + 1.0j*V2i
 
         # Filter to smooth at edges
@@ -638,6 +653,11 @@ class MapPlots:
 # sd = read_array('./arrays/ngeht_ref1_230_ehtim.txt')
 
 # plt.figure()
+
+
+# rp = CheapImageReconstruction()
+# x,y,I = reconstruct_image(dd,sd)
+
 
 # bp = BaselinePlots()
 
