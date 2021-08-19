@@ -46,7 +46,7 @@ from os import path
 
 ####################
 # TESTING
-Window.size = (300,500)
+# Window.size = (300,500)
 ##################
 
 
