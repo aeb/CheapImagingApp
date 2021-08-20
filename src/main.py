@@ -1,6 +1,6 @@
 __version__ = "0.6"
 
-__Mydebug__ = True
+__mydebug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
