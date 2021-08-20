@@ -172,7 +172,7 @@ class InteractiveWorldMapOverlayWidget(Widget):
         self.canvas = RenderContext()
         self.canvas.shader.fs = fs_multitexture
 
-        self.nx = 2048
+        self.nx = 1024
         self.ny = self.nx//2
 
         print("On init:",self.nx,self.ny)
