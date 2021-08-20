@@ -296,7 +296,7 @@ class InteractiveWorldMapOverlayWidget(Widget):
         return new_tex_coords
 
     def update_mpl(self) :
-        fig = Figure(figsize=(self.nx/128,self.ny/128),dpi=128)
+        fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(111,position=[0,0,1,1])
         self.generate_mpl_plot(fig,ax)

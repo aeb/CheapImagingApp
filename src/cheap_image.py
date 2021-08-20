@@ -363,6 +363,9 @@ class CheapImageReconstruction :
 
 class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
 
+
+    gcdict = {}
+    lldict = {}
     
     def __init__(self,**kwargs) :
 
@@ -373,11 +376,8 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         self.off_color = (0.5,0,0)
         self.on_color = (1,0.75,0.25)
         
-        self.on_gc = None
-        self.on_len = 0
-        self.off_gc = None
-        self.off_len = 0
-        
+        self.gcdict = {}
+        self.lldict = {}
 
     def generate_mpl_plot(self,fig,ax) :
         # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
@@ -385,92 +385,74 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         self.plot_map(ax,self.statdict)
         ax.set_facecolor((0,0,0,0))
         fig.set_facecolor((0,0,0,0))
-
         
     def update(self,datadict,statdict) :
         self.statdict = statdict
-
         if (__mydebug__):
             print("InteractiveBaselineMapPlot.update:",self.statdict.keys())
-        
 
+        lims=[-180,180,-90,90]
+        self.generate_all_station_latlon(statdict)
+        if ('SP' in self.statdict.keys()) :
+            self.lldict['SP']=[-89.0, 0.5*(lims[0]+lims[1])]
+        self.generate_all_great_circles(self.lldict, lims)
+            
         self.update_mpl()
 
+    def replot(self,datadict,statdict) :
+        self.statdict = statdict
+        if (__mydebug__):
+            print("InteractiveBaselineMapPlot.replot:",self.statdict.keys())
+            
+        self.update_mpl()
         
     # limits is a list that has in degrees the min longitude, max longitude, min latitude, max latitude to be plotted.
     def plot_map(self,axs,statdict) :
-        
         if (__mydebug__):
             print("InteractiveBaselineMapPlot.plot_map:",statdict.keys())
-        
         lims=[-180,180,-90,90]
-        
-        self.statdict = self.add_station_latlon(statdict)
-        if ('SP' in self.statdict.keys()) :
-            self.statdict['SP']['latlon']=[-89.0, 0.5*(lims[0]+lims[1])]
-
-        # self.on_gc, self.off_gc, self.on_len, self.off_len = self.generate_all_great_circles(statdict, lims)
-
-        # for i in range(0, self.off_len):
-        #     axs.plot(self.off_gc[i][0], self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-        #     axs.plot(self.off_gc[i][0]-360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-        #     axs.plot(self.off_gc[i][0]+360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-
-        # for i in range(0, self.on_len):
-        #     axs.plot(self.on_gc[i][0], self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-        #     axs.plot(self.on_gc[i][0]-360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-        #     axs.plot(self.on_gc[i][0]+360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-
+        for i in self.gcdict.keys() :
+            if (self.statdict[self.gcdict[i]['s1']]['on']==False or self.statdict[self.gcdict[i]['s2']]['on']==False) :
+                axs.plot(self.gcdict[i]['x'],self.gcdict[i]['y'],'-',color=self.off_color,alpha=0.75)
+                axs.plot(self.gcdict[i]['x']-360,self.gcdict[i]['y'],'-',color=self.off_color,alpha=0.75)
+        for i in self.gcdict.keys() :
+            if (self.statdict[self.gcdict[i]['s1']]['on']==True and self.statdict[self.gcdict[i]['s2']]['on']==True) :
+                axs.plot(self.gcdict[i]['x'],self.gcdict[i]['y'],'-',color=self.on_color,alpha=0.75)
+                axs.plot(self.gcdict[i]['x']-360,self.gcdict[i]['y'],'-',color=self.on_color,alpha=0.75)
         for s in self.statdict.keys() :
             if (self.statdict[s]['on']==False) :
-                axs.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.off_color)
-            
+                axs.plot(self.lldict[s][1], self.lldict[s][0], 'o', color = self.off_color)
         for s in self.statdict.keys() :
             if (self.statdict[s]['on']==True) :
-                axs.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.on_color)
-                    
+                axs.plot(self.lldict[s][1], self.lldict[s][0], 'o', color = self.on_color)
+        # Set limits
         axs.set_xlim((lims[:2]))
         axs.set_ylim((lims[2:]))
-
+        # Eliminate axes
         for sdir in ['left','right','top','bottom'] :
             axs.spines[sdir].set_visible(False)
         axs.xaxis.set_tick_params(bottom='off',top='off')
         axs.yaxis.set_tick_params(left='off',right='off')
         
-        
-    def add_station_latlon(self, statdict) :
+    def generate_all_station_latlon(self, statdict) :
         for s in statdict.keys():
-            statdict[s]['latlon'] = self.xyz_to_latlon(statdict[s]['loc'])
-        
+            self.lldict[s] = self.xyz_to_latlon(statdict[s]['loc'])
         return statdict
 
-    def generate_all_great_circles(self,statdict, limits,N=32) :
-        on_list = [np.nan] * (len(list(statdict.keys()))**2)
-        off_list = [np.nan] * (len(list(statdict.keys()))**2)
-        on_len = 0
-        off_len = 0
-        for k,s1 in enumerate(list(statdict.keys())) :
-            for s2 in list(statdict.keys())[(k+1):] :
-
-                ll1 = statdict[s1]['latlon']
-                ll2 = statdict[s2]['latlon']
-
-                llgA,llgB = self.great_circle(ll1,ll2)
-
+    def generate_all_great_circles(self,lldict,limits,N=64) :
+        self.gcdict = {}
+        i = 0
+        for k,s1 in enumerate(list(lldict.keys())) :
+            for s2 in list(lldict.keys())[(k+1):] :
+                ll1 = lldict[s1]
+                ll2 = lldict[s2]
+                llgA = self.great_circle(ll1,ll2,N=N)
                 lonc = 0.5*(limits[0]+limits[1])
                 y = llgA[0]
                 x = llgA[1] - (llgA[1][0]-lonc) + (llgA[1][0]-lonc)%360 
-              
-                if statdict[s1]['on'] == False or statdict[s2]['on'] == False:
-                    off_list[off_len] = [x,y]
-                    off_len += 1
-                else:
-                    on_list[on_len] = [x,y]
-                    on_len += 1
-                    
-        return on_list, off_list, on_len, off_len
-    
-
+                self.gcdict[i] = {'s1':s1,'s2':s2,'x':x,'y':y}
+                i += 1
+        
     def great_circle(self,pos1,pos2,N=32) :
 
         lat1, lon1 = pos1
@@ -486,19 +468,14 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
     
         # Third, generate a great circle that goes through the pole (easy) and ll2 (not hard)
         latA = np.linspace(ll2[0],90.0,N)
-        latB = np.linspace(90.0,ll2[0]+360.0,N)
         lonA = 0*latA + ll2[1]
-        lonB = 0*latB + ll2[1]
         llgA = np.array([latA,lonA])
-        llgB = np.array([latB,lonB])
 
         # Fourth, unrotate about y
         llgA = self.xyz_to_latlon(self.RotateY(self.latlon_to_xyz(llgA),angle=(90-lat1)))
-        llgB = self.xyz_to_latlon(self.RotateY(self.latlon_to_xyz(llgB),angle=(90-lat1)))
         llgA[1] = llgA[1] + lon1
-        llgB[1] = llgB[1] + lon1
 
-        return llgA,llgB
+        return llgA
 
     def latlon_to_xyz(self,latlon,radius=1) :
 

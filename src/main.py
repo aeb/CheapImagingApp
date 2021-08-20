@@ -475,7 +475,7 @@ class MenuedBaselineMapPlot(BoxLayout) :
             print("         :",statdict.keys(),self.size)
 
     def replot(self) :
-        # self.mp.update(self.ddict,self.sdict)
+        self.mp.replot(self.ddict,self.sdict)
         
         if __mydebug__ :
             print("mp.replot:",self.sdict.keys(),self.size)
