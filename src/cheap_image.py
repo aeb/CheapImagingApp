@@ -435,6 +435,7 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         axs.yaxis.set_tick_params(left='off',right='off')
         
     def generate_all_station_latlon(self, statdict) :
+        self.lldict = {}
         for s in statdict.keys():
             self.lldict[s] = self.xyz_to_latlon(statdict[s]['loc'])
         return statdict
