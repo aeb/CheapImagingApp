@@ -409,17 +409,17 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         if ('SP' in self.statdict.keys()) :
             self.statdict['SP']['latlon']=[-89.0, 0.5*(lims[0]+lims[1])]
 
-        self.on_gc, self.off_gc, self.on_len, self.off_len = self.generate_all_great_circles(statdict, lims)
+        # self.on_gc, self.off_gc, self.on_len, self.off_len = self.generate_all_great_circles(statdict, lims)
 
-        for i in range(0, self.off_len):
-            axs.plot(self.off_gc[i][0], self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-            axs.plot(self.off_gc[i][0]-360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-            axs.plot(self.off_gc[i][0]+360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
+        # for i in range(0, self.off_len):
+        #     axs.plot(self.off_gc[i][0], self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
+        #     axs.plot(self.off_gc[i][0]-360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
+        #     axs.plot(self.off_gc[i][0]+360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
 
-        for i in range(0, self.on_len):
-            axs.plot(self.on_gc[i][0], self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-            axs.plot(self.on_gc[i][0]-360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-            axs.plot(self.on_gc[i][0]+360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
+        # for i in range(0, self.on_len):
+        #     axs.plot(self.on_gc[i][0], self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
+        #     axs.plot(self.on_gc[i][0]-360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
+        #     axs.plot(self.on_gc[i][0]+360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
 
         for s in self.statdict.keys() :
             if (self.statdict[s]['on']==False) :
@@ -444,7 +444,7 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         
         return statdict
 
-    def generate_all_great_circles(self,statdict, limits,N=128) :
+    def generate_all_great_circles(self,statdict, limits,N=32) :
         on_list = [np.nan] * (len(list(statdict.keys()))**2)
         off_list = [np.nan] * (len(list(statdict.keys()))**2)
         on_len = 0
@@ -471,7 +471,7 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         return on_list, off_list, on_len, off_len
     
 
-    def great_circle(self,pos1,pos2,N=64) :
+    def great_circle(self,pos1,pos2,N=32) :
 
         lat1, lon1 = pos1
         lat2, lon2 = pos2
