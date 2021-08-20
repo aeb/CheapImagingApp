@@ -6,10 +6,14 @@ import matplotlib.tri as tri
 import copy
 from os import path
 
-from PIL import Image
+from mpl_texture import InteractiveWorldMapOverlayWidget
+
+#from PIL import Image
 
 # Data dictionary: datadict has form {'u':u, 'v':v, 'V':V}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
+
+__mydebug__ = True
 
 
 #########
@@ -357,200 +361,82 @@ class CheapImageReconstruction :
         
 
 
-class MapPlots:
+class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
 
-    img_dict = {}
     
-    def __init__(self) :
+    def __init__(self,**kwargs) :
 
-        img = Image.open(path.abspath(path.join(path.dirname(__file__),'images/world_spherical.jpg')))
+        self.statdict = {}
 
-
-        self.img_dict[0] = np.array(img)
-        for k in range(1,int(np.log2(img.size[0]))-7) :
-            self.img_dict[k] = np.array(img.resize((img.size[0]>>k,img.size[1]>>k),resample=Image.LANCZOS))
-            
-        # print("Number of images:",len(self.img_dict.keys()))
-
-        # for k in self.img_dict.keys() :
-        #     plt.figure()
-        #     plt.imshow(self.img_dict[k])
-        #     print("Image %i size:"%(k),self.img_dict[k].shape)
-
+        super().__init__(**kwargs)
             
         self.off_color = (0.5,0,0)
         self.on_color = (1,0.75,0.25)
-
+        
         self.on_gc = None
         self.on_len = 0
         self.off_gc = None
         self.off_len = 0
+        
 
+    def generate_mpl_plot(self,fig,ax) :
+        # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
+        # You probably want, but do not require, the following in your over-lay
+        self.plot_map(ax,self.statdict)
+        ax.set_facecolor((0,0,0,0))
+        fig.set_facecolor((0,0,0,0))
 
+        
+    def update(self,datadict,statdict) :
+        self.statdict = statdict
+
+        if (__mydebug__):
+            print("InteractiveBaselineMapPlot.update:",self.statdict.keys())
+        
+
+        self.update_mpl()
+
+        
     # limits is a list that has in degrees the min longitude, max longitude, min latitude, max latitude to be plotted.
-    def plot_map(self,axs,statdict,limits=None,window_size=None) :
-
-        # Set this to current axes for convenience, might be a minor performance hit?
-        plt.sca(axs)
-
-        lims = np.copy(limits)
-
-        if (window_size is None) :
-            img = self.img_dict[0]
-        else :
-            img = self.matched_resolution_image(window_size,limits)
+    def plot_map(self,axs,statdict) :
         
-        ## Plot the Earth image in the region of interest.
-        # Figure out where istart, iend, jstart, jend are given limits if limits are not None
-        # j pixel 0 is at longitude 0, pixel -1 is at longitude 360-1/N degrees.
-        # i pixel 0 is at latitude 90, pixel -1 is at latitude -90 degrees.
-        if (limits is None) :
-            istart = jstart = 0
-            iend = jend = -1
-            extent = [-180, 180, -90, 90] # Defines coordinates
-            lims = [-180, 180, -90, 90]
-            img2 = img
-        else :
-
-            iend = int(max(1,min(img.shape[0]-1,np.ceil(((-lims[2] + 90) * img.shape[0] / 180))))) # pixel after lims[2]
-            istart = int(min(iend-1,max(0,np.floor(((-lims[3] + 90) * img.shape[0] / 180))))) # pixel before lims[3]
-            
-            istartdgr = -istart*180/img.shape[0]+90
-            ienddgr = -iend*180/img.shape[0]+90
-
-            lonc_limits = (0.5*(limits[0]+limits[1])+180)%360-180
-            lims[0] = lonc_limits - 0.5*(limits[1]-limits[0])
-            lims[1] = lonc_limits + 0.5*(limits[1]-limits[0])
-
-            lonc = 0.5*(lims[0]+lims[1])
-            jc = int( (((lonc+180.0)%360+360)%360) * img.shape[1]/360.0 + 0.5 ) # The index of center of the limits, rounded
-            lonjc = jc*360.0/img.shape[1]-180.0 # The EXACT position corresponding to jc
-            jstart = img.shape[1]//2 - max(1,int( np.ceil( (lonjc-lims[0])*img.shape[1]/360.0 ) ))
-            jend = img.shape[1]//2 + max(1,int( np.ceil( (lims[1]-lonjc)*img.shape[1]/360.0 ) ))
-
-            jstartdgr = jstart * 360 / img.shape[1] + jc*360/img.shape[1] - 180.0 - 180.0
-            jenddgr = jend * 360 / img.shape[1] + jc*360/img.shape[1] - 180.0 - 180.0
-
-            img2 = np.roll(img, -jc+(img.shape[1]//2), axis=1)
-
-            extent=[jstartdgr,jenddgr,ienddgr,istartdgr]
+        if (__mydebug__):
+            print("InteractiveBaselineMapPlot.plot_map:",statdict.keys())
         
-        plt.imshow(img2[istart:iend,jstart:jend,:],extent=extent,interpolation='spline16')
-
+        lims=[-180,180,-90,90]
+        
         self.statdict = self.add_station_latlon(statdict)
-        self.statdict['SP']['latlon']=[-89.0, 0.5*(lims[0]+lims[1])]
+        if ('SP' in self.statdict.keys()) :
+            self.statdict['SP']['latlon']=[-89.0, 0.5*(lims[0]+lims[1])]
 
         self.on_gc, self.off_gc, self.on_len, self.off_len = self.generate_all_great_circles(statdict, lims)
 
         for i in range(0, self.off_len):
-            plt.plot(self.off_gc[i][0], self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-            plt.plot(self.off_gc[i][0]-360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-            plt.plot(self.off_gc[i][0]+360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
+            axs.plot(self.off_gc[i][0], self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
+            axs.plot(self.off_gc[i][0]-360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
+            axs.plot(self.off_gc[i][0]+360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
 
         for i in range(0, self.on_len):
-            plt.plot(self.on_gc[i][0], self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-            plt.plot(self.on_gc[i][0]-360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-            plt.plot(self.on_gc[i][0]+360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
+            axs.plot(self.on_gc[i][0], self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
+            axs.plot(self.on_gc[i][0]-360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
+            axs.plot(self.on_gc[i][0]+360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
 
         for s in self.statdict.keys() :
             if (self.statdict[s]['on']==False) :
-                plt.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.off_color)
+                axs.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.off_color)
             
         for s in self.statdict.keys() :
             if (self.statdict[s]['on']==True) :
-                plt.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.on_color)
+                axs.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.on_color)
                     
-        plt.xlim((lims[:2]))
-        plt.ylim((lims[2:]))
-        plt.gca().set_facecolor('k')
-        plt.gcf().set_facecolor('k')
+        axs.set_xlim((lims[:2]))
+        axs.set_ylim((lims[2:]))
 
-
-    def replot(self,axs,limits=None,window_size=None) :
-
-
-        # Set this to current axes for convenience, might be a minor performance hit?
-        plt.sca(axs)
-
-        lims = np.copy(limits)
-
-        if (window_size is None) :
-            img = self.img_dict[0]
-        else :
-            img = self.matched_resolution_image(window_size,limits)
+        for sdir in ['left','right','top','bottom'] :
+            axs.spines[sdir].set_visible(False)
+        axs.xaxis.set_tick_params(bottom='off',top='off')
+        axs.yaxis.set_tick_params(left='off',right='off')
         
-        ## Plot the Earth image in the region of interest.
-        # Figure out where istart, iend, jstart, jend are given limits if limits are not None
-        # j pixel 0 is at longitude 0, pixel -1 is at longitude 360-1/N degrees.
-        # i pixel 0 is at latitude 90, pixel -1 is at latitude -90 degrees.
-        if (limits is None) :
-            istart = jstart = 0
-            iend = jend = -1
-            extent = [-180, 180, -90, 90] # Defines coordinates
-            lims = [-180, 180, -90, 90]
-            img2 = img
-        else :
-
-            iend = int(max(1,min(img.shape[0]-1,np.ceil(((-lims[2] + 90) * img.shape[0] / 180))))) # pixel after lims[2]
-            istart = int(min(iend-1,max(0,np.floor(((-lims[3] + 90) * img.shape[0] / 180))))) # pixel before lims[3]
-            
-            istartdgr = -istart*180/img.shape[0]+90
-            ienddgr = -iend*180/img.shape[0]+90
-
-            lonc_limits = (0.5*(limits[0]+limits[1])+180)%360-180
-            lims[0] = lonc_limits - 0.5*(limits[1]-limits[0])
-            lims[1] = lonc_limits + 0.5*(limits[1]-limits[0])
-
-            lonc = 0.5*(lims[0]+lims[1])
-            jc = int( (((lonc+180.0)%360+360)%360) * img.shape[1]/360.0 + 0.5 ) # The index of center of the limits, rounded
-            lonjc = jc*360.0/img.shape[1]-180.0 # The EXACT position corresponding to jc
-            jstart = img.shape[1]//2 - max(1,int( np.ceil( (lonjc-lims[0])*img.shape[1]/360.0 ) ))
-            jend = img.shape[1]//2 + max(1,int( np.ceil( (lims[1]-lonjc)*img.shape[1]/360.0 ) ))
-
-            jstartdgr = jstart * 360 / img.shape[1] + jc*360/img.shape[1] - 180.0 - 180.0
-            jenddgr = jend * 360 / img.shape[1] + jc*360/img.shape[1] - 180.0 - 180.0
-
-            img2 = np.roll(img, -jc+(img.shape[1]//2), axis=1)
-
-            extent=[jstartdgr,jenddgr,ienddgr,istartdgr]
-        
-        plt.imshow(img2[istart:iend,jstart:jend,:],extent=extent,interpolation='spline16')
-
-        self.statdict['SP']['latlon']=[-89.0, 0.5*(lims[0]+lims[1])]
-
-        for i in range(0, self.off_len):
-            plt.plot(self.off_gc[i][0], self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-            plt.plot(self.off_gc[i][0]-360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-            plt.plot(self.off_gc[i][0]+360, self.off_gc[i][1], '-', color = self.off_color, alpha = 0.5)
-
-        for i in range(0, self.on_len):
-            plt.plot(self.on_gc[i][0], self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-            plt.plot(self.on_gc[i][0]-360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-            plt.plot(self.on_gc[i][0]+360, self.on_gc[i][1], '-', color = self.on_color, alpha = 0.5)
-
-        for s in self.statdict.keys() :
-            if (self.statdict[s]['on']==False) :
-                plt.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.off_color)
-            
-        for s in self.statdict.keys() :
-            if (self.statdict[s]['on']==True) :
-                plt.plot(self.statdict[s]['latlon'][1], self.statdict[s]['latlon'][0], 'o', color = self.on_color)
-                    
-        plt.xlim((lims[:2]))
-        plt.ylim((lims[2:]))
-        plt.gca().set_facecolor('k')
-        plt.gcf().set_facecolor('k')
-
-        
-
-    def matched_resolution_image(self,window_size,limits,over_resolution_factor=8) :
-        for k in range(1,len(self.img_dict.keys())) :
-            if ( self.img_dict[k].shape[1]*(limits[1]-limits[0])/360.0<window_size[0]/over_resolution_factor or self.img_dict[k].shape[0]*(limits[3]-limits[2])/360.0<window_size[1]/over_resolution_factor ) :
-                # print("Choosing resolution level %i"%(k-1),self.img_dict[k-1].shape,window_size)
-                return self.img_dict[k-1]
-        # print("Choosing resolution level min"%(),self.img_dict[len(self.img_dict.keys())-1].shape,window_size)
-        return self.img_dict[len(self.img_dict.keys())-1]
-
         
     def add_station_latlon(self, statdict) :
         for s in statdict.keys():
@@ -558,12 +444,6 @@ class MapPlots:
         
         return statdict
 
-    # _____________________________________________________Temporary test function:_______________________________________________
-    def test_gen_grtcrc(self, stat1, stat2):
-        llgA, llgB = self.great_circle(stat1['latlon'], stat2['latlon'])
-        plt.plot(llgA[1], llgA[0], '-', color = 'magenta')
-    #_____________________________________________________________________________________________________________________________
-        
     def generate_all_great_circles(self,statdict, limits,N=128) :
         on_list = [np.nan] * (len(list(statdict.keys()))**2)
         off_list = [np.nan] * (len(list(statdict.keys()))**2)

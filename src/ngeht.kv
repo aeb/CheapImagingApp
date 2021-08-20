@@ -476,15 +476,28 @@ ScreenManager:
         closed_height: dp(40)+dp(15)
 
 
+# <MenuedBaselineMapPlot>:
 <InteractiveMapsPlot>:
     orientation: "vertical"
     ddm_id: ddm
     otm_id: otm
     menu_id: sme
     plot_id: plot
-    MapsPlot:
-        id: plot
+    FloatLayout :
+        id: al
+        canvas:
+            Color:
+                rgb: 0,0,0
+            Rectangle:
+                size: root.width,root.height
+                
         size_hint: 1.0,1.0
+        MenuedBaselineMapPlot:
+            id: plot
+            size: root.width,root.height
+            # pos: 0.5*root.width,0.5*root.height
+            # pos_hint: {'center':(0.5*self.width,0.5*self.height)}
+            
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
@@ -497,7 +510,7 @@ ScreenManager:
             size: "40dp","40dp"
             color: 1,1,1,0.75
             background_color: 0,0,0,0
-            on_press: plot.zoom_in()
+            on_press: plot.mp.zoom_in()
         Button:
             text: "-"
             font_size: "36sp"
@@ -505,7 +518,7 @@ ScreenManager:
             size: "40dp","40dp"
             color: 1,1,1,0.75
             background_color: 0,0,0,0
-            on_press: plot.zoom_out()
+            on_press: plot.mp.zoom_out()
 
 
     DiameterMenu:

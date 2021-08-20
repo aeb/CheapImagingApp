@@ -1,6 +1,6 @@
-__version__ = "0.5.2"
+__version__ = "0.6"
 
-__mydebug__ = False
+__Mydebug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -117,7 +117,7 @@ class ReconstructionPlot(BoxLayout) :
         self.bind(height=self.resize)
         self.bind(width=self.resize)
 
-        self.freeze_plot = False
+        self.plot_frozen = False
 
         if __mydebug__ :
             print("rp.__init__: finished")
@@ -205,7 +205,7 @@ class ReconstructionPlot(BoxLayout) :
         self.replot()
             
     def on_touch_move(self,touch) :
-        if (not self.freeze_plot) :
+        if (not self.plot_frozen) :
             screen_to_plot = 2.0*float(self.plot_maxsize)/float(max(self.height,self.width))
             self.plot_center[0] = self.plot_center[0] + touch.dpos[0]*screen_to_plot
             self.plot_center[1] = self.plot_center[1] - touch.dpos[1]*screen_to_plot
@@ -218,7 +218,7 @@ class ReconstructionPlot(BoxLayout) :
             self.refresh()
 
     # def on_touch_up(self,touch) :
-    #     self.freeze_plot = False
+    #     self.plot_frozen = False
 
     def zoom_out(self) :
         self.plot_maxsize = self.plot_maxsize * 1.414
@@ -255,6 +255,12 @@ class ReconstructionPlot(BoxLayout) :
         _snr_cut = self.snr_cut
         self.replot()
 
+    def freeze_plot(self) :
+        self.plot_frozen = True
+
+    def unfreeze_plot(self) :
+        self.plot_frozen = False
+
         
 class BaselinesPlot(BoxLayout) :
 
@@ -287,7 +293,7 @@ class BaselinesPlot(BoxLayout) :
         self.bind(height=self.resize)
         self.bind(width=self.resize)
 
-        self.freeze_plot = False
+        self.plot_frozen = False
 
         if __mydebug__ :
             print("bp.__init__: finished")
@@ -377,7 +383,7 @@ class BaselinesPlot(BoxLayout) :
         self.replot()
             
     def on_touch_move(self,touch) :
-        if (not self.freeze_plot) :
+        if (not self.plot_frozen) :
             screen_to_plot = 2.0*float(self.plot_maxsize)/float(max(self.height,self.width))
             self.plot_center[0] = self.plot_center[0] + touch.dpos[0]*screen_to_plot
             self.plot_center[1] = self.plot_center[1] - touch.dpos[1]*screen_to_plot
@@ -390,7 +396,7 @@ class BaselinesPlot(BoxLayout) :
             self.refresh()
 
     # def on_touch_up(self,touch) :
-    #     self.freeze_plot = False
+    #     self.plot_frozen = False
             
     def zoom_out(self) :
         self.plot_maxsize = self.plot_maxsize * 1.414
@@ -429,15 +435,16 @@ class BaselinesPlot(BoxLayout) :
         _snr_cut = self.snr_cut
         self.replot()
 
+    def freeze_plot(self) :
+        self.plot_frozen = True
+
+    def unfreeze_plot(self) :
+        self.plot_frozen = False
 
 
-class MapsPlot(BoxLayout) :
+class MenuedBaselineMapPlot(BoxLayout) :
 
-    plot_vmaxsize = 90
-    plot_hmaxsize = 90
-    plot_center = np.array([0.0,0.0])
-
-    mp = ci.MapPlots()
+    mp = ci.InteractiveBaselineMapPlot()
     menu_id = ObjectProperty(None)
 
     def __init__(self,**kwargs) :
@@ -447,169 +454,44 @@ class MapsPlot(BoxLayout) :
         self.ngeht_diameter = _ngeht_diameter
         self.snr_cut = _snr_cut
 
-        
-        self.fig=plt.figure(figsize=(6,6))
-        self.axs=plt.axes([0,0,1,1])
-
-        limits = np.array([-1,1,-1,1])*self.plot_vmaxsize
-        limits[:2] = limits[:2] + self.plot_center[0]
-        limits[2:] = limits[2:] + self.plot_center[1]
-        
-        self.mp.plot_map(self.axs,_statdict,limits=limits)
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-
         self.sdict = _statdict
+        self.ddict = _datadict
 
-        self.bind(height=self.resize)
-        self.bind(width=self.resize)
+        self.plot_frozen = False
 
-        self.freeze_plot = False
 
+        self.add_widget(self.mp)
+        
         if __mydebug__ :
             print("mp.__init__: finished")
         
 
     def update(self,datadict,statdict) :
-        global _statdict
-        _statdict = statdict
-        self.sdict = _statdict
-
+        self.mp.update(datadict,statdict)
+        
         if __mydebug__ :
-            print("mp.update:",self.sdict.keys(),self.fig,self.size)
-            print("         :",_statdict.keys(),self.fig,self.size)
-        
-        self.replot()
-        
+            print("mp.update:",self.sdict.keys(),self.size)
+            print("         :",_statdict.keys(),self.size)
+            print("         :",statdict.keys(),self.size)
+
     def replot(self) :
-        global _statdict
-        self.sdict = _statdict
-
-        if __mydebug__ :
-            print("mp.replot:",self.sdict.keys(),self.fig,self.size)
-            print("         :",_statdict.keys(),self.fig,self.size)
-
-
-        if (self.width==0 or self.height==0) :
-            self.clear()
-            return
-
-        if (self.fig is None) :
-            self.fig=plt.figure()
-            self.axs=plt.axes([0,0,1,1])
-
-        limits = np.array([-self.plot_hmaxsize,self.plot_hmaxsize,-self.plot_vmaxsize,self.plot_vmaxsize])
-        if (self.width==0 or self.height==0) :
-            pass
-        elif (self.width/self.height>self.plot_vmaxsize/self.plot_hmaxsize) :
-            limits[:2] = limits[:2] + self.plot_center[0]
-            limits[2:] = float(self.height)/float(self.width)*limits[:2] + self.plot_center[1]
-        else :
-            limits[:2] = float(self.width)/float(self.height)*limits[2:] + self.plot_center[0]
-            limits[2:] = limits[2:] + self.plot_center[1]
-
-        if (limits[1]-limits[0]>360.0) :
-            old_hsize = limits[1]-limits[0]
-            old_ratio = (limits[3]-limits[2])/(limits[1]-limits[0])
-            limits[0] = self.plot_center[0] - 180.0
-            limits[1] = self.plot_center[0] + 180.0
-            limits[2] = - old_ratio * 180.0 + self.plot_center[1]
-            limits[3] = old_ratio * 180.0 + self.plot_center[1]
-            self.plot_hmaxsize = 180.0
-            self.plot_vmaxsize = old_ratio*180.0
-            
-        self.axs.cla()
-        self.clear_widgets()
-        self.mp.plot_map(self.axs,self.sdict,limits=limits,window_size=[self.width,self.height])
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
+        # self.mp.update(self.ddict,self.sdict)
         
-    def refresh(self):
         if __mydebug__ :
-            print("mp.refresh:",self.sdict.keys())
-            print("          :",_statdict.keys())
-
-        if (self.width==0 or self.height==0) :
-            self.clear()
-            return
-
-        if (self.fig is None) :
-            self.fig=plt.figure()
-            self.axs=plt.axes([0,0,1,1])
-
-        limits = np.array([-self.plot_hmaxsize,self.plot_hmaxsize,-self.plot_vmaxsize,self.plot_vmaxsize])
-        if (self.width==0 or self.height==0) :
-            pass
-        elif (self.width/self.height>self.plot_vmaxsize/self.plot_hmaxsize) :
-            limits[:2] = limits[:2] + self.plot_center[0]
-            limits[2:] = float(self.height)/float(self.width)*limits[:2] + self.plot_center[1]
-        else :
-            limits[:2] = float(self.width)/float(self.height)*limits[2:] + self.plot_center[0]
-            limits[2:] = limits[2:] + self.plot_center[1]
-
-        if (limits[1]-limits[0]>360.0) :
-            old_hsize = limits[1]-limits[0]
-            old_ratio = (limits[3]-limits[2])/(limits[1]-limits[0])
-            limits[0] = self.plot_center[0] - 180.0
-            limits[1] = self.plot_center[0] + 180.0
-            limits[2] = - old_ratio * 180.0 + self.plot_center[1]
-            limits[3] = old_ratio * 180.0 + self.plot_center[1]
-            self.plot_hmaxsize = 180.0
-            self.plot_vmaxsize = old_ratio*180.0
-            
-        self.axs.cla()
-        self.clear_widgets()
-        self.mp.replot(self.axs,limits=limits,window_size=[self.width,self.height])
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-        
-    def resize(self,widget,newsize) :
-        if __mydebug__ :
-            print("mp.resize:",newsize)
-        #self.refresh()
-        self.replot()
-            
-    def on_touch_move(self,touch) :
-        if (not self.freeze_plot) :
-            self.plot_center[0] = self.plot_center[0] - touch.dpos[0]*2.0*float(self.plot_hmaxsize)/float(self.width)
-            self.plot_center[1] = self.plot_center[1] - touch.dpos[1]*2.0*float(self.plot_vmaxsize)/float(self.height)
-            self.refresh()
-
-    def on_touch_down(self,touch) :
-        if (touch.is_double_tap) :
-            self.plot_vmaxsize = 90.0
-            self.plot_hmaxsize = self.width/self.height * self.plot_vmaxsize
-            # print("imp:",self.plot_vmaxsize,self.plot_hmaxsize,self.width,self.height)
-            self.plot_center = np.array([0,0])
-            self.refresh()
-
-    def zoom_out(self) :
-        self.plot_vmaxsize = self.plot_vmaxsize * 1.414
-        self.plot_hmaxsize = self.plot_hmaxsize * 1.414
-        self.refresh()
-
-    def zoom_in(self) :
-        self.plot_vmaxsize = self.plot_vmaxsize * 0.707
-        self.plot_hmaxsize = self.plot_hmaxsize * 0.707
-        self.refresh()
-
-    def clear(self) :
-        if (not self.fig is None) :
-            plt.close(self.fig)
-            self.fig=None
-        self.clear_widgets()
+            print("mp.replot:",self.sdict.keys(),self.size)
+            print("         :",_statdict.keys(),self.size)
 
     def set_start_time(self,val) :
         self.time_range[1] = self.time_range[1]-self.time_range[0]+val
         self.time_range[0] = val
-        # self.replot()
         
     def set_obs_time(self,val) :
         self.time_range[1] = self.time_range[0] + val
-        # self.replot()
 
     def set_ngeht_diameter(self,val) :
         global _ngeht_diameter
         self.ngeht_diameter = val
         _ngeht_diameter = self.ngeht_diameter
-        # self.replot()
 
     def set_snr_cut(self,val) :
         global _snr_cut
@@ -617,7 +499,12 @@ class MapsPlot(BoxLayout) :
         if (val is None) :
             self.snr_cut = 0
         _snr_cut = self.snr_cut
-        # self.replot()
+
+    def freeze_plot(self) :
+        self.mp.plot_frozen = True
+
+    def unfreeze_plot(self) :
+        self.mp.plot_frozen = False
 
         
 
@@ -957,9 +844,9 @@ class ObsTimeSliders(BoxLayout) :
 
     def on_active(self,widget,active) :
         if active :
-            self.plot.freeze_plot = True
+            self.plot.freeze_plot()
         else :
-            self.plot.freeze_plot = False
+            self.plot.unfreeze_plot()
             
     def adjust_start_time(self,widget,val) :
         self.plot.set_start_time(val)
@@ -1082,9 +969,9 @@ class DiameterSliders(BoxLayout) :
 
     def on_active(self,widget,active) :
         if active :
-            self.plot.freeze_plot = True
+            self.plot.freeze_plot()
         else :
-            self.plot.freeze_plot = False
+            self.plot.unfreeze_plot()
             
     def adjust_diameter(self,widget,val) :
         global _ngeht_diameter_setting
