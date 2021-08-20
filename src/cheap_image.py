@@ -417,12 +417,12 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         lims=[-180,180,-90,90]
         for i in self.gcdict.keys() :
             if (self.statdict[self.gcdict[i]['s1']]['on']==False or self.statdict[self.gcdict[i]['s2']]['on']==False) :
-                axs.plot(self.gcdict[i]['x'],self.gcdict[i]['y'],'-',color=self.off_color,alpha=0.75)
-                axs.plot(self.gcdict[i]['x']-360,self.gcdict[i]['y'],'-',color=self.off_color,alpha=0.75)
+                axs.plot(self.gcdict[i]['x'],self.gcdict[i]['y'],'-',color=self.off_color,alpha=0.5)
+                axs.plot(self.gcdict[i]['x']-360,self.gcdict[i]['y'],'-',color=self.off_color,alpha=0.5)
         for i in self.gcdict.keys() :
             if (self.statdict[self.gcdict[i]['s1']]['on']==True and self.statdict[self.gcdict[i]['s2']]['on']==True) :
-                axs.plot(self.gcdict[i]['x'],self.gcdict[i]['y'],'-',color=self.on_color,alpha=0.75)
-                axs.plot(self.gcdict[i]['x']-360,self.gcdict[i]['y'],'-',color=self.on_color,alpha=0.75)
+                axs.plot(self.gcdict[i]['x'],self.gcdict[i]['y'],'-',color=self.on_color,alpha=0.5)
+                axs.plot(self.gcdict[i]['x']-360,self.gcdict[i]['y'],'-',color=self.on_color,alpha=0.5)
         for s in self.statdict.keys() :
             if (self.statdict[s]['on']==False) :
                 axs.plot(self.lldict[s][1], self.lldict[s][0], 'o', color = self.off_color)
