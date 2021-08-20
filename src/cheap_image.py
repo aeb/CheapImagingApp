@@ -363,7 +363,7 @@ class CheapImageReconstruction :
 
 class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
 
-
+    statdict = {}
     gcdict = {}
     lldict = {}
     
@@ -387,15 +387,19 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
         fig.set_facecolor((0,0,0,0))
         
     def update(self,datadict,statdict) :
+
         self.statdict = statdict
         if (__mydebug__):
             print("InteractiveBaselineMapPlot.update:",self.statdict.keys())
 
-        lims=[-180,180,-90,90]
-        self.generate_all_station_latlon(statdict)
-        if ('SP' in self.statdict.keys()) :
-            self.lldict['SP']=[-89.0, 0.5*(lims[0]+lims[1])]
-        self.generate_all_great_circles(self.lldict, lims)
+        if (list(self.lldict.keys()) != list(self.statdict.keys())) :
+            if (__mydebug__):
+                print("InteractiveBaselineMapPlot.update: remaking circles")
+            lims=[-180,180,-90,90]
+            self.generate_all_station_latlon(statdict)
+            if ('SP' in self.statdict.keys()) :
+                self.lldict['SP']=[-89.0, 0.5*(lims[0]+lims[1])]
+            self.generate_all_great_circles(self.lldict, lims)
             
         self.update_mpl()
 
