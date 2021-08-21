@@ -85,28 +85,58 @@ class InteractivePlotWidget(Widget):
         if (touch.is_double_tap) :
             self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
             self.rect.tex_coords = self.tex_coords
-            # self.rect.size = (self.nx,self.ny)
             maxwidth = max(self.width,self.height*self.nx/self.ny)
             self.rect.size = (maxwidth,self.ny*maxwidth/self.nx)
             self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
-
+            x_shift = 0.0
+            y_shift = -0.5*(self.height-self.rect.size[1])/self.rect.size[1]
+            for i in range(0,8,2) :
+                self.tex_coords[i] = self.tex_coords[i] + x_shift
+                self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+            self.tex_coords = self.check_boundaries(self.tex_coords)
+            self.rect.tex_coords = self.tex_coords
+            
     def zoom_in(self) :
+        if (__mydebug__) :
+            print("InteractivePlotWidget.zoom_in:",self.rect.tex_coords,self.height)
         self.rect.size = (self.rect.size[0]*1.414,self.rect.size[1]*1.414)
-        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+        y_shift = 0.5 * (1.414-1.0) * self.height/self.rect.size[1]
+        x_shift = 0
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        if (__mydebug__) :
+            print("                             :",self.rect.tex_coords,self.height)
 
     def zoom_out(self) :
         self.rect.size = (self.rect.size[0]*0.707,self.rect.size[1]*0.707)
         self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+        y_shift = 0.5 * (0.707-1.0) * self.height/self.rect.size[1]
+        x_shift = 0
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
         self.tex_coords = self.check_boundaries(self.tex_coords)
         self.rect.tex_coords = self.tex_coords
 
     def resize(self,widget,newsize) :
+        if (__mydebug__) :
+            print("InteractivePlotWidget.resize:",newsize)
         self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
         self.rect.tex_coords = self.tex_coords
-        # self.rect.size = (self.nx*self.height/self.ny,self.height)
         maxwidth = max(self.width,self.height*self.nx/self.ny)
         self.rect.size = (maxwidth,self.ny*maxwidth/self.nx)
         self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        x_shift = 0.0
+        y_shift = -0.5*(self.height-self.rect.size[1])/self.rect.size[1]
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
 
     def set_zoom_factor(self,value) :
         self.rect.size = (self.nx*value,self.ny*value)
