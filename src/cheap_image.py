@@ -617,7 +617,14 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         self.update_mpl(**kwargs)
 
     def check_boundaries(self,tex_coords) :
-        return tex_coords    
+        return tex_coords
+
+    def check_size(self,size) :
+        if (size[0]<self.width) :
+            size = (self.width, size[1]/size[0] * self.width)
+        elif  (size[1]<self.height) :
+            size = (size[0]/size[1] * self.height, self.height)
+        return size
 
     ############
     # High-level plot generation
@@ -828,6 +835,15 @@ class InteractiveBaselineMapPlot(InteractiveWorldMapOverlayWidget):
 
         return xyz2
 
+    def check_size(self,size) :
+        if (size[0]==0 or size[1]==0) :
+            return size
+        if (size[0]<self.width and size[1]<self.height) :
+            if (self.width/size[0] < self.height/size[1]) :
+                size = (self.width, size[1]/size[0] * self.width)
+            else :
+                size = (size[0]/size[1] * self.height, self.height)
+        return size
 
         
 

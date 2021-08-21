@@ -306,6 +306,9 @@ class MenuedReconstructionPlot(BoxLayout) :
             print("mrp.update:",self.sdict.keys(),self.size)
 
     def replot(self,**kwargs) :
+        global _datadict, _statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
@@ -657,6 +660,9 @@ class MenuedBaselineMapPlot(BoxLayout) :
             print("         :",statdict.keys(),self.size)
 
     def replot(self) :
+        global _datadict, _statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
         self.mp.replot(self.ddict,self.sdict)
         
         if __mydebug__ :

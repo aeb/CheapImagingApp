@@ -86,7 +86,7 @@ class InteractivePlotWidget(Widget):
             self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
             self.rect.tex_coords = self.tex_coords
             maxwidth = max(self.width,self.height*self.nx/self.ny)
-            self.rect.size = (maxwidth,self.ny*maxwidth/self.nx)
+            self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
             self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
             x_shift = 0.0
             y_shift = -0.5*(self.height-self.rect.size[1])/self.rect.size[1]
@@ -99,10 +99,13 @@ class InteractivePlotWidget(Widget):
     def zoom_in(self) :
         if (__mydebug__) :
             print("InteractivePlotWidget.zoom_in:",self.rect.tex_coords,self.height)
-        self.rect.size = (self.rect.size[0]*1.414,self.rect.size[1]*1.414)
+        old_size = self.rect.size
+        self.rect.size = self.check_size((self.rect.size[0]*1.414,self.rect.size[1]*1.414))
         self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
-        y_shift = 0.5 * (1.414-1.0) * self.height/self.rect.size[1]
+        y_shift = 0.5 * (self.rect.size[0]/old_size[0]-1.0) * self.height/self.rect.size[1]
         x_shift = 0
+        if (__mydebug__) :
+            print("InteractivePlotWidget.zoom_in:",old_size,self.rect.size,y_shift)
         for i in range(0,8,2) :
             self.tex_coords[i] = self.tex_coords[i] + x_shift
             self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
@@ -112,10 +115,13 @@ class InteractivePlotWidget(Widget):
             print("                             :",self.rect.tex_coords,self.height)
 
     def zoom_out(self) :
-        self.rect.size = (self.rect.size[0]*0.707,self.rect.size[1]*0.707)
+        old_size = self.rect.size
+        self.rect.size = self.check_size((self.rect.size[0]*0.707,self.rect.size[1]*0.707))
         self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
-        y_shift = 0.5 * (0.707-1.0) * self.height/self.rect.size[1]
+        y_shift = 0.5 * (self.rect.size[0]/old_size[0]-1.0) * self.height/self.rect.size[1]
         x_shift = 0
+        if (__mydebug__) :
+            print("InteractivePlotWidget.zoom_out:",old_size,self.rect.size,y_shift)
         for i in range(0,8,2) :
             self.tex_coords[i] = self.tex_coords[i] + x_shift
             self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
@@ -128,7 +134,7 @@ class InteractivePlotWidget(Widget):
         self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
         self.rect.tex_coords = self.tex_coords
         maxwidth = max(self.width,self.height*self.nx/self.ny)
-        self.rect.size = (maxwidth,self.ny*maxwidth/self.nx)
+        self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
         self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
         x_shift = 0.0
         y_shift = -0.5*(self.height-self.rect.size[1])/self.rect.size[1]
@@ -139,7 +145,7 @@ class InteractivePlotWidget(Widget):
         self.rect.tex_coords = self.tex_coords
 
     def set_zoom_factor(self,value) :
-        self.rect.size = (self.nx*value,self.ny*value)
+        self.rect.size = self.check_size(self.nx*value,self.ny*value)
         x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
         y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
         self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
@@ -164,6 +170,9 @@ class InteractivePlotWidget(Widget):
         new_tex_coords[7] = max(min(tex_coords[7],max_y_shift),0)
         return new_tex_coords
 
+    def check_size(self,size) :
+        return size
+    
     def update_mpl(self,**kwargs) :
         fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
@@ -290,17 +299,17 @@ class InteractiveWorldMapOverlayWidget(Widget):
         if (touch.is_double_tap) :
             self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
             self.rect.tex_coords = self.tex_coords
-            self.rect.size = (self.nx*self.height/self.ny,self.height)
+            self.rect.size = self.check_size((self.nx*self.height/self.ny,self.height))
             self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
 
     def zoom_in(self) :
-        self.rect.size = (self.rect.size[0]*1.414,self.rect.size[1]*1.414)
+        self.rect.size = self.check_size((self.rect.size[0]*1.414,self.rect.size[1]*1.414))
         self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
         if (__mydebug__) :
             print("InteractiveWorldMapOverlayWidget.zoom_in",self.rect.size,self.rect.pos)
             
     def zoom_out(self) :
-        self.rect.size = (self.rect.size[0]*0.707,self.rect.size[1]*0.707)
+        self.rect.size = self.check_size((self.rect.size[0]*0.707,self.rect.size[1]*0.707))
         self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
         self.tex_coords = self.check_boundaries(self.tex_coords)
         self.rect.tex_coords = self.tex_coords
@@ -310,11 +319,11 @@ class InteractiveWorldMapOverlayWidget(Widget):
     def resize(self,widget,newsize) :
         self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
         self.rect.tex_coords = self.tex_coords
-        self.rect.size = (self.nx*self.height/self.ny,self.height)
+        self.rect.size = self.check_size((self.nx*self.height/self.ny,self.height))
         self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
 
     def set_zoom_factor(self,value) :
-        self.rect.size = (self.nx*value,self.ny*value)
+        self.rect.size = self.check_size((self.nx*value,self.ny*value))
         x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
         y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
         self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
@@ -334,6 +343,9 @@ class InteractiveWorldMapOverlayWidget(Widget):
         new_tex_coords[7] = max(min(tex_coords[7],max_y_shift),0)
         return new_tex_coords
 
+    def check_size(self,size) :
+        return size
+    
     def update_mpl(self,**kwargs) :
         fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
