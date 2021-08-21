@@ -25,8 +25,6 @@ class InteractivePlotWidget(Widget):
     
     def __init__(self, **kwargs):
         self.canvas = RenderContext()
-        # setting shader.fs to new source code automatically compiles it.
-        # self.canvas.shader.fs = fs_multitexture
 
         self.nx = 1024
         self.ny = self.nx
@@ -87,18 +85,28 @@ class InteractivePlotWidget(Widget):
         if (touch.is_double_tap) :
             self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
             self.rect.tex_coords = self.tex_coords
-            self.rect.size = (self.nx,self.ny)
+            # self.rect.size = (self.nx,self.ny)
+            maxwidth = max(self.width,self.height*self.nx/self.ny)
+            self.rect.size = (maxwidth,self.ny*maxwidth/self.nx)
+            self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
 
     def zoom_in(self) :
         self.rect.size = (self.rect.size[0]*1.414,self.rect.size[1]*1.414)
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
 
     def zoom_out(self) :
         self.rect.size = (self.rect.size[0]*0.707,self.rect.size[1]*0.707)
+        self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
         self.tex_coords = self.check_boundaries(self.tex_coords)
         self.rect.tex_coords = self.tex_coords
 
     def resize(self,widget,newsize) :
-        self.set_zoom_factor(2)
+        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
+        self.rect.tex_coords = self.tex_coords
+        # self.rect.size = (self.nx*self.height/self.ny,self.height)
+        maxwidth = max(self.width,self.height*self.nx/self.ny)
+        self.rect.size = (maxwidth,self.ny*maxwidth/self.nx)
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
 
     def set_zoom_factor(self,value) :
         self.rect.size = (self.nx*value,self.ny*value)
@@ -110,6 +118,7 @@ class InteractivePlotWidget(Widget):
             self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
         self.tex_coords = self.check_boundaries(self.tex_coords)
         self.rect.tex_coords = self.tex_coords
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
         
     def check_boundaries(self,tex_coords) :
         new_tex_coords = [0]*len(tex_coords)
@@ -119,23 +128,23 @@ class InteractivePlotWidget(Widget):
         new_tex_coords[4] = max(min(tex_coords[4],1+max_x_shift),1)
         new_tex_coords[6] = max(min(tex_coords[6],max_x_shift),0)
         max_y_shift = max((self.rect.size[1]-self.height)/self.rect.size[1],0)
-        new_tex_coords[1] = min(max(tex_coords[1],1-max_y_shift),1)
-        new_tex_coords[3] = min(max(tex_coords[3],1-max_y_shift),1)
-        new_tex_coords[5] = min(max(tex_coords[5],-max_y_shift),0)
-        new_tex_coords[7] = min(max(tex_coords[7],-max_y_shift),0)
+        new_tex_coords[1] = max(min(tex_coords[1],1+max_y_shift),1)
+        new_tex_coords[3] = max(min(tex_coords[3],1+max_y_shift),1)
+        new_tex_coords[5] = max(min(tex_coords[5],max_y_shift),0)
+        new_tex_coords[7] = max(min(tex_coords[7],max_y_shift),0)
         return new_tex_coords
 
-    def update_mpl(self) :
-        fig = Figure(figsize=(self.nx/128,self.ny/128),dpi=128)
+    def update_mpl(self,**kwargs) :
+        fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(111,position=[0,0,1,1])
-        self.generate_mpl_plot(fig,ax)
+        self.generate_mpl_plot(fig,ax,**kwargs)
         canvas.draw()
         self.buf = np.asarray(canvas.buffer_rgba()).ravel()
         self.arr = array('B', self.buf)
         self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
 
-    def generate_mpl_plot(self,fig,ax) :
+    def generate_mpl_plot(self,fig,ax,**kwargs) :
         # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
         pass
 
@@ -295,17 +304,17 @@ class InteractiveWorldMapOverlayWidget(Widget):
         new_tex_coords[7] = max(min(tex_coords[7],max_y_shift),0)
         return new_tex_coords
 
-    def update_mpl(self) :
+    def update_mpl(self,**kwargs) :
         fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(111,position=[0,0,1,1])
-        self.generate_mpl_plot(fig,ax)
+        self.generate_mpl_plot(fig,ax,**kwargs)
         canvas.draw()
         self.buf = np.asarray(canvas.buffer_rgba()).ravel()
         self.arr = array('B', self.buf)
         self.texture1.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
 
-    def generate_mpl_plot(self,fig,ax) :
+    def generate_mpl_plot(self,fig,ax,**kwargs) :
         # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
         # You probably want, but do not require, the following in your over-lay
         ax.set_facecolor((0,0,0,0))

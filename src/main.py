@@ -261,6 +261,101 @@ class ReconstructionPlot(BoxLayout) :
     def unfreeze_plot(self) :
         self.plot_frozen = False
 
+
+        
+class MenuedReconstructionPlot(BoxLayout) :
+
+    plot_maxsize = 500.0
+    plot_center = np.array([0.0,0.0])
+
+    irp = ci.InteractiveImageReconstructionPlot()
+    menu_id = ObjectProperty(None)
+    
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+
+        self.time_range = _time_range
+        self.ngeht_diameter = _ngeht_diameter
+        self.snr_cut = _snr_cut
+
+        self.sdict = _statdict
+        self.ddict = _datadict
+
+        self.plot_frozen = False
+
+        self.limits = np.array([1,-1,-1,1])*self.plot_maxsize
+        self.limits[:2] = self.limits[:2] + self.plot_center[0]
+        self.limits[2:] = self.limits[2:] + self.plot_center[1]
+
+        self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+
+        self.add_widget(self.irp)
+        
+        if __mydebug__ :
+            print("mrp.__init__: finished")
+        
+
+    def update(self,datadict,statdict,**kwargs) :
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        self.irp.update(datadict,statdict,**kwargs)
+                    
+        if __mydebug__ :
+            print("mrp.update:",self.sdict.keys(),self.size)
+
+    def replot(self,**kwargs) :
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        self.irp.replot(self.ddict,self.sdict,**kwargs)
+        
+        if __mydebug__ :
+            print("mrp.replot:",self.sdict.keys(),self.size)
+
+    def refresh(self,**kwargs) :
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        self.irp.replot(self.ddict,self.sdict,**kwargs)
+        
+        if __mydebug__ :
+            print("mrp.refresh:",self.sdict.keys(),self.size)
+            
+    def set_start_time(self,val) :
+        if __mydebug__ :
+            print("mrp.set_start_time:",val)
+        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
+        self.time_range[0] = val
+
+        self.update(self.ddict,self.sdict)
+        
+    def set_obs_time(self,val) :
+        self.time_range[1] = self.time_range[0] + val
+
+    def set_ngeht_diameter(self,val) :
+        global _ngeht_diameter
+        self.ngeht_diameter = val
+        _ngeht_diameter = self.ngeht_diameter
+
+    def set_snr_cut(self,val) :
+        global _snr_cut
+        self.snr_cut = val
+        if (val is None) :
+            self.snr_cut = 0
+        _snr_cut = self.snr_cut
+
+    def freeze_plot(self) :
+        self.irp.plot_frozen = True
+
+    def unfreeze_plot(self) :
+        self.irp.plot_frozen = False
+
+
+
         
 class BaselinesPlot(BoxLayout) :
 
@@ -442,6 +537,93 @@ class BaselinesPlot(BoxLayout) :
         self.plot_frozen = False
 
 
+class MenuedBaselinePlot(BoxLayout) :
+
+
+    ibp = ci.InteractiveBaselinePlot()
+    menu_id = ObjectProperty(None)
+
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+
+        self.time_range = _time_range
+        self.ngeht_diameter = _ngeht_diameter
+        self.snr_cut = _snr_cut
+
+        self.sdict = _statdict
+        self.ddict = _datadict
+
+        self.plot_frozen = False
+
+        self.limits = [-20,20,20,-20]
+
+        self.update(self.ddict,self.sdict,limits=self.limits)
+
+        self.add_widget(self.ibp)
+        
+        if __mydebug__ :
+            print("mp.__init__: finished")
+        
+
+    def update(self,datadict,statdict,**kwargs) :
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        self.ibp.update(datadict,statdict,**kwargs)
+                    
+        if __mydebug__ :
+            print("bp.update:",self.sdict.keys(),self.size)
+
+    def replot(self,**kwargs) :
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        self.ibp.replot(self.ddict,self.sdict,**kwargs)
+        
+        if __mydebug__ :
+            print("mp.replot:",self.sdict.keys(),self.size)
+
+    def refresh(self,**kwargs) :
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        self.ibp.replot(self.ddict,self.sdict,**kwargs)
+        
+        if __mydebug__ :
+            print("mp.refresh:",self.sdict.keys(),self.size)
+            
+    def set_start_time(self,val) :
+        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
+        self.time_range[0] = val
+        
+    def set_obs_time(self,val) :
+        self.time_range[1] = self.time_range[0] + val
+
+    def set_ngeht_diameter(self,val) :
+        global _ngeht_diameter
+        self.ngeht_diameter = val
+        _ngeht_diameter = self.ngeht_diameter
+
+    def set_snr_cut(self,val) :
+        global _snr_cut
+        self.snr_cut = val
+        if (val is None) :
+            self.snr_cut = 0
+        _snr_cut = self.snr_cut
+
+    def freeze_plot(self) :
+        self.ibp.plot_frozen = True
+
+    def unfreeze_plot(self) :
+        self.ibp.plot_frozen = False
+
+        
+
+    
+        
 class MenuedBaselineMapPlot(BoxLayout) :
 
     mp = ci.InteractiveBaselineMapPlot()
