@@ -267,7 +267,7 @@ class ReconstructionPlot(BoxLayout) :
         
 class MenuedReconstructionPlot(BoxLayout) :
 
-    plot_maxsize = 500.0
+    plot_maxsize = 750.0
     plot_center = np.array([0.0,0.0])
 
     irp = ci.InteractiveImageReconstructionPlot()
