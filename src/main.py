@@ -544,7 +544,8 @@ class BaselinesPlot(BoxLayout) :
 
 class MenuedBaselinePlot(BoxLayout) :
 
-    ibp = ci.InteractiveBaselinePlot()
+    # ibp = ci.InteractiveBaselinePlot()
+    ibp = ci.InteractiveBaselinePlot_kivygraph()
     menu_id = ObjectProperty(None)
 
     def __init__(self,**kwargs) :
@@ -574,6 +575,13 @@ class MenuedBaselinePlot(BoxLayout) :
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
         kwargs['ngeht_diameter']=self.ngeht_diameter
+
+        global _datadict, _statdict
+        _datadict = datadict
+        _statdict = statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+        
         self.ibp.update(datadict,statdict,**kwargs)
                     
         if __mydebug__ :
