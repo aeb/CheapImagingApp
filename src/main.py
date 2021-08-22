@@ -820,7 +820,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         # Hack to fix the plot resize on initialization
         # if (self.mp.rect.size[0]==0 or self.mp.rect.size[1]==0) :
         #     Clock.schedule_once(lambda x : self.replot(), 0.1)
-        Clock.schedule_once(lambda x : self.replot(), 0.1)
+        Clock.schedule_once(lambda x : self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect), 0.1)
         
         if __mydebug__ :
             print("MenuedBaselineMapPlot_kivygraph.resize(): replotting with",newsize,self.size,self.mp.rect.size)
