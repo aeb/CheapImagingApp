@@ -1,6 +1,6 @@
 __version__ = "0.6"
 
-__mydebug__ = True
+__mydebug__ = False
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -18,6 +18,8 @@ from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner, SpinnerOption
 from kivy.properties import StringProperty, NumericProperty, ObjectProperty, VariableListProperty, BooleanProperty, ListProperty
 from kivy.clock import Clock
+
+from kivy.graphics import Ellipse, Color, Rectangle, Line
 
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition, SlideTransition
 
@@ -542,7 +544,6 @@ class BaselinesPlot(BoxLayout) :
 
 class MenuedBaselinePlot(BoxLayout) :
 
-
     ibp = ci.InteractiveBaselinePlot()
     menu_id = ObjectProperty(None)
 
@@ -694,8 +695,140 @@ class MenuedBaselineMapPlot(BoxLayout) :
     def unfreeze_plot(self) :
         self.mp.plot_frozen = False
 
-        
+    def zoom_in(self) :
+        self.mp.zoom_in()
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot.zoom_in(): replotting")
 
+    def zoom_out(self) :
+        self.mp.zoom_out()
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot.zoom_out(): replotting")
+
+            
+class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
+
+    bmc = ci.BaselineMapCanvas()
+    mp = ci.InteractiveBaselineMapPlot_kivygraph()
+    menu_id = ObjectProperty(None)
+    
+    def __init__(self,**kwargs) :
+        global _datadict, _statdict
+        
+        self.sdict = _statdict
+        self.ddict = _datadict
+
+        super().__init__(**kwargs)
+
+        self.time_range = _time_range
+        self.ngeht_diameter = _ngeht_diameter
+        self.snr_cut = _snr_cut
+
+        self.plot_frozen = False
+
+        self.add_widget(self.mp)
+        self.add_widget(self.bmc)
+
+        self.pixel_offset = (0,0)
+
+        # Generate some default resizing behaviors
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+
+        # Generate first set of baselines
+        self.mp.replot(self.ddict,self.sdict)
+        
+        if __mydebug__ :
+            print("mp.__init__: finished")
+
+    def update(self,datadict,statdict) :
+        self.mp.update(datadict,statdict)
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.update:",self.sdict.keys(),self.size)
+            print("         :",_statdict.keys(),self.size)
+            print("         :",statdict.keys(),self.size)
+
+    def replot(self) :
+        global _datadict, _statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+        self.mp.replot(self.ddict,self.sdict)
+        self.bmc.plot_stations(self.sdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.replot:",self.sdict.keys(),self.size)
+            print("         :",_statdict.keys(),self.size)
+
+    def set_start_time(self,val) :
+        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
+        self.time_range[0] = val
+        
+    def set_obs_time(self,val) :
+        self.time_range[1] = self.time_range[0] + val
+
+    def set_ngeht_diameter(self,val) :
+        global _ngeht_diameter
+        self.ngeht_diameter = val
+        _ngeht_diameter = self.ngeht_diameter
+
+    def set_snr_cut(self,val) :
+        global _snr_cut
+        self.snr_cut = val
+        if (val is None) :
+            self.snr_cut = 0
+        _snr_cut = self.snr_cut
+
+    def freeze_plot(self) :
+        self.plot_froze = True
+        self.mp.plot_frozen = True
+
+    def unfreeze_plot(self) :
+        self.plot_froze = False
+        self.mp.plot_frozen = False
+
+    def on_touch_move(self,touch) :
+        if (not self.plot_frozen) :
+            self.pixel_offset = ( self.pixel_offset[0] + touch.dpos[0], self.pixel_offset[1] + touch.dpos[1] )
+        self.mp.on_touch_move(touch)
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.on_touch_move(): replotting")
+
+    def on_touch_down(self,touch) :
+        self.mp.on_touch_down(touch)
+        if (touch.is_double_tap) :
+            self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.on_touch_down(): replotting",self.size,self.mp.rect.size)
+            
+    def zoom_in(self) :
+        self.mp.zoom_in()
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.zoom_in(): replotting")
+
+    def zoom_out(self) :
+        self.mp.zoom_out()
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.zoom_out(): replotting")
+
+    def resize(self,widget,newsize) :
+        self.mp.resize(widget,newsize)
+        # print("MBLMP_kg.resize(): after mp.resize --",self.mp.rect.size,self.mp.rect.pos)
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        # Hack to fix the plot resize on initialization
+        if (self.mp.rect.size[0]==0 or self.mp.rect.size[1]==0) :
+            Clock.schedule_once(lambda x : self.replot(), 0.1)
+        
+        if __mydebug__ :
+            print("MenuedBaselineMapPlot_kivygraph.resize(): replotting with",newsize,self.size,self.mp.rect.size)
+            # Clock.schedule_once(self.delayed_report,0.1)
+
+    # def delayed_report(self,dt) :
+    #     print("MenuedBaselineMapPlot_kivygraph.delayed_report(): replotting with",self.size,self.mp.rect.size)
+
+        
 class DynamicBoxLayout(BoxLayout):
 
     is_open = BooleanProperty(False)
