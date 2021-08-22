@@ -400,7 +400,14 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
                         diameter_correction_factor[s] = statdict[s]['diameter']/ngeht_diameter
                 keep = np.array([ np.abs(self.ddict['V'][j])/(self.ddict['err'][j].real * diameter_correction_factor[self.ddict['s1'][j]] * diameter_correction_factor[self.ddict['s2'][j]]) > snr_cut for j in range(len(self.ddict['s1'])) ])
                 self.on = self.on*keep
-                 
+
+
+
+        umax = max(np.max(self.ddict['u']),np.max(self.ddict['v']))
+        umax = ((2*umax)//5)*5
+        self.plot_location = [0.5*umax,-0.5*umax,-umax,umax]
+
+                
         self.redraw()
 
     def replot(self,datadict,statdict,**kwargs) :
@@ -517,18 +524,18 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
                 self.add_widget(lbl)
         
         #  Third plot axis labels
-        ypx = int(self.y_to_screen(0.0) - 0.5*self.height + 0.5) + 0.75*sp(30)
+        ypx = int(self.y_to_screen(0.0) - 0.5*self.height + 0.5) + 0.75*sp(20)
         if (ypx>-0.5*self.height and ypx<0.5*self.height) :
             xpx = int( 0.375*self.width + 0.5)
             points = [xpx,0,xpx,self.height]
-            xlbl = Label(text='[i]u[/i]'+unit_lbl,pos=(xpx,ypx),font_size=sp(30),halign='right', markup=True)
+            xlbl = Label(text='[i]u[/i]'+unit_lbl,pos=(xpx,ypx),font_size=sp(20),halign='right', markup=True)
             self.labels.append(xlbl)
             self.add_widget(xlbl)
-        xpx = int(self.x_to_screen(0.0) - 0.5*self.width + 0.5) + 1.5*sp(30)
+        xpx = int(self.x_to_screen(0.0) - 0.5*self.width + 0.5) + 1.5*sp(20)
         if (xpx>-0.5*self.width and xpx<0.5*self.width) :
             ypx = int( 0.375*self.height + 0.5)
             points = [xpx,0,xpx,self.height]
-            ylbl = Label(text='[i]v[/i]'+unit_lbl,pos=(xpx,ypx),font_size=sp(30),halign='right', markup=True)
+            ylbl = Label(text='[i]v[/i]'+unit_lbl,pos=(xpx,ypx),font_size=sp(20),halign='right', markup=True)
             self.labels.append(ylbl)
             self.add_widget(ylbl)
 
@@ -565,7 +572,7 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
     
     def resize(self,widget,newsize) :
         self.rescale = 1.0
-        self.offset = [0,0]
+        self.offset = [0,0.5*(self.height-self.width)]
         self.redraw()
 
     def on_touch_down(self,touch) :
