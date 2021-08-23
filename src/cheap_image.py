@@ -11,17 +11,22 @@ from kivy.graphics import Ellipse, Color, Rectangle, Line, Point
 from kivy.metrics import dp, sp
 from kivy.uix.label import Label
 
+from kivy.clock import Clock
+
 from kivy.core.window import Window
 
 from mpl_texture import InteractiveWorldMapOverlayWidget, InteractivePlotWidget, InteractiveWorldMapWidget
 # from mpl_texture import InteractivePlotWidget, InteractiveWorldMapWidget
+
+import hashlib
+
 
 #from PIL import Image
 
 # Data dictionary: datadict has form {'u':u, 'v':v, 'V':V}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
-__mydebug__ = False
+__mydebug__ = True
 
 
 #########
@@ -593,7 +598,7 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
 class CheapImageReconstruction :
 
     def __init__(self) :
-        pass
+        self.argument_hash = None
 
     x=None
     y=None
@@ -701,10 +706,22 @@ class CheapImageReconstruction :
     # High-level plot generation
     def plot_image_reconstruction(self,axs,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,limits=None,show_map=True,show_contours=True) :
 
+        # new_argument_hash = hashlib.md5(bytes(str(datadict)+str(statdict)+str(time_range)+str(snr_cut)+str(ngeht_diameter)+str(limits)+str(show_map)+str(show_contours)),'utf-8')
+
+        # if ( new_argument_hash == self.argument_hash ) :
+        #     return
+
+        # print("FOO:",new_argument_hash)
+        # print("BAR:",self.argument_hash)
+        
+        # self.argument_hash = new_argument_hash
+        
         # Reconstruct image
         self.x,self.y,self.I=self.reconstruct_image(datadict,statdict,time_range=time_range,snr_cut=snr_cut,ngeht_diameter=ngeht_diameter)
 
         self.replot_image_reconstruction(axs,time_range=time_range,limits=limits,show_map=show_map,show_contours=show_contours)
+
+        
         
 
     ############
@@ -768,6 +785,8 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
 
         self.ddict = {}
         self.sdict = {}
+
+        self.argument_hash = None
         
         super().__init__(**kwargs)
 
@@ -869,29 +888,34 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         # Return
         return xarr,yarr,Iarr
 
+    # def report_clock(self,dt) :
+    #     print("Reporting after",dt)
     
-        
     def generate_mpl_plot(self,fig,ax,**kwargs) :
+
+        if (__mydebug__) :
+            print("InteractiveImageReconstructionPlot.generate_mpl_plot: start")
+        
+        # print("---- Starting -----")
+        # self.report_clock(0.0)
+        # for dt in np.linspace(0,5,32) :
+        #     Clock.schedule_once(self.report_clock,dt)
+        # print("---- Continuing -----")
+        
         # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
         # You probably want, but do not require, the following in your over-lay
         self.plot_image_reconstruction(ax,self.ddict,self.sdict,**kwargs)
         ax.set_facecolor((0,0,0,1))
         fig.set_facecolor((0,0,0,1))
 
-
     def update(self,datadict,statdict,**kwargs) :
-
         self.sdict = statdict
         self.ddict = datadict
-
         self.update_mpl(**kwargs)
 
-
     def replot(self,datadict,statdict,**kwargs) :
-
         self.sdict = statdict
         self.ddict = datadict
-
         self.update_mpl(**kwargs)
 
     def check_boundaries(self,tex_coords) :
@@ -907,10 +931,9 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
     ############
     # High-level plot generation
     def plot_image_reconstruction(self,axs,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,limits=None,show_map=True,show_contours=True) :
-
+        
         if (len(statdict.keys())==0) :
             return
-
         
         # Reconstruct image
         self.xarr,self.yarr,self.Iarr=self.reconstruct_image(datadict,statdict,time_range=time_range,snr_cut=snr_cut,ngeht_diameter=ngeht_diameter)

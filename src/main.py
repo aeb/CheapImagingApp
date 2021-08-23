@@ -1,6 +1,6 @@
 __version__ = "0.7"
 
-__mydebug__ = False
+__mydebug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -45,6 +45,9 @@ from kivy.core.window import Window
 from fancy_mdslider import FancyMDSlider
 
 from os import path
+
+import hashlib
+
 
 ####################
 # TESTING
@@ -289,15 +292,26 @@ class MenuedReconstructionPlot(BoxLayout) :
         self.limits[:2] = self.limits[:2] + self.plot_center[0]
         self.limits[2:] = self.limits[2:] + self.plot_center[1]
 
+        self.argument_hash = None
+        
         self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
 
         self.add_widget(self.irp)
+
         
         if __mydebug__ :
             print("mrp.__init__: finished")
         
 
     def update(self,datadict,statdict,**kwargs) :
+
+        new_argument_hash = hashlib.md5(bytes(str(datadict)+str(statdict)+str(kwargs),'utf-8')).hexdigest()
+        print("FOO:",new_argument_hash)
+        print("BAR:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
+        
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
@@ -308,9 +322,18 @@ class MenuedReconstructionPlot(BoxLayout) :
             print("mrp.update:",self.sdict.keys(),self.size)
 
     def replot(self,**kwargs) :
+
         global _datadict, _statdict
         self.ddict = _datadict
         self.sdict = _statdict
+
+        new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
+        print("FOO:",new_argument_hash)
+        print("BAR:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
+        
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
@@ -321,6 +344,14 @@ class MenuedReconstructionPlot(BoxLayout) :
             print("mrp.replot:",self.sdict.keys(),self.size)
 
     def refresh(self,**kwargs) :
+
+        new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
+        print("FOO:",new_argument_hash)
+        print("BAR:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
+
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
@@ -970,6 +1001,9 @@ class VariableToggleList(StackLayout) :
             self.add_widget(b)
             self.bs.append(b)
 
+        if (__mydebug__) :
+            print("VariableToggleList.refresh: updating plot")
+            
         self.rpp.update(_datadict,self.sdict)
         
     def on_toggle(self,val) :
@@ -1054,7 +1088,7 @@ class StationMenu(DynamicBoxLayout) :
         if __mydebug__ :
             print("                        :",self.rpp,array_index)
         
-        
+
     def refresh(self) :
 
         if __mydebug__ :
