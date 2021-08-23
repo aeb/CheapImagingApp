@@ -1,46 +1,29 @@
-__version__ = "0.7"
+__version__ = "0.7.1"
 
-__mydebug__ = True
+__main_debug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
 from kivy.lang import Builder
 
-from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.anchorlayout import AnchorLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner, SpinnerOption
-from kivy.properties import StringProperty, NumericProperty, ObjectProperty, VariableListProperty, BooleanProperty, ListProperty
+from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty
 from kivy.clock import Clock
-
-from kivy.graphics import Ellipse, Color, Rectangle, Line
-
-from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition, SlideTransition
-
+from kivy.uix.screenmanager import FadeTransition, SlideTransition
 from kivy.metrics import dp
 from kivy.uix.image import Image
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.uix.behaviors.touchripple import TouchRippleBehavior
-
 
 from kivymd.uix.menu import MDDropdownMenu
-from kivymd.uix.snackbar import Snackbar
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.toolbar import MDBottomAppBar
 from kivymd.uix.behaviors import CircularRippleBehavior
 
 import numpy as np
-import matplotlib.pyplot as plt
-#from kivy.garden.matplotlib import FigureCanvasKivyAgg
-from backend_kivyagg import FigureCanvasKivyAgg
-
-from kivy.core.window import Window
 
 from fancy_mdslider import FancyMDSlider
 
@@ -51,6 +34,7 @@ import hashlib
 
 ####################
 # TESTING
+# from kivy.core.window import Window
 # Window.size = (300,500)
 ##################
 
@@ -74,9 +58,6 @@ _existing_arrays = ['EHT 2017','EHT 2022']
 _existing_station_list = ['PV','AZ','SM','LM','AA','SP','JC','GL','PB','KP','HA']
 
 _stationdicts={}
-# _stationdicts['ngEHT ref1']=ci.read_array('./arrays/ngeht_ref1_230_ehtim.txt',existing_station_list=_existing_station_list)
-# _stationdicts['EHT 2017']=ci.read_array('./arrays/eht2017_230_ehtim.txt',existing_station_list=_existing_station_list)
-# _stationdicts['EHT 2022']=ci.read_array('./arrays/eht2022_230_ehtim.txt',existing_station_list=_existing_station_list)
 
 _stationdicts={}
 _stationdicts['ngEHT ref1']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
@@ -89,183 +70,6 @@ _array_index = 0
 
 _statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
 _datadict=ci.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
-
-
-class ReconstructionPlot(BoxLayout) :
-
-    plot_maxsize = 500.0
-    plot_center = np.array([0.0,0.0])
-
-    img = ci.CheapImageReconstruction()
-    menu_id = ObjectProperty(None)
-
-    def __init__(self,**kwargs) :
-        super().__init__(**kwargs)
-
-        self.fig=plt.figure(figsize=(6,6))
-        self.axs=plt.axes([0,0,1,1])
-
-        self.time_range = _time_range
-        self.ngeht_diameter = _ngeht_diameter
-        self.snr_cut = _snr_cut
-        
-        limits = np.array([1,-1,-1,1])*self.plot_maxsize
-        limits[:2] = limits[:2] + self.plot_center[0]
-        limits[2:] = limits[2:] + self.plot_center[1]
-        
-        self.img.plot_image_reconstruction(self.axs,_datadict,_statdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=limits)
-        #self.add_widget(FigureCanvasKivyAgg(self.fig))
-
-        self.ddict = _datadict
-        self.sdict = _statdict
-
-        self.bind(height=self.resize)
-        self.bind(width=self.resize)
-
-        self.plot_frozen = False
-
-        if __mydebug__ :
-            print("rp.__init__: finished")
-        
-
-    def update(self,datadict,statdict) :
-        global _datadict, _statdict
-        _datadict = datadict
-        _statdict = statdict
-        self.ddict = _datadict
-        self.sdict = _statdict
-
-        if __mydebug__ :
-            print("rp.update:",self.sdict.keys(),self.fig,self.size)
-            print("         :",_statdict.keys(),self.fig,self.size)
-        
-        self.replot()
-        
-        
-    def replot(self) :
-        global _datadict, _statdict
-        self.ddict = _datadict
-        self.sdict = _statdict
-        
-        if __mydebug__ :
-            print("rp.replot:",self.sdict.keys(),self.fig,self.size)
-            print("         :",_statdict.keys(),self.fig,self.size)
-
-        if (self.width==0 or self.height==0) :
-            self.clear()
-            return
-
-        if (self.fig is None) :
-            self.fig=plt.figure()
-            self.axs=plt.axes([0,0,1,1])
-
-        limits = np.array([1,-1,-1,1])*self.plot_maxsize
-        if (self.width==0 or self.height==0) :
-            pass
-        elif (self.width>self.height) :
-            limits[:2] = limits[:2] + self.plot_center[0]
-            limits[2:] = float(self.height)/float(self.width)*limits[2:] + self.plot_center[1]
-        else :
-            limits[:2] = float(self.width)/float(self.height)*limits[:2] + self.plot_center[0]
-            limits[2:] = limits[2:] + self.plot_center[1]
-
-        self.axs.cla()
-        self.clear_widgets()
-        self.img.plot_image_reconstruction(self.axs,self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=limits)
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-
-    def refresh(self) :
-        if __mydebug__ :
-            print("rp.refresh:",self.sdict.keys(),self.fig,self.size)
-            print("          :",_statdict.keys(),self.fig,self.size)
-        
-        if (self.width==0 or self.height==0) :
-            self.clear()
-            return
-
-        if (self.fig is None) :
-            self.fig=plt.figure()
-            self.axs=plt.axes([0,0,1,1])
-            
-        limits = np.array([1,-1,-1,1])*self.plot_maxsize
-        if (self.width==0 or self.height==0) :
-            pass
-        elif (self.width>self.height) :
-            limits[:2] = limits[:2] + self.plot_center[0]
-            limits[2:] = float(self.height)/float(self.width)*limits[2:] + self.plot_center[1]
-        else :
-            limits[:2] = float(self.width)/float(self.height)*limits[:2] + self.plot_center[0]
-            limits[2:] = limits[2:] + self.plot_center[1]
-
-        self.axs.cla()
-        self.clear_widgets()
-        self.img.replot_image_reconstruction(self.axs,time_range=self.time_range,limits=limits)
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-
-        
-    def resize(self,widget,newsize) :
-        if __mydebug__ :
-            print("rp.resize:",newsize)
-        # self.refresh()
-        self.replot()
-            
-    def on_touch_move(self,touch) :
-        if (not self.plot_frozen) :
-            screen_to_plot = 2.0*float(self.plot_maxsize)/float(max(self.height,self.width))
-            self.plot_center[0] = self.plot_center[0] + touch.dpos[0]*screen_to_plot
-            self.plot_center[1] = self.plot_center[1] - touch.dpos[1]*screen_to_plot
-            self.refresh()
-
-    def on_touch_down(self,touch) :
-        if (touch.is_double_tap) :
-            self.plot_maxsize = 500.0
-            self.plot_center = np.array([0,0])
-            self.refresh()
-
-    # def on_touch_up(self,touch) :
-    #     self.plot_frozen = False
-
-    def zoom_out(self) :
-        self.plot_maxsize = self.plot_maxsize * 1.414
-        self.refresh()
-
-    def zoom_in(self) :
-        self.plot_maxsize = self.plot_maxsize * 0.707
-        self.refresh()
-
-    def clear(self) :
-        if (not self.fig is None) :
-            plt.close(self.fig)
-            self.fig=None
-        self.clear_widgets()
-
-    def set_start_time(self,val) :
-        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
-        self.time_range[0] = val
-        self.replot()
-        
-    def set_obs_time(self,val) :
-        self.time_range[1] = self.time_range[0] + val
-        self.replot()
-
-    def set_ngeht_diameter(self,val) :
-        self.ngeht_diameter = val
-        _ngeht_diameter = self.ngeht_diameter
-        self.replot()
-
-    def set_snr_cut(self,val) :
-        self.snr_cut = val
-        if (val is None) :
-            self.snr_cut = 0
-        _snr_cut = self.snr_cut
-        self.replot()
-
-    def freeze_plot(self) :
-        self.plot_frozen = True
-
-    def unfreeze_plot(self) :
-        self.plot_frozen = False
-
 
         
 class MenuedReconstructionPlot(BoxLayout) :
@@ -299,7 +103,7 @@ class MenuedReconstructionPlot(BoxLayout) :
         self.add_widget(self.irp)
 
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mrp.__init__: finished")
         
 
@@ -318,7 +122,7 @@ class MenuedReconstructionPlot(BoxLayout) :
         kwargs['ngeht_diameter']=self.ngeht_diameter
         self.irp.update(datadict,statdict,**kwargs)
                     
-        if __mydebug__ :
+        if __main_debug__ :
             print("mrp.update:",self.sdict.keys(),self.size)
 
     def replot(self,**kwargs) :
@@ -340,7 +144,7 @@ class MenuedReconstructionPlot(BoxLayout) :
         kwargs['ngeht_diameter']=self.ngeht_diameter
         self.irp.replot(self.ddict,self.sdict,**kwargs)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mrp.replot:",self.sdict.keys(),self.size)
 
     def refresh(self,**kwargs) :
@@ -358,11 +162,11 @@ class MenuedReconstructionPlot(BoxLayout) :
         kwargs['ngeht_diameter']=self.ngeht_diameter
         self.irp.replot(self.ddict,self.sdict,**kwargs)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mrp.refresh:",self.sdict.keys(),self.size)
             
     def set_start_time(self,val) :
-        if __mydebug__ :
+        if __main_debug__ :
             print("mrp.set_start_time:",val)
         self.time_range[1] = self.time_range[1]-self.time_range[0]+val
         self.time_range[0] = val
@@ -391,191 +195,8 @@ class MenuedReconstructionPlot(BoxLayout) :
         self.irp.plot_frozen = False
 
 
-
-        
-class BaselinesPlot(BoxLayout) :
-
-    plot_maxsize = 10.0
-    plot_center = np.array([0.0,0.0])
-
-    blp = ci.BaselinePlots()
-    menu_id = ObjectProperty(None)
-
-    def __init__(self,**kwargs) :
-        super().__init__(**kwargs)
-
-        self.fig=plt.figure(figsize=(6,6))
-        self.axs=plt.axes([0,0,1,1])
-
-        self.time_range = _time_range
-        self.ngeht_diameter = _ngeht_diameter
-        self.snr_cut = _snr_cut
-        
-        limits = np.array([1,-1,-1,1])*self.plot_maxsize
-        limits[:2] = limits[:2] + self.plot_center[0]
-        limits[2:] = limits[2:] + self.plot_center[1]
-        
-        self.blp.plot_baselines(self.axs,_datadict,_statdict,time_range=self.time_range,limits=limits,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter)
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-
-        self.ddict = _datadict
-        self.sdict = _statdict
-
-        self.bind(height=self.resize)
-        self.bind(width=self.resize)
-
-        self.plot_frozen = False
-
-        if __mydebug__ :
-            print("bp.__init__: finished")
-
-        
-    def update(self,datadict,statdict) :
-        global _datadict, _statdict
-        _datadict = datadict
-        _statdict = statdict
-        self.ddict = _datadict
-        self.sdict = _statdict
-        
-        if __mydebug__ :
-            print("bp.update:",self.sdict.keys(),self.fig,self.size)
-            print("         :",_statdict.keys(),self.fig,self.size)
-        
-        self.replot()
-        
-    def replot(self) :
-        global _datadict, _statdict
-        self.ddict = _datadict
-        self.sdict = _statdict
-        
-        # Why is this not updating the self.sdict properly until we swap twice?
-        if __mydebug__ :
-            print("bp.replot:",self.sdict.keys(),self.fig,self.size)
-            print("         :",_statdict.keys(),self.fig,self.size)
-        
-        if (self.width==0 or self.height==0) :
-            self.clear()
-            return
-
-        if (self.fig is None) :
-            self.fig=plt.figure()
-            self.axs=plt.axes([0,0,1,1])
-
-        limits = np.array([1,-1,-1,1])*self.plot_maxsize
-        if (self.width==0 or self.height==0) :
-            pass
-        elif (self.width>self.height) :
-            limits[:2] = limits[:2] + self.plot_center[0]
-            limits[2:] = float(self.height)/float(self.width)*limits[2:] + self.plot_center[1]
-        else :
-            limits[:2] = float(self.width)/float(self.height)*limits[:2] + self.plot_center[0]
-            limits[2:] = limits[2:] + self.plot_center[1]
-
-            
-        self.axs.cla()
-        self.clear_widgets()
-        self.blp.plot_baselines(self.axs,self.ddict,self.sdict,time_range=self.time_range,limits=limits,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter)
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-        
-    def refresh(self):
-        if __mydebug__ :
-            print("bp.refresh:",self.sdict.keys(),self.fig,self.size)
-            print("          :",_statdict.keys(),self.fig,self.size)
-
-        if (self.width==0 or self.height==0) :
-            self.clear()
-            return
-
-        if (self.fig is None) :
-            self.fig=plt.figure()
-            self.axs=plt.axes([0,0,1,1])
-
-        limits = np.array([1,-1,-1,1])*self.plot_maxsize
-        if (self.width==0 or self.height==0) :
-            pass
-        elif (self.width>self.height) :
-            limits[:2] = limits[:2] + self.plot_center[0]
-            limits[2:] = float(self.height)/float(self.width)*limits[2:] + self.plot_center[1]
-        else :
-            limits[:2] = float(self.width)/float(self.height)*limits[:2] + self.plot_center[0]
-            limits[2:] = limits[2:] + self.plot_center[1]
-
-            
-        self.axs.cla()
-        self.clear_widgets()
-        self.blp.replot(self.axs,limits=limits)
-        # self.blp.plot_baselines(self.axs,self.ddict,self.sdict,time_range=self.time_range,limits=limits)
-        self.add_widget(FigureCanvasKivyAgg(self.fig))
-        
-    def resize(self,widget,newsize) :
-        if __mydebug__ :
-            print("bp.resize:",newsize)
-        # self.refresh()
-        self.replot()
-            
-    def on_touch_move(self,touch) :
-        if (not self.plot_frozen) :
-            screen_to_plot = 2.0*float(self.plot_maxsize)/float(max(self.height,self.width))
-            self.plot_center[0] = self.plot_center[0] + touch.dpos[0]*screen_to_plot
-            self.plot_center[1] = self.plot_center[1] - touch.dpos[1]*screen_to_plot
-            self.refresh()
-
-    def on_touch_down(self,touch) :
-        if (touch.is_double_tap) :
-            self.plot_maxsize = 10.0
-            self.plot_center = np.array([0,0])
-            self.refresh()
-
-    # def on_touch_up(self,touch) :
-    #     self.plot_frozen = False
-            
-    def zoom_out(self) :
-        self.plot_maxsize = self.plot_maxsize * 1.414
-        self.refresh()
-
-    def zoom_in(self) :
-        self.plot_maxsize = self.plot_maxsize * 0.707
-        self.refresh()
-
-    def clear(self) :
-        if (not self.fig is None) :
-            plt.close(self.fig)
-            self.fig=None
-        self.clear_widgets()
-
-    def set_start_time(self,val) :
-        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
-        self.time_range[0] = val
-        self.replot()
-        
-    def set_obs_time(self,val) :
-        self.time_range[1] = self.time_range[0] + val
-        self.replot()
-
-    def set_ngeht_diameter(self,val) :
-        global _ngeht_diameter
-        self.ngeht_diameter = val
-        _ngeht_diameter = self.ngeht_diameter
-        self.replot()
-
-    def set_snr_cut(self,val) :
-        global _snr_cut
-        self.snr_cut = val
-        if (val is None) :
-            self.snr_cut = 0
-        _snr_cut = self.snr_cut
-        self.replot()
-
-    def freeze_plot(self) :
-        self.plot_frozen = True
-
-    def unfreeze_plot(self) :
-        self.plot_frozen = False
-
-
 class MenuedBaselinePlot(BoxLayout) :
 
-    # ibp = ci.InteractiveBaselinePlot()
     ibp = ci.InteractiveBaselinePlot_kivygraph()
     menu_id = ObjectProperty(None)
 
@@ -597,7 +218,7 @@ class MenuedBaselinePlot(BoxLayout) :
 
         self.add_widget(self.ibp)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mp.__init__: finished")
         
 
@@ -616,7 +237,7 @@ class MenuedBaselinePlot(BoxLayout) :
         
         self.ibp.update(datadict,statdict,**kwargs)
                     
-        if __mydebug__ :
+        if __main_debug__ :
             print("bp.update:",self.sdict.keys(),self.size)
 
     def replot(self,**kwargs) :
@@ -631,7 +252,7 @@ class MenuedBaselinePlot(BoxLayout) :
 
         self.ibp.replot(self.ddict,self.sdict,**kwargs)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mp.replot:",self.sdict.keys(),self.size)
 
     def refresh(self,**kwargs) :
@@ -641,7 +262,7 @@ class MenuedBaselinePlot(BoxLayout) :
         kwargs['ngeht_diameter']=self.ngeht_diameter
         self.ibp.replot(self.ddict,self.sdict,**kwargs)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mp.refresh:",self.sdict.keys(),self.size)
             
     def set_start_time(self,val) :
@@ -652,7 +273,7 @@ class MenuedBaselinePlot(BoxLayout) :
     def set_obs_time(self,val) :
         self.time_range[1] = self.time_range[0] + val
         self.refresh()
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselinePlot.set_obs_time: set the time")
         
     def set_ngeht_diameter(self,val) :
@@ -681,83 +302,6 @@ class MenuedBaselinePlot(BoxLayout) :
         self.ibp.zoom_out()
 
     
-        
-class MenuedBaselineMapPlot(BoxLayout) :
-
-    mp = ci.InteractiveBaselineMapPlot()
-    menu_id = ObjectProperty(None)
-
-    def __init__(self,**kwargs) :
-        super().__init__(**kwargs)
-
-        self.time_range = _time_range
-        self.ngeht_diameter = _ngeht_diameter
-        self.snr_cut = _snr_cut
-
-        self.sdict = _statdict
-        self.ddict = _datadict
-
-        self.plot_frozen = False
-
-        self.add_widget(self.mp)
-        
-        if __mydebug__ :
-            print("mp.__init__: finished")
-        
-
-    def update(self,datadict,statdict) :
-        self.mp.update(datadict,statdict)
-        
-        if __mydebug__ :
-            print("mp.update:",self.sdict.keys(),self.size)
-            print("         :",_statdict.keys(),self.size)
-            print("         :",statdict.keys(),self.size)
-
-    def replot(self) :
-        global _datadict, _statdict
-        self.ddict = _datadict
-        self.sdict = _statdict
-        self.mp.replot(self.ddict,self.sdict)
-        
-        if __mydebug__ :
-            print("mp.replot:",self.sdict.keys(),self.size)
-            print("         :",_statdict.keys(),self.size)
-
-    def set_start_time(self,val) :
-        self.time_range[1] = self.time_range[1]-self.time_range[0]+val
-        self.time_range[0] = val
-        
-    def set_obs_time(self,val) :
-        self.time_range[1] = self.time_range[0] + val
-
-    def set_ngeht_diameter(self,val) :
-        global _ngeht_diameter
-        self.ngeht_diameter = val
-        _ngeht_diameter = self.ngeht_diameter
-
-    def set_snr_cut(self,val) :
-        global _snr_cut
-        self.snr_cut = val
-        if (val is None) :
-            self.snr_cut = 0
-        _snr_cut = self.snr_cut
-
-    def freeze_plot(self) :
-        self.mp.plot_frozen = True
-
-    def unfreeze_plot(self) :
-        self.mp.plot_frozen = False
-
-    def zoom_in(self) :
-        self.mp.zoom_in()
-        if __mydebug__ :
-            print("MenuedBaselineMapPlot.zoom_in(): replotting")
-
-    def zoom_out(self) :
-        self.mp.zoom_out()
-        if __mydebug__ :
-            print("MenuedBaselineMapPlot.zoom_out(): replotting")
-
             
 class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
 
@@ -791,13 +335,13 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         # Generate first set of baselines
         self.mp.replot(self.ddict,self.sdict)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("mp.__init__: finished")
 
     def update(self,datadict,statdict) :
         self.mp.update(datadict,statdict)
         self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.update:",self.sdict.keys(),self.size)
             print("         :",_statdict.keys(),self.size)
             print("         :",statdict.keys(),self.size)
@@ -808,7 +352,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         self.sdict = _statdict
         self.mp.replot(self.ddict,self.sdict)
         self.bmc.plot_stations(self.sdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.replot:",self.sdict.keys(),self.size)
             print("         :",_statdict.keys(),self.size)
 
@@ -844,26 +388,26 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
             self.pixel_offset = ( self.pixel_offset[0] + touch.dpos[0], self.pixel_offset[1] + touch.dpos[1] )
         self.mp.on_touch_move(touch)
         self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.on_touch_move(): replotting")
 
     def on_touch_down(self,touch) :
         self.mp.on_touch_down(touch)
         if (touch.is_double_tap) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.on_touch_down(): replotting",self.size,self.mp.rect.size)
             
     def zoom_in(self) :
         self.mp.zoom_in()
         self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.zoom_in(): replotting")
 
     def zoom_out(self) :
         self.mp.zoom_out()
         self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.zoom_out(): replotting")
 
     def resize(self,widget,newsize) :
@@ -875,7 +419,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         #     Clock.schedule_once(lambda x : self.replot(), 0.1)
         Clock.schedule_once(lambda x : self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect), 0.1)
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.resize(): replotting with",newsize,self.size,self.mp.rect.size)
             # Clock.schedule_once(self.delayed_report,0.1)
 
@@ -1001,14 +545,14 @@ class VariableToggleList(StackLayout) :
             self.add_widget(b)
             self.bs.append(b)
 
-        if (__mydebug__) :
+        if (__main_debug__) :
             print("VariableToggleList.refresh: updating plot")
             
         self.rpp.update(_datadict,self.sdict)
         
     def on_toggle(self,val) :
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("VariableToggleList.on_toggle:",self.rpp,self.sdict)
 
         for b in self.bs :
@@ -1021,7 +565,7 @@ class VariableToggleList(StackLayout) :
                 
         self.rpp.update(_datadict,self.sdict)        
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("                            :",self.rpp,self.sdict)
 
         
@@ -1075,7 +619,7 @@ class StationMenu(DynamicBoxLayout) :
 
     def select_array(self,array_index) :
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("StationMenu.select_array:",self.rpp,array_index)
         
         global _array_index,_statdict
@@ -1085,13 +629,13 @@ class StationMenu(DynamicBoxLayout) :
         self.submenu_id.remake(_stationdicts[self.array_name])
         self.reset_state()
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("                        :",self.rpp,array_index)
         
 
     def refresh(self) :
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("StationMenu.refresh",self.rpp)
         
         self.array_name = list(_stationdicts.keys())[_array_index]
@@ -1131,7 +675,7 @@ class SMESpinner(Spinner):
             
     def on_selection(self,text) :
         
-        if __mydebug__ :
+        if __main_debug__ :
             print("SMESpinner.on_selection:",self.text,text)
             
         self.sme_id.select_array(self.array_index_dict[text])
@@ -1153,7 +697,7 @@ class ObsTimeMenu(DynamicBoxLayout) :
 
     def refresh(self) :
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("ObsTimeMenu.refresh",self.plot)
         
         self.ots_id.refresh()
@@ -1269,7 +813,6 @@ class ObsTimeMDSlider(FancyMDSlider):
         return (dp(50),dp(28))
 
 
-
 class DiameterMenu(DynamicBoxLayout) :
     plot = ObjectProperty(None)
     ddm_id = ObjectProperty(None)
@@ -1278,7 +821,7 @@ class DiameterMenu(DynamicBoxLayout) :
 
     def refresh(self) :
 
-        if __mydebug__ :
+        if __main_debug__ :
             print("DiameterMenu.refresh",self.plot)
         
         self.ddm_id.refresh()
@@ -1430,7 +973,7 @@ class SimpleDataSetSelection(Spinner) :
         _datadict = ci.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
 
     def select_dataset(self) :
-        if __mydebug__ :
+        if __main_debug__ :
             print("Reading data set from",self.datasets[self.text]['file'])
         global _datadict
         _datadict = ci.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
@@ -1553,16 +1096,9 @@ class TopBanner(MDBoxLayout) :
         sm.current = "about"
         sm.transition = SlideTransition()
 
-        
-class BottomBanner(MDBottomAppBar) :
-    menu_id = ObjectProperty(None)
-    def __init__(self,**kwargs) :
-        super().__init__(**kwargs)
-
 
 class ngEHTApp(MDApp):
     # pass
-    # Window.size = (300,500)
 
     def twitter_follow(self) :
         import webbrowser
