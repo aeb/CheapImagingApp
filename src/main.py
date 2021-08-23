@@ -571,6 +571,7 @@ class MenuedBaselinePlot(BoxLayout) :
         
 
     def update(self,datadict,statdict,**kwargs) :
+
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
@@ -592,6 +593,11 @@ class MenuedBaselinePlot(BoxLayout) :
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
         kwargs['ngeht_diameter']=self.ngeht_diameter
+
+        global _datadict, _statdict
+        self.ddict = _datadict
+        self.sdict = _statdict
+
         self.ibp.replot(self.ddict,self.sdict,**kwargs)
         
         if __mydebug__ :
@@ -610,14 +616,19 @@ class MenuedBaselinePlot(BoxLayout) :
     def set_start_time(self,val) :
         self.time_range[1] = self.time_range[1]-self.time_range[0]+val
         self.time_range[0] = val
+        self.refresh()
         
     def set_obs_time(self,val) :
         self.time_range[1] = self.time_range[0] + val
-
+        self.refresh()
+        if __mydebug__ :
+            print("MenuedBaselinePlot.set_obs_time: set the time")
+        
     def set_ngeht_diameter(self,val) :
         global _ngeht_diameter
         self.ngeht_diameter = val
         _ngeht_diameter = self.ngeht_diameter
+        self.refresh()
 
     def set_snr_cut(self,val) :
         global _snr_cut
@@ -632,7 +643,11 @@ class MenuedBaselinePlot(BoxLayout) :
     def unfreeze_plot(self) :
         self.ibp.plot_frozen = False
 
-        
+    def zoom_in(self) :
+        self.ibp.zoom_in()
+
+    def zoom_out(self) :
+        self.ibp.zoom_out()
 
     
         
@@ -652,7 +667,6 @@ class MenuedBaselineMapPlot(BoxLayout) :
         self.ddict = _datadict
 
         self.plot_frozen = False
-
 
         self.add_widget(self.mp)
         
@@ -1382,7 +1396,8 @@ class SimpleDataSetSelection(Spinner) :
         _datadict = ci.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
 
     def select_dataset(self) :
-        print("Reading data set from",self.datasets[self.text]['file'])
+        if __mydebug__ :
+            print("Reading data set from",self.datasets[self.text]['file'])
         global _datadict
         _datadict = ci.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
 

@@ -21,7 +21,7 @@ from mpl_texture import InteractiveWorldMapOverlayWidget, InteractivePlotWidget,
 # Data dictionary: datadict has form {'u':u, 'v':v, 'V':V}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
-__mydebug__ = True
+__mydebug__ = False
 
 
 #########
@@ -407,15 +407,12 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
         umax = ((2*umax)//5)*5
         self.plot_location = [0.5*umax,-0.5*umax,-umax,umax]
 
-                
         self.redraw()
 
     def replot(self,datadict,statdict,**kwargs) :
-
-
-        self.redraw()
-        #self.update(datadict,statdict,**kwargs)
-        
+        self.update(datadict,statdict,**kwargs)
+        if __mydebug__ :
+            print("InteractiveBaselinePlot_kivygraph.replot")
         
     def x_to_screen(self,x) :
         return ((x-self.plot_location[0])*self.width/self.plot_location[2])*self.rescale + self.offset[0]
@@ -566,9 +563,9 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
 
                     
     def on_touch_move(self,touch) :
-        self.offset = (self.offset[0] + touch.dpos[0],self.offset[1] + touch.dpos[1])
-        self.redraw()
-        print("You're touching me!",self.pos)
+        if (self.plot_frozen==False) :
+            self.offset = (self.offset[0] + touch.dpos[0],self.offset[1] + touch.dpos[1])
+            self.redraw()
     
     def resize(self,widget,newsize) :
         self.rescale = 1.0
@@ -1320,7 +1317,7 @@ class InteractiveBaselineMapPlot_kivygraph(InteractiveWorldMapWidget):
             else :
                 size = (size[0]/size[1] * Window.height, Window.height)
                 
-        if __mydebug__ :
+        if (__mydebug__) :
             print("InteractiveBaselineMapPlot_kivygraph.check_size",self.width,self.height,size,Window.width,Window.height)
         return size
 
