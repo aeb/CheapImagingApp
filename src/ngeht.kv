@@ -308,8 +308,6 @@ ScreenManager:
 <TopBanner>:
     orientation: "vertical"
     size_hint: 1, None
-    # height: "40dp"
-    # height: "64dp"
 
     MDToolbar:
         title: "ngEHT @home"
@@ -329,36 +327,6 @@ ScreenManager:
                 width: self.height
     
 
-        
-        
-
-# <BottomBanner>:
-#     size_hint: 1, None
-#     height: 0
-#     md_bg_color: 0.14,0.14,0.14,1
-#     specific_text_color: 0.77,0.55,0.17,1
-
-#     MDToolbar:
-#         elevation: 30
-#         icon: "../images/ngeht_medallion_gold_on_grey2.png"
-#         type: "bottom"
-#         on_action_button:
-#             root.menu_id.toggle_state()
-            
-#         mode: "end"
-#         icon_color: 0.77,0.55,0.17,1
-
-# <BottomBannerBoring@MDBoxLayout>:
-#     size_hint: 1, None
-#     height: "64dp"
-#     md_bg_color: 0.14,0.14,0.14,1
-
-#     MDToolbar:
-#         type: "bottom"
-#         remove_notch: True
-            
-
-    
 <InteractiveReconstructionPlot>:
     orientation: "vertical"
     ddm_id: ddm
@@ -375,9 +343,6 @@ ScreenManager:
         MenuedReconstructionPlot:
             id: plot
             size: root.width,root.height
-    # ReconstructionPlot:
-    #     id: plot
-    #     size_hint: 1.0,1.0
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
@@ -391,7 +356,6 @@ ScreenManager:
             color: 1,1,1,0.75
             background_color: 0,0,0,0
             on_press: plot.irp.zoom_in()
-            # on_press: plot.zoom_in()
         Button:
             text: "-"
             font_size: "36sp"
@@ -400,7 +364,6 @@ ScreenManager:
             color: 1,1,1,0.75
             background_color: 0,0,0,0
             on_press: plot.irp.zoom_out()
-            # on_press: plot.zoom_out()
 
     DiameterMenu:
         id: ddm
@@ -446,9 +409,6 @@ ScreenManager:
         MenuedBaselinePlot:
             id: plot
             size: root.width,root.height
-    # BaselinesPlot:
-    #     id: plot
-    #     size_hint: 1.0,1.0            
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
@@ -461,7 +421,6 @@ ScreenManager:
             size: "40dp","40dp"
             color: 1,1,1,0.75
             background_color: 0,0,0,0
-            # on_press: plot.ibp.zoom_in()
             on_press: plot.zoom_in()
         Button:
             text: "-"
@@ -470,7 +429,6 @@ ScreenManager:
             size: "40dp","40dp"
             color: 1,1,1,0.75
             background_color: 0,0,0,0
-            # on_press: plot.ibp.zoom_out()
             on_press: plot.zoom_out()
 
     DiameterMenu:
@@ -515,7 +473,6 @@ ScreenManager:
                 size: root.width,root.height
                 
         size_hint: 1.0,1.0
-        # MenuedBaselineMapPlot:
         MenuedBaselineMapPlot_kivygraph:
             id: plot
             size: root.width,root.height
@@ -532,7 +489,6 @@ ScreenManager:
             size: "40dp","40dp"
             color: 1,1,1,0.75
             background_color: 0,0,0,0
-            # on_press: plot.mp.zoom_in()
             on_press: plot.zoom_in()
         Button:
             text: "-"
@@ -541,7 +497,6 @@ ScreenManager:
             size: "40dp","40dp"
             color: 1,1,1,0.75
             background_color: 0,0,0,0
-            # on_press: plot.mp.zoom_out()
             on_press: plot.zoom_out()
 
 
@@ -754,13 +709,6 @@ ScreenManager:
     TopBanner:
     MDBoxLayout:
         orientation: "vertical"    
-        # RelativeLayout:
-        #     canvas:
-        #         Color:
-        #             rgba: 1,1,1,1
-        #         Rectangle:
-        #             size: self.width,self.height
-
         BoxLayout:
             size_hint: 1,1
             orientation: "vertical"
@@ -795,18 +743,14 @@ ScreenManager:
                 size_hint: 1,None
                 height: "14sp"
             BoxLayout:
-                # padding: 50
-                # spacing: 20
                 Image:
                     source: "./logos/perimeter_stacked_black.png"
                     stretch: True 
                     size_hint: 1,1
-                    # pos_hint: {'top':1}
                 Image:
                     source: "./logos/UniversityOfWaterloo_logo_horiz_rgb.png"
                     stretch: True
                     size_hint: 1,1
-                    # pos_hint: {'top':1}
             Widget:
 
 

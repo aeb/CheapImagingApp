@@ -269,11 +269,11 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
         
     def zoom_in(self) :
         self.rescale = self.rescale * 1.414
-        self.offset = [ self.offset[0]*1.414 + 0.5*(1.0-1.414)*self.width, self.offset[1]*1.414 + 0.5*(1.0-1.414)*self.width ]
+        self.offset = [ self.offset[0]*1.414 + 0.5*(1.0-1.414)*self.width, self.offset[1]*1.414 + 0.5*(1.0-1.414)*self.height ]
         self.redraw()
         
     def zoom_out(self) :
         self.rescale = self.rescale * 0.707
-        self.offset = [ self.offset[0]*0.707 + 0.5*(1.0-0.707)*self.width, self.offset[1]*0.707 + 0.5*(1.0-0.707)*self.width ]
+        self.offset = [ self.offset[0]*0.707 + 0.5*(1.0-0.707)*self.width, self.offset[1]*0.707 + 0.5*(1.0-0.707)*self.height ]
         self.redraw()
 
