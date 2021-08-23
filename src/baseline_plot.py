@@ -1,21 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mi
-import matplotlib.tri as tri
-import copy
-from os import path
 
 from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import Ellipse, Color, Line, Point
+from kivy.graphics import Color, Line, Point
 from kivy.metrics import dp, sp
 from kivy.uix.label import Label
-from kivy.core.window import Window
 
-from mpl_texture import InteractivePlotWidget, InteractiveWorldMapWidget
-
-import hashlib
-
-# Data dictionary: datadict has form {'u':u, 'v':v, 'V':V}
+# Data dictionary: datadict has form {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':err}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 __baseline_plot_debug__ = True

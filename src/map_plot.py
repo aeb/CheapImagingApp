@@ -1,22 +1,148 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mi
-import matplotlib.tri as tri
-import copy
-from os import path
 
 from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import Ellipse, Color, Line, Point
-from kivy.metrics import dp, sp
-from kivy.uix.label import Label
+from kivy.graphics import Ellipse, Color, Line
+from kivy.metrics import dp
 from kivy.core.window import Window
+from kivy.clock import Clock
+from kivy.uix.widget import Widget
+from kivy.graphics import RenderContext, Color, Rectangle
+from kivy.properties import ListProperty, StringProperty
+from kivy.core.image import Image
 
-from mpl_texture import InteractivePlotWidget, InteractiveWorldMapWidget
+from os import path
+import copy
 
-import hashlib
-
+# Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 __map_plot_debug__ = True
+
+
+class InteractiveWorldMapWidget(Widget):
+
+    tex_coords = ListProperty([0, 1, 1, 1, 1, 0, 0, 0])
+    texture_wrap = StringProperty('repeat')
+    
+    def __init__(self, **kwargs):
+        self.canvas = RenderContext()
+
+        self.nx = 1024
+        self.ny = self.nx//2
+
+        if (__map_plot_debug__) :
+            print("On init:",self.nx,self.ny)
+        
+        with self.canvas:
+            # Background texture
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical.jpg'))).texture
+            self.texture.wrap = self.texture_wrap
+            self.rect = Rectangle(size=(self.nx,self.ny),texture=self.texture)
+            self.rect.tex_coords = self.tex_coords
+
+        if (__map_plot_debug__) :
+            print("InteractiveWorldMapWidget._init__ rect.size:",self.rect.size)
+            
+        # Don't restrict zooming at start
+        self.plot_frozen = False
+        
+        # call the constructor of parent
+        # if they are any graphics objects, they will be added on our new
+        # canvas
+        super(InteractiveWorldMapWidget, self).__init__(**kwargs)
+
+        # We'll update our glsl variables in a clock
+        # Clock.schedule_interval(self.update_glsl, 0)        
+        Clock.schedule_interval(self.texture_init, 0)
+
+        # Generate some default resizing behaviors
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+        
+    def update_glsl(self, *largs):
+        # This is needed for the default vertex shader.
+        self.canvas['projection_mat'] = Window.render_context['projection_mat']
+        self.canvas['modelview_mat'] = Window.render_context['modelview_mat']
+
+    def texture_init(self, *args):
+        self.texture = self.canvas.children[-1].texture
+        self.update_glsl()
+
+    def on_touch_move(self,touch) :
+        if (not self.plot_frozen) :
+            x_shift = - touch.dpos[0]/float(self.rect.size[0])
+            y_shift = touch.dpos[1]/float(self.rect.size[1])
+            
+            for i in range(0,8,2) :
+                self.tex_coords[i] = self.tex_coords[i] + x_shift
+                self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+
+            if (__map_plot_debug__) :
+                print("InteractiveWorldMapWidget.on_touch_move:")
+                print("   tex_coords before :",self.tex_coords)
+                print("   size/pos/width/height :",self.rect.size,self.rect.pos,self.width,self.height)
+                
+            self.tex_coords = self.check_boundaries(self.tex_coords)
+            
+            if (__map_plot_debug__) :
+                print("InteractiveWorldMapWidget.on_touch_move:")
+                print("   tex_coords  after :",self.tex_coords)
+                print("   size/pos/width/height :",self.rect.size,self.rect.pos,self.width,self.height)
+            
+            self.rect.tex_coords = self.tex_coords
+
+    def on_touch_down(self,touch) :
+        if (touch.is_double_tap) :
+            self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
+            self.rect.tex_coords = self.tex_coords
+            self.rect.size = self.check_size((self.nx*self.height/self.ny,self.height))
+            self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+
+    def zoom_in(self) :
+        self.rect.size = self.check_size((self.rect.size[0]*1.414,self.rect.size[1]*1.414))
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        if (__map_plot_debug__) :
+            print("InteractiveWorldMapWidget.zoom_in",self.rect.size,self.rect.pos,self.width)
+            
+    def zoom_out(self) :
+        self.rect.size = self.check_size((self.rect.size[0]*0.707,self.rect.size[1]*0.707))
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        if (__map_plot_debug__) :
+            print("InteractiveWorldMapWidget.zoom_in:",self.rect.size,self.rect.pos,self.width)
+
+    def resize(self,widget,newsize) :
+        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
+        self.rect.tex_coords = self.tex_coords
+        self.rect.size = self.check_size((self.nx*self.height/self.ny,self.height))
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        if (__map_plot_debug__) :
+            print("InteractiveWorldMapWidget.resize(): replotting",self.rect.size,self.rect.pos)
+
+    def set_zoom_factor(self,value) :
+        self.rect.size = self.check_size((self.nx*value,self.ny*value))
+        x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
+        y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
+        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+
+    def check_boundaries(self,tex_coords) :
+        new_tex_coords = copy.copy(tex_coords)
+        max_y_shift = max((self.rect.size[1]-self.height)/self.rect.size[1],0)
+        new_tex_coords[1] = max(min(tex_coords[1],1+max_y_shift),1)
+        new_tex_coords[3] = max(min(tex_coords[3],1+max_y_shift),1)
+        new_tex_coords[5] = max(min(tex_coords[5],max_y_shift),0)
+        new_tex_coords[7] = max(min(tex_coords[7],max_y_shift),0)
+        return new_tex_coords
+
+    def check_size(self,size) :
+        return size
+        
 
 
 class InteractiveBaselineMapPlot_kivygraph(InteractiveWorldMapWidget):
@@ -37,12 +163,12 @@ class InteractiveBaselineMapPlot_kivygraph(InteractiveWorldMapWidget):
         self.gcdict = {}
         self.lldict = {}
 
-    def generate_mpl_plot(self,fig,ax,**kwargs) :
-        # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
-        # You probably want, but do not require, the following in your over-lay
-        self.plot_map(ax,self.statdict)
-        ax.set_facecolor((0,0,0,0))
-        fig.set_facecolor((0,0,0,0))
+    # def generate_mpl_plot(self,fig,ax,**kwargs) :
+    #     # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
+    #     # You probably want, but do not require, the following in your over-lay
+    #     self.plot_map(ax,self.statdict)
+    #     ax.set_facecolor((0,0,0,0))
+    #     fig.set_facecolor((0,0,0,0))
         
     def update(self,datadict,statdict,**kwargs) :
 

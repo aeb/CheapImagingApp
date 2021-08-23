@@ -2,22 +2,196 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mi
 import matplotlib.tri as tri
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from kivy.clock import Clock
+from kivy.uix.widget import Widget
+from kivy.core.window import Window
+from kivy.graphics import RenderContext, Color, Rectangle, BindTexture
+from kivy.graphics.texture import Texture
+from kivy.properties import ListProperty
+
 import copy
-from os import path
-
-# from kivy.uix.floatlayout import FloatLayout
-# from kivy.graphics import Ellipse, Color, Line, Point
-# from kivy.metrics import dp, sp
-# from kivy.uix.label import Label
-# from kivy.core.window import Window
-
-#from mpl_texture import InteractivePlotWidget, InteractiveWorldMapWidget
-from mpl_texture import InteractivePlotWidget
-
+from array import array
 import hashlib
+
+# Data dictionary: datadict has form {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':err}
+# Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 
 __cheap_image_debug__ = True
+
+
+
+class InteractivePlotWidget(Widget):
+
+    tex_coords = ListProperty([0, 1, 1, 1, 1, 0, 0, 0])
+    
+    def __init__(self, **kwargs):
+        self.canvas = RenderContext()
+
+        self.nx = 1024
+        self.ny = self.nx
+
+        print("On init:",self.nx,self.ny)
+        
+        with self.canvas:
+            Color(1, 1, 1)
+            self.texture = Texture.create(size=(self.nx,self.ny))
+            self.buf = [0,0,0,255]*(self.nx*self.ny)
+            self.arr = array('B',self.buf)
+            self.update_mpl()
+            self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
+            BindTexture(texture=self.texture, index=0)
+            self.texture.wrap = 'clamp_to_edge'
+            
+            # create a rectangle on which to plot texture (will be at index 0)
+            Color(1,1,1)
+            self.rect = Rectangle(size=(self.nx,self.ny),texture=self.texture)
+            self.rect.tex_coords = self.tex_coords
+            
+
+        self.plot_frozen = False
+        
+        # call the constructor of parent
+        # if they are any graphics objects, they will be added on our new
+        # canvas
+        super(InteractivePlotWidget, self).__init__(**kwargs)
+
+        # We'll update our glsl variables in a clock
+        # Clock.schedule_interval(self.update_glsl, 0)        
+        Clock.schedule_interval(self.texture_init, 0)
+
+        # Generate some default resizing behaviors
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+        
+    def update_glsl(self, *largs):
+        # This is needed for the default vertex shader.
+        self.canvas['projection_mat'] = Window.render_context['projection_mat']
+        self.canvas['modelview_mat'] = Window.render_context['modelview_mat']
+
+    def texture_init(self, *args):
+        self.texture = self.canvas.children[-1].texture
+        self.update_glsl()
+
+    def on_touch_move(self,touch) :
+        if (not self.plot_frozen) :
+            x_shift = - touch.dpos[0]/float(self.rect.size[0])
+            y_shift = touch.dpos[1]/float(self.rect.size[1])
+            for i in range(0,8,2) :
+                self.tex_coords[i] = self.tex_coords[i] + x_shift
+                self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+            self.tex_coords = self.check_boundaries(self.tex_coords)
+            self.rect.tex_coords = self.tex_coords
+
+    def on_touch_down(self,touch) :
+        if (touch.is_double_tap) :
+            self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
+            self.rect.tex_coords = self.tex_coords
+            maxwidth = max(self.width,self.height*self.nx/self.ny)
+            self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
+            self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+            x_shift = 0.0
+            y_shift = -0.5*(self.height-self.rect.size[1])/self.rect.size[1]
+            for i in range(0,8,2) :
+                self.tex_coords[i] = self.tex_coords[i] + x_shift
+                self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+            self.tex_coords = self.check_boundaries(self.tex_coords)
+            self.rect.tex_coords = self.tex_coords
+            
+    def zoom_in(self) :
+        if (__cheap_image_debug__) :
+            print("InteractivePlotWidget.zoom_in:",self.rect.tex_coords,self.height)
+        old_size = self.rect.size
+        self.rect.size = self.check_size((self.rect.size[0]*1.414,self.rect.size[1]*1.414))
+        self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+        y_shift = 0.5 * (self.rect.size[0]/old_size[0]-1.0) * self.height/self.rect.size[1]
+        x_shift = 0
+        if (__cheap_image_debug__) :
+            print("InteractivePlotWidget.zoom_in:",old_size,self.rect.size,y_shift)
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        if (__cheap_image_debug__) :
+            print("                             :",self.rect.tex_coords,self.height)
+
+    def zoom_out(self) :
+        old_size = self.rect.size
+        self.rect.size = self.check_size((self.rect.size[0]*0.707,self.rect.size[1]*0.707))
+        self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+        y_shift = 0.5 * (self.rect.size[0]/old_size[0]-1.0) * self.height/self.rect.size[1]
+        x_shift = 0
+        if (__cheap_image_debug__) :
+            print("InteractivePlotWidget.zoom_out:",old_size,self.rect.size,y_shift)
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+
+    def resize(self,widget,newsize) :
+        if (__cheap_image_debug__) :
+            print("InteractivePlotWidget.resize:",newsize)
+        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
+        self.rect.tex_coords = self.tex_coords
+        maxwidth = max(self.width,self.height*self.nx/self.ny)
+        self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
+        self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+        x_shift = 0.0
+        y_shift = -0.5*(self.height-self.rect.size[1])/self.rect.size[1]
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        
+    def set_zoom_factor(self,value) :
+        self.rect.size = self.check_size(self.nx*value,self.ny*value)
+        x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
+        y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
+        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        
+    def check_boundaries(self,tex_coords) :
+        new_tex_coords = [0]*len(tex_coords)
+        max_x_shift = max((self.rect.size[0]-self.width)/self.rect.size[0],0)
+        new_tex_coords[0] = max(min(tex_coords[0],max_x_shift),0)
+        new_tex_coords[2] = max(min(tex_coords[2],1+max_x_shift),1)
+        new_tex_coords[4] = max(min(tex_coords[4],1+max_x_shift),1)
+        new_tex_coords[6] = max(min(tex_coords[6],max_x_shift),0)
+        max_y_shift = max((self.rect.size[1]-self.height)/self.rect.size[1],0)
+        new_tex_coords[1] = max(min(tex_coords[1],1+max_y_shift),1)
+        new_tex_coords[3] = max(min(tex_coords[3],1+max_y_shift),1)
+        new_tex_coords[5] = max(min(tex_coords[5],max_y_shift),0)
+        new_tex_coords[7] = max(min(tex_coords[7],max_y_shift),0)
+        return new_tex_coords
+
+    def check_size(self,size) :
+        return size
+    
+    def update_mpl(self,**kwargs) :
+        fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
+        canvas = FigureCanvas(fig)
+        ax = fig.add_subplot(111,position=[0,0,1,1])
+        self.generate_mpl_plot(fig,ax,**kwargs)
+        canvas.draw()
+        self.buf = np.asarray(canvas.buffer_rgba()).ravel()
+        self.arr = array('B', self.buf)
+        self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
+
+    def generate_mpl_plot(self,fig,ax,**kwargs) :
+        # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
+        pass
+
 
 
 class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
