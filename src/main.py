@@ -44,9 +44,9 @@ import copy
 
 import ngeht_array
 import data
+import baseline_plot
 import cheap_image
 import map_plot
-import baseline_plot
 
 _on_color = (1,0.75,0.25,1)
 _off_color = (0.5,0,0,1)
