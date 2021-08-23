@@ -1,0 +1,214 @@
+'''
+Multitexture Example
+====================
+
+This example blends two textures: the image mtexture1.png of the letter K
+and the image mtexture2.png of an orange circle. You should see an orange
+K clipped to a circle. It uses a custom shader, written in glsl
+(OpenGL Shading Language), stored in a local string.
+
+Note the image mtexture1.png is a white 'K' on a transparent background, which
+makes it hard to see.
+'''
+
+from kivy.clock import Clock
+from kivy.app import App
+from kivy.uix.widget import Widget
+from kivy.uix.floatlayout import FloatLayout
+from kivy.core.window import Window
+from kivy.graphics import RenderContext, Color, Rectangle, BindTexture
+from kivy.graphics.texture import Texture
+from kivy.properties import ObjectProperty, ListProperty, StringProperty
+from kivy.core.image import Image
+
+from array import array
+import numpy as np
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+class InteractivePlotWidget(Widget):
+
+    tex_coords = ListProperty([0, 1, 1, 1, 1, 0, 0, 0])
+    
+    def __init__(self, **kwargs):
+        self.canvas = RenderContext()
+        # setting shader.fs to new source code automatically compiles it.
+        # self.canvas.shader.fs = fs_multitexture
+
+        self.nx = 1024
+        self.ny = self.nx
+
+        print("On init:",self.nx,self.ny)
+        
+        with self.canvas:
+            Color(1, 1, 1)
+            self.texture = Texture.create(size=(self.nx,self.ny))
+            self.buf = [0,0,0,255]*(self.nx*self.ny)
+            self.arr = array('B',self.buf)
+            self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
+            BindTexture(texture=self.texture, index=0)
+            self.texture.wrap = 'clamp_to_edge'
+            
+            # create a rectangle on which to plot texture (will be at index 0)
+            Color(1,1,1)
+            self.rect = Rectangle(size=(self.nx,self.ny),texture=self.texture)
+            self.rect.tex_coords = self.tex_coords
+            
+
+        self.freeze_plot = False
+        
+        # call the constructor of parent
+        # if they are any graphics objects, they will be added on our new
+        # canvas
+        super(InteractivePlotWidget, self).__init__(**kwargs)
+
+        # We'll update our glsl variables in a clock
+        # Clock.schedule_interval(self.update_glsl, 0)        
+        Clock.schedule_interval(self.texture_init, 0)
+
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+        
+    def update_glsl(self, *largs):
+        # This is needed for the default vertex shader.
+        self.canvas['projection_mat'] = Window.render_context['projection_mat']
+        self.canvas['modelview_mat'] = Window.render_context['modelview_mat']
+
+    def texture_init(self, *args):
+        self.texture = self.canvas.children[-1].texture
+        self.update_glsl()
+
+    def on_touch_move(self,touch) :
+        if (not self.freeze_plot) :
+            screen_to_x = 1.0/float(self.rect.size[0])
+            screen_to_y = 1.0/float(self.rect.size[1])
+
+            x_shift = - touch.dpos[0]*screen_to_x
+            y_shift = touch.dpos[1]*screen_to_y
+            
+            for i in range(0,8,2) :
+                self.tex_coords[i] = self.tex_coords[i] + x_shift
+                self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+
+            self.tex_coords = self.check_boundaries(self.tex_coords)
+            self.rect.tex_coords = self.tex_coords
+
+    def on_touch_down(self,touch) :
+        if (touch.is_double_tap) :
+            self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
+            self.rect.tex_coords = self.tex_coords
+            self.rect.size = (self.nx,self.ny)
+
+    def zoom_in(self) :
+        self.rect.size = (self.rect.size[0]*1.414,self.rect.size[1]*1.414)
+
+    def zoom_out(self) :
+        self.rect.size = (self.rect.size[0]*0.707,self.rect.size[1]*0.707)
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+
+    def resize(self,widget,newsize) :
+        self.set_zoom_factor(2)
+
+    def set_zoom_factor(self,value) :
+        self.rect.size = (self.nx*value,self.ny*value)
+        x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
+        y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
+        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
+        for i in range(0,8,2) :
+            self.tex_coords[i] = self.tex_coords[i] + x_shift
+            self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+        self.tex_coords = self.check_boundaries(self.tex_coords)
+        self.rect.tex_coords = self.tex_coords
+        
+    def check_boundaries(self,tex_coords) :
+        new_tex_coords = [0]*len(tex_coords)
+        max_x_shift = max((self.rect.size[0]-self.width)/self.rect.size[0],0)
+        new_tex_coords[0] = max(min(tex_coords[0],max_x_shift),0)
+        new_tex_coords[2] = max(min(tex_coords[2],1+max_x_shift),1)
+        new_tex_coords[4] = max(min(tex_coords[4],1+max_x_shift),1)
+        new_tex_coords[6] = max(min(tex_coords[6],max_x_shift),0)
+        max_y_shift = max((self.rect.size[1]-self.height)/self.rect.size[1],0)
+        new_tex_coords[1] = min(max(tex_coords[1],1-max_y_shift),1)
+        new_tex_coords[3] = min(max(tex_coords[3],1-max_y_shift),1)
+        new_tex_coords[5] = min(max(tex_coords[5],-max_y_shift),0)
+        new_tex_coords[7] = min(max(tex_coords[7],-max_y_shift),0)
+        return new_tex_coords
+
+    def add_mpl_fig(self,ptype) :
+        print("Changing plot to %s"%(ptype))
+
+        if (ptype=='none') :
+            self.buf = [255,255,255,0]*len(self.buf)
+            self.arr = array('B',self.buf)
+        elif (ptype=='sine') :
+
+            fig = Figure(figsize=(self.nx/128,self.ny/128),dpi=128)
+            canvas = FigureCanvas(fig)
+            ax = fig.add_subplot(111,position=[0,0,1,1])
+
+            self.generate_mpl_plot(fig,ax,limits=None)
+            
+            canvas.draw()
+            self.buf = np.asarray(canvas.buffer_rgba())
+            
+            print("Max alpha:",np.max(self.buf[:,:,3]))
+            self.buf = self.buf.ravel()
+            print(self.buf,np.any(self.buf!=255))
+            
+        else :
+            print("ERROR: unrecognized plot type %s"%(ptype))
+            
+        self.arr = array('B', self.buf)
+        self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
+
+    def generate_mpl_plot(self,fig,ax,limits=None) :
+        xtmp = np.linspace(-10,10,256)
+        ytmp = np.sin(xtmp)
+        ax.plot(xtmp,ytmp,'-',color=(1,0.75,0.25),lw=1)
+        ax.set_xlim((-10,10))
+        ax.set_ylim((-2,2))
+        ax.set_facecolor((0,0,0,1))
+        fig.set_facecolor((0,0,0,1))
+        for sdir in ['left','right','top','bottom'] :
+            ax.spines[sdir].set_visible(False)
+        ax.xaxis.set_tick_params(bottom='off',top='off')
+        ax.yaxis.set_tick_params(left='off',right='off')
+        ax.axhline(0,color='g')
+        ax.axvline(0,color='g')
+
+
+
+        
+class NewPlotWidget(InteractivePlotWidget) :
+
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+
+    def generate_mpl_plot(self,fig,ax,limits=None) :
+        xtmp = np.linspace(-10,10,256)
+        ytmp = np.sin(xtmp) * np.exp(-xtmp**2/(2.0*3**2))
+        ax.plot(xtmp,ytmp,'-',color=(1,0.75,0.25),lw=1)
+        ax.set_xlim((-10,10))
+        ax.set_ylim((-2,2))
+        ax.set_facecolor((0,0,0,1))
+        fig.set_facecolor((0,0,0,1))
+        for sdir in ['left','right','top','bottom'] :
+            ax.spines[sdir].set_visible(False)
+        ax.xaxis.set_tick_params(bottom='off',top='off')
+        ax.yaxis.set_tick_params(left='off',right='off')
+        ax.axhline(0,color='g')
+        ax.axvline(0,color='g')
+
+
+        
+class PlotReadyApp(App):
+    pass
+
+if __name__ == '__main__':
+    PlotReadyApp().run()
+
+
+    
