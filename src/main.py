@@ -42,7 +42,11 @@ import hashlib
 
 import copy
 
-import cheap_image as ci
+import ngeht_array
+import data
+import cheap_image
+import map_plot
+import baseline_plot
 
 _on_color = (1,0.75,0.25,1)
 _off_color = (0.5,0,0,1)
@@ -60,16 +64,16 @@ _existing_station_list = ['PV','AZ','SM','LM','AA','SP','JC','GL','PB','KP','HA'
 _stationdicts={}
 
 _stationdicts={}
-_stationdicts['ngEHT ref1']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
-_stationdicts['EHT 2017']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
-_stationdicts['EHT 2022']=ci.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
+_stationdicts['ngEHT ref1']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
+_stationdicts['EHT 2017']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
+_stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
 
 
 _array = list(_stationdicts.keys())[0]
 _array_index = 0
 
 _statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
-_datadict=ci.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
+_datadict=data.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 
         
 class MenuedReconstructionPlot(BoxLayout) :
@@ -77,7 +81,7 @@ class MenuedReconstructionPlot(BoxLayout) :
     plot_maxsize = 750.0
     plot_center = np.array([0.0,0.0])
 
-    irp = ci.InteractiveImageReconstructionPlot()
+    irp = cheap_image.InteractiveImageReconstructionPlot()
     menu_id = ObjectProperty(None)
     
     def __init__(self,**kwargs) :
@@ -197,7 +201,7 @@ class MenuedReconstructionPlot(BoxLayout) :
 
 class MenuedBaselinePlot(BoxLayout) :
 
-    ibp = ci.InteractiveBaselinePlot_kivygraph()
+    ibp = baseline_plot.InteractiveBaselinePlot_kivygraph()
     menu_id = ObjectProperty(None)
 
     def __init__(self,**kwargs) :
@@ -305,8 +309,8 @@ class MenuedBaselinePlot(BoxLayout) :
             
 class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
 
-    bmc = ci.BaselineMapCanvas()
-    mp = ci.InteractiveBaselineMapPlot_kivygraph()
+    bmc = map_plot.BaselineMapCanvas()
+    mp = map_plot.InteractiveBaselineMapPlot_kivygraph()
     menu_id = ObjectProperty(None)
     
     def __init__(self,**kwargs) :
@@ -970,13 +974,13 @@ class SimpleDataSetSelection(Spinner) :
 
         # Set default data
         global _datadict
-        _datadict = ci.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
+        _datadict = data.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
 
     def select_dataset(self) :
         if __main_debug__ :
             print("Reading data set from",self.datasets[self.text]['file'])
         global _datadict
-        _datadict = ci.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
+        _datadict = data.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
 
 
         
