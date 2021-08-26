@@ -34,6 +34,7 @@ import hashlib
 
 ####################
 # TESTING
+import pickle
 # from kivy.core.window import Window
 # Window.size = (300,500)
 ##################
@@ -73,7 +74,8 @@ _array = list(_stationdicts.keys())[0]
 _array_index = 0
 
 _statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
-_datadict=data.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
+# _datadict=data.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
+_datadict=data.read_themis_data_file(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 
         
 class MenuedReconstructionPlot(BoxLayout) :
@@ -964,6 +966,15 @@ class SimpleDataSetSelection(Spinner) :
         self.datasets['M87 345 GHz']={'file':'data/V_M87_ngeht_ref1_345_perfect_scanavg_tygtd.dat'}
         self.datasets['Sgr A* 345 GHz']={'file':'data/V_SGRA_ngeht_ref1_345_perfect_scanavg_tygtd.dat'}
 
+        self.datasets['Jet 230 GHz']={'file':'source_images/GRRT_IMAGE_data1400_freq230.npy'}
+        self.datasets['Jet 345 GHz']={'file':'source_images/GRRT_IMAGE_data1400_freq345.npy'}
+        self.datasets['RIAF 230 GHz']={'file':'source_images/fromm230_scat.npy'}
+        self.datasets['RIAF 345 GHz']={'file':'source_images/fromm345_scat.npy'}
+
+        self.datasets['First contact']={'file':'source_images/toy_story_aliens.png'}        
+        
+        self.datasets['datagen']={'file':'datagen.pkl'}
+        
         # Set values
         self.values = []
         for ds in self.datasets.keys() :
@@ -973,14 +984,24 @@ class SimpleDataSetSelection(Spinner) :
         self.text = list(self.datasets.keys())[0]
 
         # Set default data
-        global _datadict
-        _datadict = data.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
+        global _datadict, _statdict
+        # _datadict = data.read_themis_data_file(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
+        _datadict = data.generate_data_from_file(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])),_statdict)
 
+        
     def select_dataset(self) :
         if __main_debug__ :
             print("Reading data set from",self.datasets[self.text]['file'])
-        global _datadict
-        _datadict = data.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
+        global _datadict, _statdict
+
+        if (self.text=='datagen') :
+            with open("datagen.pkl","rb") as f :
+                _datadict = pickle.load(f)
+        else :
+            # _datadict = data.read_data(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])))
+            _datadict = data.generate_data_from_file(path.abspath(path.join(path.dirname(__file__),self.datasets[self.text]['file'])),_statdict)
+
+        print("Read:",_datadict)
 
 
         
