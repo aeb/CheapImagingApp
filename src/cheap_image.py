@@ -16,12 +16,14 @@ import copy
 from array import array
 import hashlib
 
+# import threading
+# import time
+
 # Data dictionary: datadict has form {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':err}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 
 __cheap_image_debug__ = True
-
 
 
 class InteractivePlotWidget(Widget):
@@ -34,7 +36,7 @@ class InteractivePlotWidget(Widget):
         self.nx = 1024
         self.ny = self.nx
 
-        print("On init:",self.nx,self.ny)
+        # print("On init:",self.nx,self.ny)
         
         with self.canvas:
             Color(1, 1, 1)
@@ -66,6 +68,7 @@ class InteractivePlotWidget(Widget):
         # Generate some default resizing behaviors
         self.bind(height=self.resize)
         self.bind(width=self.resize)
+        
         
     def update_glsl(self, *largs):
         # This is needed for the default vertex shader.
@@ -179,15 +182,25 @@ class InteractivePlotWidget(Widget):
         return size
     
     def update_mpl(self,**kwargs) :
+
+        # print("Started update_mpl in thread")
+        
         fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(111,position=[0,0,1,1])
         self.generate_mpl_plot(fig,ax,**kwargs)
+        # print("Made mpl plot in update_mpl in thread")
         canvas.draw()
+        # print("Drew canvas in update_mpl in thread")
         self.buf = np.asarray(canvas.buffer_rgba()).ravel()
+        # print("Assigned buf in update_mpl in thread")
         self.arr = array('B', self.buf)
+        # print("Assigned arr in update_mpl in thread")
         self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
 
+        # print("Finished update_mpl in thread")
+
+        
     def generate_mpl_plot(self,fig,ax,**kwargs) :
         # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
         pass
@@ -214,6 +227,8 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
     # Low-level image reconstruction function
     def reconstruct_image(self,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,f=2,method='cubic',make_hermitian=False) :
 
+        # print("Started image reconstruction in thread")
+        
         # Useful constant
         uas2rad = np.pi/180.0/3600e6
 
@@ -303,7 +318,11 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
 
         # Compute image estimate via FFT
         Iarr = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(V2))))
+        # Iarr = np.fft.fftshift(np.abs(np.fft.ifft2(np.fft.ifftshift(V2))))
         
+
+        # print("Finished image reconstruction in thread")
+
         # Return
         return xarr,yarr,Iarr
 
@@ -321,13 +340,42 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
     def update(self,datadict,statdict,**kwargs) :
         self.sdict = statdict
         self.ddict = datadict
+        # print("Started update, initiating thread:",kwargs)
         self.update_mpl(**kwargs)
+
+
+        # # create the thread to invoke other_func with arguments (2, 5)
+        # andrews_specific_name = threading.Thread(target=self.update_mpl, kwargs=kwargs)
+        # # # set daemon to true so the thread dies when app is closed
+        # andrews_specific_name.daemon = True
+        # # start the thread
+        # andrews_specific_name.start()
+        # # wait for end for now
+        # andrews_specific_name.join()
+        # #time.sleep(10) # HACK
+        
+
+        # print("Finished update, should have finished thread")
+        
 
     def replot(self,datadict,statdict,**kwargs) :
         self.sdict = statdict
         self.ddict = datadict
         self.update_mpl(**kwargs)
 
+        # print("Started replot, initiating thread")
+
+        # # create the thread to invoke other_func with arguments (2, 5)
+        # t = threading.Thread(target=self.update_mpl, kwargs=kwargs)
+        # # # set daemon to true so the thread dies when app is closed
+        # # t.daemon = True
+        # # start the thread
+        # t.start()
+        # # wait for end for now
+        # t.join()
+
+        # print("Finished replot, should have finished thread")
+        
     def check_boundaries(self,tex_coords) :
         return tex_coords
 
