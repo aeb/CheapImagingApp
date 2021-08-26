@@ -973,7 +973,7 @@ class SimpleDataSetSelection(Spinner) :
 
         self.datasets['First contact']={'file':'source_images/toy_story_aliens.png'}        
         
-        self.datasets['datagen']={'file':'datagen.pkl'}
+        # self.datasets['datagen']={'file':'datagen.pkl'}
         
         # Set values
         self.values = []
