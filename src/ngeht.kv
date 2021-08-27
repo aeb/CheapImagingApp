@@ -43,10 +43,11 @@ ScreenManager:
                 background_color: 1,1,1,0.25
                 on_release:
                     print("--> From data to map")
+                    selection_screen.dssp_id.produce_selected_data_set()
                     sm.transition.direction = 'right'
                     sm.current = 'screen3'
                     maps_screen.ddm_id.refresh()
-                    maps_screen.otm_id.refresh()                    
+                    maps_screen.otm_id.refresh()
                     maps_screen.menu_id.refresh()
                     maps_screen.plot_id.replot()
                     print("<-- From data to map")
@@ -63,6 +64,7 @@ ScreenManager:
                 background_color: 1,1,1,0.25
                 on_release:
                     print("--> From data to reconstruction")
+                    selection_screen.dssp_id.produce_selected_data_set()
                     sm.transition.direction = 'left'
                     sm.current = 'screen1'
                     reconstruction_screen.ddm_id.refresh()
@@ -240,37 +242,40 @@ ScreenManager:
                 pos_hint: {"center": (0.5,0.5)}
                 
 <DataSetSelectionScreen>:
+    dssp_id: dssp
     orientation: "vertical"
     TopBanner:
-    RelativeLayout:
-        canvas.before:
-            Color:
-                #rgba: 1,1,1,1
-                rgba: 0.77,0.55,0.17,1
-            Rectangle:
-                size: self.width,self.height
-        Label:
-            size_hint_y: None
-            pos_hint: {'center': (.5, .8)}
-            text: "Select Data Set"
-            color: 0.14,0.14,0.14,1
-            font_size: "24sp"
-        SimpleDataSetSelection:
-            size_hint_x: 0.75
-            size_hint_y: None
-            pos_hint: {'center': (.5, .7)}
-            height: "30dp"
-            sync_height: True
-            text_autoupdate: True
-            color: 1,1,1,1
-            background_color: 0.14,0.14,0.14,0.25
-            on_text:
-                self.select_dataset()
-        Image:
-            source: "./images/ngeht_white_on_gold2.png"
-            allow_stretch: True
-            size_hint: 1,0.5
-            pos_hint: {'top': 0.6 }
+    DataSetSelectionPage:
+        id: dssp
+    # RelativeLayout:
+    #     canvas.before:
+    #         Color:
+    #             #rgba: 1,1,1,1
+    #             rgba: 0.77,0.55,0.17,1
+    #         Rectangle:
+    #             size: self.width,self.height
+    #     Label:
+    #         size_hint_y: None
+    #         pos_hint: {'center': (.5, .8)}
+    #         text: "Select Data Set"
+    #         color: 0.14,0.14,0.14,1
+    #         font_size: "24sp"
+    #     SimpleDataSetSelection:
+    #         size_hint_x: 0.75
+    #         size_hint_y: None
+    #         pos_hint: {'center': (.5, .7)}
+    #         height: "30dp"
+    #         sync_height: True
+    #         text_autoupdate: True
+    #         color: 1,1,1,1
+    #         background_color: 0.14,0.14,0.14,0.25
+    #         on_text:
+    #             self.select_dataset()
+    #     Image:
+    #         source: "./images/ngeht_white_on_gold2.png"
+    #         allow_stretch: True
+    #         size_hint: 1,0.5
+    #         pos_hint: {'top': 0.6 }
         
 <ReconstructionScreen>:
     orientation: "vertical"

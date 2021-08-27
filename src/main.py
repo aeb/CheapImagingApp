@@ -1,6 +1,6 @@
 __version__ = "0.7.1"
 
-__main_debug__ = True
+__main_debug__ = False
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -18,6 +18,7 @@ from kivy.uix.screenmanager import FadeTransition, SlideTransition
 from kivy.metrics import dp
 from kivy.uix.image import Image
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.graphics import Color, Line, Rectangle
 
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -34,9 +35,9 @@ import hashlib
 
 ####################
 # TESTING
-import pickle
-# from kivy.core.window import Window
-# Window.size = (300,500)
+# import pickle
+from kivy.core.window import Window
+Window.size = (300,500)
 ##################
 
 
@@ -73,11 +74,15 @@ _stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dir
 _array = list(_stationdicts.keys())[0]
 _array_index = 0
 
+_statdict_maximum=copy.deepcopy(_stationdicts['ngEHT ref1'])
 _statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
 # _datadict=data.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 _datadict=data.read_themis_data_file(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 
-        
+_source_RA = 17.7611225
+_source_Dec = -29.007810
+
+
 class MenuedReconstructionPlot(BoxLayout) :
 
     plot_maxsize = 750.0
@@ -1021,11 +1026,94 @@ class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
 
         
         
-class MovieSplashScreen(BoxLayout) :
-    img_id = ObjectProperty(None)
+
+class DataSetSelectionPage(BoxLayout) :
+
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+        
+        self.orientation = "vertical"
+        
+        self.ic = data.ImageCarousel()
+
+        self.ic.add_image("./source_images/M87_230.png","./source_images/GRRT_IMAGE_data1400_freq230.npy","Simulated jet at 230 GHz.")
+        self.ic.add_image("./source_images/M87_345.png","./source_images/GRRT_IMAGE_data1400_freq345.npy","Simulated jet at 345 GHz.")
+        self.ic.add_image("./source_images/SGRA_230.png","./source_images/fromm230_scat.npy","Simulated RIAF at 230 GHz.")
+        self.ic.add_image("./source_images/SGRA_345.png","./source_images/fromm345_scat.npy","Simulated RIAF at 345 GHz.")
+        self.ic.add_image("./source_images/toy_story_aliens.png","./source_images/toy_story_aliens.png","First contact!")
+        
+        self.add_widget(self.ic)
+        
+        self.dss = data.DataSelectionSliders()
+        self.dss.size_hint = 1,0.5
+
+        self.add_widget(self.dss)
+
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+
+        # Generate the circle details
+        self.radius_list = np.array([1.0, 0.80, 0.69, 0.53, 0.41, 0.24])
+        self.phi0_list = np.array([0, 90, 180, 240, 30, 180, 180])
+        self.total_phi0_list = (self.phi0_list[1:]-self.phi0_list[:-1]+360.0)%360.0 + 360.0
+        self.dx_list = np.zeros(len(self.radius_list))
+        self.dy_list = np.zeros(len(self.radius_list))
+        for j in range(1,len(self.radius_list)) :
+            self.dx_list[j] = (self.radius_list[j]-self.radius_list[j-1]) * np.sin(self.phi0_list[j]*np.pi/180.0) + self.dx_list[j-1]
+            self.dy_list[j] = (self.radius_list[j]-self.radius_list[j-1]) * np.cos(self.phi0_list[j]*np.pi/180.0) + self.dy_list[j-1]
+        
+        
+    def redraw_background(self) :
+
+        #self.canvas.clear()
+        
+        with self.canvas.before :
+            
+            Color(0.25,0.25,0.25,1)
+            Rectangle(size=self.size)
+            
+            circ_scale = 0.5*max(self.height,self.width)
+            width = dp(6)
+            Xc = 0.75*circ_scale+0.25*self.width
+            Yc = 0.45*self.height
+            Color(0.35,0.35,0.35,1)
+            for j in range(len(self.radius_list)) :
+                xc = self.dx_list[j]*circ_scale + Xc
+                yc = self.dy_list[j]*circ_scale + Yc
+                rc = self.radius_list[j]*circ_scale
+                Line(circle=(xc,yc,rc),close=True,width=width)
+
+            width = dp(6)
+            Xc = Xc + 0.2*width
+            Yc = Yc - 0.2*width
+            Color(0.14,0.14,0.14,1)
+            for j in range(len(self.radius_list)) :
+                xc = self.dx_list[j]*circ_scale + Xc
+                yc = self.dy_list[j]*circ_scale + Yc
+                rc = self.radius_list[j]*circ_scale
+                Line(circle=(xc,yc,rc),close=True,width=width)
+                
+
+    def resize(self,widget,newsize) :
+        self.redraw_background()
+
+    def produce_selected_data_set(self) :
+        if (__main_debug__) :
+            print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
+        global _datadict
+        _datadict = data.generate_data_from_file( self.ic.selected_data_file(), \
+                                                  _statdict_maximum, \
+                                                  freq=self.dss.observation_frequency, \
+                                                  ra=_source_RA,dec=_source_Dec, \
+                                                  scale=self.dss.source_size, \
+                                                  total_flux=self.dss.source_flux)
+
         
 class DataSetSelectionScreen(BoxLayout) :
-    pass
+    dssp_id = ObjectProperty(None)
+    
+class MovieSplashScreen(BoxLayout) :
+    img_id = ObjectProperty(None)
 
 class InteractiveReconstructionPlot(FloatLayout) :
     ddm_id = ObjectProperty(None)

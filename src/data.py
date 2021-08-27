@@ -1,8 +1,16 @@
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.carousel import Carousel
+from kivy.uix.image import AsyncImage
+from kivy.uix.label import Label
+from kivy.metrics import dp, sp
+from kivy.properties import StringProperty, NumericProperty
+from fancy_mdslider import FancyMDSlider
+
 import os
 import numpy as np
 import matplotlib.image as mi
 
-__data_debug__ = True
+__data_debug__ = False
 
 
 #########
@@ -198,6 +206,9 @@ def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_t
                         
                         
 def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.007810,scale=500.0,total_flux=None,**kwargs) :
+
+    if (__data_debug__) :
+        print("generate_data_from_file:",file_name,freq,ra,dec,scale,total_flux)
     
     ext = os.path.splitext(file_name)[1]
 
@@ -219,8 +230,8 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         # x,y = np.meshgrid(np.arange(0,I.shape[0]),np.arange(0,I.shape[1]),indexing='ij')
         # x,y = np.meshgrid(np.arange(0,I.shape[1]),np.arange(0,I.shape[0]),indexing='ij')
         x,y = np.meshgrid(np.arange(0,I.shape[1]),np.arange(0,I.shape[0]))
-        x = (x-0.5*I.shape[1])*psize
-        y = (y-0.5*I.shape[0])*psize
+        x = (x-0.5*I.shape[1])*psize * (scale/500.0)
+        y = (y-0.5*I.shape[0])*psize * (scale/500.0)
 
         # print("Shapes:",x.shape,y.shape,I.shape)
         # print("x:",x[:5,0],x[:,0].shape)
@@ -335,3 +346,185 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         
     
     
+class ImageCarousel(Carousel) :
+
+    slide_index = NumericProperty(None)
+    slide_caption = StringProperty(None)
+    
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+
+        self.direction = 'right'
+        self.loop = True
+        self.data_file_list = []
+        
+    def add_image(self,image_file,data_file,caption="") :
+        box = BoxLayout()
+        box.orientation = "vertical"
+        image = AsyncImage(source=image_file, allow_stretch=True)
+        lbl = Label(text=caption,color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
+        box.add_widget(image)
+        box.add_widget(lbl)
+        self.add_widget(box)
+        self.data_file_list.append(data_file)
+        
+    def selected_data_file(self) :
+        return self.data_file_list[self.index]
+
+
+class DataSelectionSliders(BoxLayout) :
+
+    source_size = NumericProperty(None)
+    source_flux = NumericProperty(None)
+    observation_frequency = NumericProperty(None)
+    
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+        self.orientation = 'vertical'
+
+        # Add the source size slider
+        self.sss_box = BoxLayout()
+        self.sss_box.orientation='horizontal'
+        self.sss_label = Label(text='Size:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sss_box.add_widget(self.sss_label)
+        
+        self.sss = SourceSizeMDSlider()
+        self.sss.background_color=(0,0,0,0)
+        self.sss.color=(1,1,1,0.75)
+        self.sss.orientation='horizontal'
+        self.sss.size_hint=(0.8,1)
+        self.sss.bind(value=self.adjust_source_size)
+        self.sss_box.add_widget(self.sss)
+        
+        self.sss_label2 = Label(text=("%3g \u03BCas")%(self.sss.source_size()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sss_box.add_widget(self.sss_label2)
+
+        self.add_widget(self.sss_box)
+        
+        # Add the source flux slider
+        self.sfs_box = BoxLayout()
+        self.sfs_box.orientation='horizontal'
+        self.sfs_label = Label(text='Total Flux:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sfs_box.add_widget(self.sfs_label)
+        
+        self.sfs = FluxMDSlider()
+        self.sfs.background_color=(0,0,0,0)
+        self.sfs.color=(1,1,1,0.75)
+        self.sfs.orientation='horizontal'
+        self.sfs.size_hint=(0.8,1)
+        self.sfs.bind(value=self.adjust_source_flux) #
+        self.sfs_box.add_widget(self.sfs)
+        
+        self.sfs_label2 = Label(text="%5.1f Jy"%(self.sfs.flux()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sfs_box.add_widget(self.sfs_label2)
+
+        self.add_widget(self.sfs_box)
+        
+        # Add the observation frequency slider
+        self.ofs_box = BoxLayout()
+        self.ofs_box.orientation='horizontal'
+        self.ofs_label = Label(text='Obs. Freq.:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.ofs_box.add_widget(self.ofs_label)
+        
+        self.ofs = ObsFrequencyMDSlider()
+        self.ofs.background_color=(0,0,0,0)
+        self.ofs.color=(1,1,1,0.75)
+        self.ofs.orientation='horizontal'
+        self.ofs.size_hint=(0.8,1)
+        self.ofs.bind(value=self.adjust_observation_frequency) #
+        self.ofs_box.add_widget(self.ofs)
+        
+        self.ofs_label2 = Label(text="%3g GHz"%(self.ofs.observation_frequency()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.ofs_box.add_widget(self.ofs_label2)
+
+        self.add_widget(self.ofs_box)
+
+
+        self.source_size = self.sss.source_size()
+        self.source_flux = self.sfs.flux()
+        self.observation_frequency = self.ofs.observation_frequency()
+        
+        
+    
+    def adjust_source_size(self,widget,val) :
+        self.source_size = self.sss.source_size()
+        self.sss_label2.text = self.sss.hint_box_text(0)
+
+    def adjust_source_flux(self,widget,val) :
+        self.source_flux = self.sfs.flux()
+        self.sfs_label2.text = self.sfs.hint_box_text(0)
+
+    def adjust_observation_frequency(self,widget,val) :
+        self.observation_frequency = self.ofs.observation_frequency()
+        self.ofs_label2.text = self.ofs.hint_box_text(0)
+        
+
+class ObsFrequencyMDSlider(FancyMDSlider):
+
+    def __init__(self,**kwargs):
+        self.observation_frequency_list = [ 86, 230, 345, 480, 690 ]
+        super().__init__(**kwargs)
+        self.min = 0
+        self.max = len(self.observation_frequency_list)-1
+        self.value = 1
+        self.step = 1
+        self.show_off = False
+
+    def observation_frequency(self) :
+        return self.observation_frequency_list[int(self.value)]
+        
+    def hint_box_text(self,value) :
+        return "%3g GHz"%(self.observation_frequency())
+
+    def hint_box_size(self) :
+        return (dp(50),dp(28))
+
+    
+class SourceSizeMDSlider(FancyMDSlider):
+    
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+
+        self.min = 50
+        self.max = 1000
+        self.value = 500
+        self.step = 50
+        self.show_off = False
+
+    def source_size(self) :
+        return self.value
+        
+    def hint_box_text(self,value) :
+        return ("%5g \u03BCas")%(self.source_size())
+
+    def hint_box_size(self) :
+        return (dp(50),dp(28))
+    
+    
+class FluxMDSlider(FancyMDSlider):
+    
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+
+        self.min = -2
+        self.max = 1
+        self.value = 0
+        self.step = 0.25
+        self.show_off = True
+
+    def flux(self) :
+        return 10**self.value
+        
+    def hint_box_text(self,value) :
+        f = self.flux()
+        if (f<1e-4) :
+            return "%5.2f \03BCJy"%(1e6*f)
+        elif (f<1e-1):
+            return "%5.2f mJy"%(1e3*f)
+        elif (f<1e2) :
+            return "%5.2f Jy"%(f)
+        else :
+            return "%5.2f kJy"%(1e-3*f)
+
+    def hint_box_size(self) :
+        return (dp(50),dp(28))
