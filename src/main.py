@@ -1036,11 +1036,21 @@ class DataSetSelectionPage(BoxLayout) :
         
         self.ic = data.ImageCarousel()
 
-        self.ic.add_image("./source_images/M87_230.png","./source_images/GRRT_IMAGE_data1400_freq230.npy","Simulated jet at 230 GHz.")
-        self.ic.add_image("./source_images/M87_345.png","./source_images/GRRT_IMAGE_data1400_freq345.npy","Simulated jet at 345 GHz.")
-        self.ic.add_image("./source_images/SGRA_230.png","./source_images/fromm230_scat.npy","Simulated RIAF at 230 GHz.")
-        self.ic.add_image("./source_images/SGRA_345.png","./source_images/fromm345_scat.npy","Simulated RIAF at 345 GHz.")
-        self.ic.add_image("./source_images/toy_story_aliens.png","./source_images/toy_story_aliens.png","First contact!")
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
+                          "Simulated jet at 230 GHz.")
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
+                          "Simulated jet at 345 GHz.")
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
+                          "Simulated RIAF at 230 GHz.")
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
+                          "Simulated RIAF at 345 GHz.")
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
+                          "First contact!")
         
         self.add_widget(self.ic)
         
