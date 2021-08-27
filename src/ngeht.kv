@@ -21,13 +21,67 @@ ScreenManager:
             allow_stretch: True
             ripple_duration_in_fast: 0.1
             on_release:
-                print("--> From home to data")
+                print("--> From home to targets")
                 self.delayed_switch_to_imaging(delay=0.2)
-                print("<-- From home to data")
+                print("<-- From home to targets")
 
-                
+
+    Screen:
+        name: 'targets'
+
+        LogoBackground:
+            logo_size: 0.5*max(root.height,root.width)
+            logo_offset: (0.5*root.width,0.5*root.height)
+            size: root.size
+        
+        TargetSelectionScreen:
+            id: selection_screen
+
+        AnchorLayout:
+            anchor_x: "left"
+            ActionButton:
+                size_hint: None, None
+                size: '16dp', '80dp'
+                text: '<'
+                icon: "./images/left_chevron.png"
+                color: 1,1,1,0.5
+                background_color: 1,1,1,0.25
+                on_release:
+                    print("--> From target to map")
+                    selection_screen.dssp_id.produce_selected_data_set()
+                    sm.transition.direction = 'right'
+                    sm.current = 'screen3'
+                    maps_screen.ddm_id.refresh()
+                    maps_screen.otm_id.refresh()
+                    maps_screen.menu_id.refresh()
+                    maps_screen.plot_id.replot()
+                    print("<-- From target to map")
+                    
+            
+        AnchorLayout:
+            anchor_x: "right"
+            ActionButton:
+                size_hint: None, None
+                size: '16dp', '80dp'
+                text: '>'
+                icon: "./images/right_chevron.png"
+                color: 1,1,1,0.5
+                background_color: 1,1,1,0.25
+                on_release:
+                    print("--> From target to data")
+                    sm.transition.direction = 'left'
+                    sm.current = 'screen0'
+                    print("<-- From target to data")
+                    
+                    
     Screen:
         name: 'screen0'
+
+        LogoBackground:
+            logo_size: 0.5*max(root.height,root.width)
+            logo_offset: (0.75*self.logo_size+0.25*root.width,0.45*root.height)
+            size: root.size
+
         
         DataSetSelectionScreen:
             id: selection_screen
@@ -42,15 +96,20 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
-                    print("--> From data to map")
-                    selection_screen.dssp_id.produce_selected_data_set()
+                    # print("--> From data to map")
+                    # selection_screen.dssp_id.produce_selected_data_set()
+                    # sm.transition.direction = 'right'
+                    # sm.current = 'screen3'
+                    # maps_screen.ddm_id.refresh()
+                    # maps_screen.otm_id.refresh()
+                    # maps_screen.menu_id.refresh()
+                    # maps_screen.plot_id.replot()
+                    # print("<-- From data to map")
+                    print("--> From data to target")
+                    # selection_screen.dssp_id.produce_selected_data_set()
                     sm.transition.direction = 'right'
-                    sm.current = 'screen3'
-                    maps_screen.ddm_id.refresh()
-                    maps_screen.otm_id.refresh()
-                    maps_screen.menu_id.refresh()
-                    maps_screen.plot_id.replot()
-                    print("<-- From data to map")
+                    sm.current = 'targets'
+                    print("<-- From data to target")
                     
             
         AnchorLayout:
@@ -164,6 +223,12 @@ ScreenManager:
     Screen:
         name: 'screen3'
 
+
+        LogoBackground:
+            logo_size: 0.5*max(root.height,root.width)
+            logo_offset: (0.1*self.logo_size,0.4*self.logo_size)
+            size: root.size
+        
         MapsScreen:
             id: maps_screen
 
@@ -197,10 +262,15 @@ ScreenManager:
                 color: 1,1,1,0.5
                 background_color: 1,1,1,0.25
                 on_release:
-                    print("--> From map to data")
+                    # print("--> From map to data")
+                    # sm.transition.direction = 'left'
+                    # sm.current = 'screen0'
+                    # print("<-- From map to data")
+
+                    print("--> From map to target")
                     sm.transition.direction = 'left'
-                    sm.current = 'screen0'
-                    print("<-- From map to data")
+                    sm.current = 'targets'
+                    print("<-- From map to target")
                     
     Screen:
         name: 'news'
@@ -240,11 +310,43 @@ ScreenManager:
                 allow_stretch: True
                 size_hint: 1,1
                 pos_hint: {"center": (0.5,0.5)}
+
+
+<TargetSelectionScreen>:
+    orientation: "vertical"
+    TopBanner:
+    RelativeLayout:
+        SimpleTargetSelection:
+            id: ts
+            size_hint_x: 0.75
+            size_hint_y: None
+            pos_hint: {'center': (.5, .7)}
+            height: "30dp"
+            sync_height: True
+            text_autoupdate: True
+            color: 1,1,1,1
+            background_color: 0.14,0.14,0.14,0.25
+        Label:
+            size_hint_x: 0.75
+            size_hint_y: None
+            pos_hint: {'center': (0.5,0.5)}
+            height: "30dp"
+            color: 1,1,1,1
+            text: "RA: "+ts.RA_label
+        Label:
+            size_hint_x: 0.75
+            size_hint_y: None
+            pos_hint: {'center': (0.5,0.4)}
+            height: "30dp"
+            color: 1,1,1,1
+            text: "Dec: "+ts.Dec_label
                 
 <DataSetSelectionScreen>:
     dssp_id: dssp
     orientation: "vertical"
     TopBanner:
+    BoxLayout:
+        size_hint: 1,0.05    
     DataSetSelectionPage:
         id: dssp
     # RelativeLayout:
@@ -471,11 +573,11 @@ ScreenManager:
     menu_id: sme
     plot_id: plot
     FloatLayout :
-        canvas:
-            Color:
-                rgb: 0,0,0
-            Rectangle:
-                size: root.width,root.height
+        # canvas:
+        #     Color:
+        #         rgb: 0,0,0
+        #     Rectangle:
+        #         size: root.width,root.height
                 
         size_hint: 1.0,1.0
         MenuedBaselineMapPlot_kivygraph:

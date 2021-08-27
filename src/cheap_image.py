@@ -218,7 +218,7 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         self.ddict = {}
         self.sdict = {}
 
-        self.argument_hash = None
+        # self.argument_hash = None
         
         super().__init__(**kwargs)
 

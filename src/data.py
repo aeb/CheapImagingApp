@@ -66,7 +66,7 @@ def bilinear(x1d,y1d,f,X,Y,indexing='xy') :
 
 #########
 # To generate data from a station dictionary and image
-def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_time=600,min_elev=15,bandwidth=8.0,day=100) :
+def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_time=600,min_elev=15,bandwidth=8.0,day=80) :
     # Takes:
     #  freq in GHz
     #  ra in hr

@@ -12,7 +12,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner, SpinnerOption
-from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty
+from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty, ListProperty
 from kivy.clock import Clock
 from kivy.uix.screenmanager import FadeTransition, SlideTransition
 from kivy.metrics import dp
@@ -36,8 +36,8 @@ import hashlib
 ####################
 # TESTING
 # import pickle
-# from kivy.core.window import Window
-# Window.size = (300,500)
+from kivy.core.window import Window
+Window.size = (300,500)
 ##################
 
 
@@ -121,8 +121,9 @@ class MenuedReconstructionPlot(BoxLayout) :
     def update(self,datadict,statdict,**kwargs) :
 
         new_argument_hash = hashlib.md5(bytes(str(datadict)+str(statdict)+str(kwargs),'utf-8')).hexdigest()
-        print("FOO:",new_argument_hash)
-        print("BAR:",self.argument_hash)
+        if (__main_debug__) :
+            print("New image md5 hash:",new_argument_hash)
+            print("Old image md5 hash:",self.argument_hash)
         if ( new_argument_hash == self.argument_hash ) :
             return
         self.argument_hash = new_argument_hash
@@ -143,8 +144,9 @@ class MenuedReconstructionPlot(BoxLayout) :
         self.sdict = _statdict
 
         new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
-        print("FOO:",new_argument_hash)
-        print("BAR:",self.argument_hash)
+        if (__main_debug__):
+            print("New image md5 hash:",new_argument_hash)
+            print("Old image md5 hash:",self.argument_hash)
         if ( new_argument_hash == self.argument_hash ) :
             return
         self.argument_hash = new_argument_hash
@@ -161,8 +163,9 @@ class MenuedReconstructionPlot(BoxLayout) :
     def refresh(self,**kwargs) :
 
         new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
-        print("FOO:",new_argument_hash)
-        print("BAR:",self.argument_hash)
+        if (__main_debug__):
+            print("New image md5 hash:",new_argument_hash)
+            print("Old image md5 hash:",self.argument_hash)
         if ( new_argument_hash == self.argument_hash ) :
             return
         self.argument_hash = new_argument_hash
@@ -737,7 +740,7 @@ class ObsTimeSliders(BoxLayout) :
         self.sts.bind(active=self.on_active)
         self.sts_box.add_widget(self.sts)
         
-        self.sts_label2 = Label(text="%5.1f UT"%(self.sts.value),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sts_label2 = Label(text="%5.1f GST"%(self.sts.value),color=(1,1,1,0.75),size_hint=(0.5,1))
         self.sts_box.add_widget(self.sts_label2)
 
         
@@ -783,7 +786,7 @@ class ObsTimeSliders(BoxLayout) :
             
     def adjust_start_time(self,widget,val) :
         self.plot.set_start_time(val)
-        self.sts_label2.text = "%5.1f UT"%(val)
+        self.sts_label2.text = "%5.1f GST"%(val)
         
     def adjust_obs_time(self,widget,val) :
         self.plot.set_obs_time(val)
@@ -801,10 +804,10 @@ class StartTimeMDSlider(FancyMDSlider):
         self.show_off = False
 
     def hint_box_text(self,value) :
-        return "%5.1f UT"%(value)
+        return "%5.1f GST"%(value)
 
     def hint_box_size(self) :
-        return (dp(50),dp(28))
+        return (dp(60),dp(28))
 
     
 class ObsTimeMDSlider(FancyMDSlider):
@@ -1009,6 +1012,88 @@ class SimpleDataSetSelection(Spinner) :
         print("Read:",_datadict)
 
 
+
+class SimpleTargetSelection(Spinner) :
+
+    RA_label = StringProperty(None)
+    Dec_label = StringProperty(None)
+
+    
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+        
+        self.targets = {}
+        self.targets['Sgr A*']={'RA':self.RA_hr(17,45,40.049),'Dec':self.Dec_deg(-29,0,28.118)}
+        self.targets['M87']={'RA':self.RA_hr(12,30,49.42338),'Dec':self.Dec_deg(12,23,28.0439)}
+        self.targets['M31']={'RA':self.RA_hr(0,42,44.3),'Dec':self.Dec_deg(41,16,9)}
+        self.targets['Cen A']={'RA':self.RA_hr(13,25,27.6),'Dec':self.Dec_deg(-43,1,9)}
+        self.targets['OJ 287']={'RA':self.RA_hr(8,54,48.9),'Dec':self.Dec_deg(20,6,31)}
+        self.targets['3C 279']={'RA':self.RA_hr(12,56,11.1),'Dec':self.Dec_deg(-5,47,22)}
+        self.targets['Mkn 421']={'RA':self.RA_hr(11,4,27.314),'Dec':self.Dec_deg(38,12,31.80)}
+        self.targets['BL Lac']={'RA':self.RA_hr(22,2,43.3),'Dec':self.Dec_deg(42,16,40)}
+        self.targets['M81']={'RA':self.RA_hr(9,55,33.2),'Dec':self.Dec_deg(69,3,55)}
+
+        
+        # Set values
+        self.values = []
+        for ds in self.targets.keys() :
+            self.values.append(ds)
+
+        # Choose key
+        self.text = list(self.targets.keys())[0]
+
+        
+        
+        # Set default RA/DEC
+        self.select_target(self,self.text)
+        
+        # global _source_RA, _source_Dec
+        # _source_RA = self.targets[self.text]['RA']
+        # _source_Dec = self.targets[self.text]['Dec']
+
+
+        
+        self.bind(text=self.select_target)
+
+        
+        print("RA:",self.hr_to_str(_source_RA))
+        print("Dec:",self.deg_to_str(_source_RA))
+        
+        
+    def RA_hr(self,hh,mm,ss) :
+        return hh+mm/60.0+ss/3600.
+        
+    def Dec_deg(self,deg,arcmin,arcsec) :
+        return (np.sign(deg)*(np.abs(deg)+arcmin/60.0+arcsec/3600.))
+
+    def hr_to_str(self,RA) :
+        hh = int(RA)
+        mm = int((RA-hh)*60.0)
+        ss = ((RA-hh)*60.0-mm)*60.0
+        #return ("%2i\u02B0 %2i\u1D50 %4.1f\u02E2"%(hh,mm,ss))
+        return ("%02ih %02im %02.0fs"%(hh,mm,ss))
+        
+    def deg_to_str(self,Dec) :
+        if (Dec<0) :
+            ns = '-'
+        else :
+            ns = '+'
+        Dec = np.abs(Dec)
+        dg = int(Dec)
+        mm = int((Dec-dg)*60.0)
+        ss = ((Dec-dg)*60.0-mm)*60.0
+        return ("%1s%02i\u00B0 %02i\' %02.0f\""%(ns,dg,mm,ss))
+    
+    def select_target(self,widget,value) :
+        if (__main_debug__) :
+            print("Selecting target:",widget,value,self.text)
+        global _source_RA, _source_Dec
+        _source_RA = self.targets[self.text]['RA']
+        _source_Dec = self.targets[self.text]['Dec']
+
+        self.RA_label = self.hr_to_str(_source_RA)
+        self.Dec_label = self.deg_to_str(_source_Dec)
+        
         
 class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
     def __init__(self, **kwargs):
@@ -1021,7 +1106,8 @@ class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
     def switch_to_imaging(self,val):
         sm = ngEHTApp.get_running_app().root
         sm.transition = FadeTransition()
-        sm.current = "screen0"
+        # sm.current = "screen0"
+        sm.current = "targets"
         sm.transition = SlideTransition()
 
         
@@ -1059,6 +1145,44 @@ class DataSetSelectionPage(BoxLayout) :
 
         self.add_widget(self.dss)
 
+        self.argument_hash = None
+        self.produce_selected_data_set()
+
+        
+        
+        
+    def produce_selected_data_set(self) :
+        if (__main_debug__) :
+            print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
+
+        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux),'utf-8')).hexdigest()
+        if (__main_debug__) :
+            print("New data md5 hash:",new_argument_hash)
+            print("Old data md5 hash:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
+            
+        global _datadict
+        _datadict = data.generate_data_from_file( self.ic.selected_data_file(), \
+                                                  _statdict_maximum, \
+                                                  freq=self.dss.observation_frequency, \
+                                                  ra=_source_RA,dec=_source_Dec, \
+                                                  scale=self.dss.source_size, \
+                                                  total_flux=self.dss.source_flux)
+            
+
+class LogoBackground(FloatLayout) :
+
+    background_color = ListProperty(None)
+    highlight_color = ListProperty(None)
+    logo_color = ListProperty(None)
+    logo_size = NumericProperty(None)
+    logo_offset = ListProperty(None,size=2)
+    highlight_offset = ListProperty(None,size=2)
+    
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
         self.bind(height=self.resize)
         self.bind(width=self.resize)
 
@@ -1071,57 +1195,62 @@ class DataSetSelectionPage(BoxLayout) :
         for j in range(1,len(self.radius_list)) :
             self.dx_list[j] = (self.radius_list[j]-self.radius_list[j-1]) * np.sin(self.phi0_list[j]*np.pi/180.0) + self.dx_list[j-1]
             self.dy_list[j] = (self.radius_list[j]-self.radius_list[j-1]) * np.cos(self.phi0_list[j]*np.pi/180.0) + self.dy_list[j-1]
+
+        self.dx_list = -self.dx_list
+        self.dy_list = -self.dy_list
+            
+        self.background_color = (0.25,0.25,0.25,1)
+        self.highlight_color = (0.35,0.35,0.35,1)
+        self.logo_color = (0.14,0.14,0.14,1)
+        self.logo_offset = (75,45)
+        self.logo_size = 75
+        self.logo_thickness = dp(6)
+        self.highlight_offset = (-0.2*dp(6),0.2*dp(6))
         
-        
+    
     def redraw_background(self) :
 
-        #self.canvas.clear()
+        self.canvas.clear()
         
         with self.canvas.before :
             
-            Color(0.25,0.25,0.25,1)
+            Color(self.background_color[0],self.background_color[1],self.background_color[2],self.background_color[3])
             Rectangle(size=self.size)
             
-            circ_scale = 0.5*max(self.height,self.width)
-            width = dp(6)
-            Xc = 0.75*circ_scale+0.25*self.width
-            Yc = 0.45*self.height
-            Color(0.35,0.35,0.35,1)
+            # circ_scale = 0.5*max(self.height,self.width)
+            # Xc = 0.75*self.logo_size+0.25*self.width
+            # Yc = 0.45*self.height
+            Xc = self.logo_offset[0] + self.highlight_offset[0]
+            Yc = self.logo_offset[1] + self.highlight_offset[1]
+            Color(self.highlight_color[0],self.highlight_color[1],self.highlight_color[2],self.highlight_color[3])
             for j in range(len(self.radius_list)) :
-                xc = self.dx_list[j]*circ_scale + Xc
-                yc = self.dy_list[j]*circ_scale + Yc
-                rc = self.radius_list[j]*circ_scale
-                Line(circle=(xc,yc,rc),close=True,width=width)
+                xc = self.dx_list[j]*self.logo_size + Xc
+                yc = self.dy_list[j]*self.logo_size + Yc
+                rc = self.radius_list[j]*self.logo_size
+                Line(circle=(xc,yc,rc),close=True,width=self.logo_thickness)
 
-            width = dp(6)
-            Xc = Xc + 0.2*width
-            Yc = Yc - 0.2*width
-            Color(0.14,0.14,0.14,1)
+            # Xc = Xc + 0.2*self.logo_thickness
+            # Yc = Yc - 0.2*self.logo_thickness
+            Xc = Xc - self.highlight_offset[0]
+            Yc = Yc - self.highlight_offset[1]
+            Color(self.logo_color[0],self.logo_color[1],self.logo_color[2],self.logo_color[3])
             for j in range(len(self.radius_list)) :
-                xc = self.dx_list[j]*circ_scale + Xc
-                yc = self.dy_list[j]*circ_scale + Yc
-                rc = self.radius_list[j]*circ_scale
-                Line(circle=(xc,yc,rc),close=True,width=width)
+                xc = self.dx_list[j]*self.logo_size + Xc
+                yc = self.dy_list[j]*self.logo_size + Yc
+                rc = self.radius_list[j]*self.logo_size
+                Line(circle=(xc,yc,rc),close=True,width=self.logo_thickness)
                 
 
     def resize(self,widget,newsize) :
         self.redraw_background()
 
-    def produce_selected_data_set(self) :
-        if (__main_debug__) :
-            print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
-        global _datadict
-        _datadict = data.generate_data_from_file( self.ic.selected_data_file(), \
-                                                  _statdict_maximum, \
-                                                  freq=self.dss.observation_frequency, \
-                                                  ra=_source_RA,dec=_source_Dec, \
-                                                  scale=self.dss.source_size, \
-                                                  total_flux=self.dss.source_flux)
 
-        
+class TargetSelectionScreen(BoxLayout) :
+    pass
+
 class DataSetSelectionScreen(BoxLayout) :
     dssp_id = ObjectProperty(None)
-    
+
 class MovieSplashScreen(BoxLayout) :
     img_id = ObjectProperty(None)
 
