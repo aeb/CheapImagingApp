@@ -1,6 +1,6 @@
 __version__ = "0.8"
 
-__main_debug__ = False
+__main_debug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -119,63 +119,54 @@ class MenuedReconstructionPlot(BoxLayout) :
         
 
     def update(self,datadict,statdict,**kwargs) :
-
-        new_argument_hash = hashlib.md5(bytes(str(datadict)+str(statdict)+str(kwargs),'utf-8')).hexdigest()
-        if (__main_debug__) :
-            print("New image md5 hash:",new_argument_hash)
-            print("Old image md5 hash:",self.argument_hash)
-        if ( new_argument_hash == self.argument_hash ) :
-            return
-        self.argument_hash = new_argument_hash
-        
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
         kwargs['ngeht_diameter']=self.ngeht_diameter
+        new_argument_hash = hashlib.md5(bytes(str(datadict)+str(statdict)+str(kwargs),'utf-8')).hexdigest()
+        if (__main_debug__) :
+            print("update kwargs:",kwargs)
+            print("update New image md5 hash:",new_argument_hash)
+            print("update Old image md5 hash:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
         self.irp.update(datadict,statdict,**kwargs)
-                    
         if __main_debug__ :
             print("mrp.update:",self.sdict.keys(),self.size)
 
     def replot(self,**kwargs) :
-
         global _datadict, _statdict
         self.ddict = _datadict
         self.sdict = _statdict
-
-        new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
-        if (__main_debug__):
-            print("New image md5 hash:",new_argument_hash)
-            print("Old image md5 hash:",self.argument_hash)
-        if ( new_argument_hash == self.argument_hash ) :
-            return
-        self.argument_hash = new_argument_hash
-        
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
         kwargs['ngeht_diameter']=self.ngeht_diameter
+        new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
+        if (__main_debug__):
+            print("replot New image md5 hash:",new_argument_hash)
+            print("replot Old image md5 hash:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
         self.irp.replot(self.ddict,self.sdict,**kwargs)
-        
         if __main_debug__ :
             print("mrp.replot:",self.sdict.keys(),self.size)
 
     def refresh(self,**kwargs) :
-
-        new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
-        if (__main_debug__):
-            print("New image md5 hash:",new_argument_hash)
-            print("Old image md5 hash:",self.argument_hash)
-        if ( new_argument_hash == self.argument_hash ) :
-            return
-        self.argument_hash = new_argument_hash
-
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
         kwargs['snr_cut']=self.snr_cut
         kwargs['ngeht_diameter']=self.ngeht_diameter
+        new_argument_hash = hashlib.md5(bytes(str(self.ddict)+str(self.sdict)+str(kwargs),'utf-8')).hexdigest()
+        if (__main_debug__):
+            print("refresh New image md5 hash:",new_argument_hash)
+            print("refresh Old image md5 hash:",self.argument_hash)
+        if ( new_argument_hash == self.argument_hash ) :
+            return
+        self.argument_hash = new_argument_hash
         self.irp.replot(self.ddict,self.sdict,**kwargs)
-        
         if __main_debug__ :
             print("mrp.refresh:",self.sdict.keys(),self.size)
             
@@ -184,16 +175,17 @@ class MenuedReconstructionPlot(BoxLayout) :
             print("mrp.set_start_time:",val)
         self.time_range[1] = self.time_range[1]-self.time_range[0]+val
         self.time_range[0] = val
-
         self.update(self.ddict,self.sdict)
         
     def set_obs_time(self,val) :
         self.time_range[1] = self.time_range[0] + val
+        self.update(self.ddict,self.sdict)
 
     def set_ngeht_diameter(self,val) :
         global _ngeht_diameter
         self.ngeht_diameter = val
         _ngeht_diameter = self.ngeht_diameter
+        self.update(self.ddict,self.sdict)
 
     def set_snr_cut(self,val) :
         global _snr_cut
@@ -201,6 +193,7 @@ class MenuedReconstructionPlot(BoxLayout) :
         if (val is None) :
             self.snr_cut = 0
         _snr_cut = self.snr_cut
+        self.update(self.ddict,self.sdict)
 
     def freeze_plot(self) :
         self.irp.plot_frozen = True
