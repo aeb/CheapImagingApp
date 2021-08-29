@@ -311,6 +311,12 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         # Filter to smooth at edges
         V2 = V2 * np.cos(u2/umax*0.5*np.pi) * np.cos(v2/vmax*0.5*np.pi)
 
+        # hu = 0.42 - 0.5*np.cos(2.0*np.pi*(u2+umax)/(2*umax)) + 0.08*np.cos(4.0*np.pi*(u2+umax)/(2*umax))
+        # hv = 0.42 - 0.5*np.cos(2.0*np.pi*(v2+umax)/(2*umax)) + 0.08*np.cos(4.0*np.pi*(v2+umax)/(2*umax))
+        # V2 = V2*hu*hv
+        
+        
+
         # Generate the x,y grid on which to image
         x1d = np.fft.fftshift(np.fft.fftfreq(u2.shape[0],d=(u2[1,1]-u2[0,0])*1e9)/uas2rad)
         y1d = np.fft.fftshift(np.fft.fftfreq(v2.shape[1],d=(v2[1,1]-v2[0,0])*1e9)/uas2rad)

@@ -128,7 +128,7 @@ Builder.load_string(
             slider.value_pos[1] - dp(8))
         color:
             (0, 0, 0, 0) if slider._is_off else (root._track_color_disabled \
-            if root.disabled else root.color)
+            if root.disabled else (root.color[0],root.color[1],root.color[2],1) )
         elevation:
             0 if slider._is_off else (4 if root.active else 2)
     MDCard:

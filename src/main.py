@@ -31,6 +31,8 @@ from fancy_mdslider import FancyMDSlider
 
 from os import path
 
+from pathlib import Path as plP
+
 import hashlib
 
 
@@ -1368,19 +1370,24 @@ class DataSetSelectionPage(BoxLayout) :
 
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
-                          "Simulated jet at 230 GHz.")
+                          "Simulated jet at 230 GHz.",
+                          False)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
-                          "Simulated jet at 345 GHz.")
+                          "Simulated jet at 345 GHz.",
+                          False)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
-                          "Simulated RIAF at 230 GHz.")
+                          "Simulated RIAF at 230 GHz.",
+                          False)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
-                          "Simulated RIAF at 345 GHz.")
+                          "Simulated RIAF at 345 GHz.",
+                          False)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
-                          "First contact!")
+                          "First contact!",
+                          True)
         # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"images/image_file_icon.png")),
         #                   None,
         #                   "Choose a file of your own!")
@@ -1389,7 +1396,9 @@ class DataSetSelectionPage(BoxLayout) :
 
         self.dss = data.DataSelectionSliders()
         self.dss.size_hint = 1,0.5
-
+        self.dss.its.active=True
+        self.dss.its.disabled = True
+        
         self.add_widget(self.dss)
 
         self.argument_hash = None
@@ -1400,17 +1409,21 @@ class DataSetSelectionPage(BoxLayout) :
             select_path=self.select_path,
             exit_manager=self.exit_manager,
             preview=True,
-            ext=['png','jpg','gif','jpeg']
+            ext=['png','jpg','jpeg','gif']
         )
+        self.file_manager_obj.md_bg_color = (0.25,0.25,0.25,1)
+        # self.file_manager_obj.toolbar.specific_text_color = (0.77,0.55,0.17,1)
 
         self.ic.add_btn.bind(on_release=self.open_file_manager)
-
+        
     def select_path(self,path) :
-        self.ic.add_image(path,path,path)
+        self.ic.add_image(path,path,path,True)
+        self.dss.its.disabled = False
         self.exit_manager(0)
         
     def open_file_manager(self,widget) :
-        self.file_manager_obj.show('/')
+        # self.file_manager_obj.show('/')
+        self.file_manager_obj.show(str(plP.home()))
 
     def exit_manager(self,value) :
         if (value==1) : # a valid file wasn't selected, return to screen
@@ -1419,13 +1432,23 @@ class DataSetSelectionPage(BoxLayout) :
             self.ic.index = -1 # Set to value just added
             
         self.file_manager_obj.close()
+
+    def on_touch_move(self,touch) :
+        self.ic.on_touch_move(touch)
+        self.dss.on_touch_move(touch)
+        Clock.schedule_once(lambda x: self.on_selection(), self.ic.anim_move_duration+0.1)
+        
+    def on_selection(self) :
+        print("Setting taper switch to active?",self.ic.taperable_list[self.ic.index])
+        self.dss.its.disabled = not self.ic.taperable_list[self.ic.index]
+        print("Setting taper switch to active?",self.ic.taperable_list[self.ic.index])
         
         
     def produce_selected_data_set(self) :
         if (__main_debug__) :
             print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
 
-        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux),'utf-8')).hexdigest()
+        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux) + str(self.dss.its.active and not self.dss.its.disabled),'utf-8')).hexdigest()
         if (__main_debug__) :
             print("New data md5 hash:",new_argument_hash)
             print("Old data md5 hash:",self.argument_hash)
@@ -1439,7 +1462,8 @@ class DataSetSelectionPage(BoxLayout) :
                                                   freq=self.dss.observation_frequency, \
                                                   ra=_source_RA,dec=_source_Dec, \
                                                   scale=self.dss.source_size, \
-                                                  total_flux=self.dss.source_flux)
+                                                  total_flux=self.dss.source_flux, \
+                                                  taper_image=(self.dss.its.active and not self.dss.its.disabled))
             
 
 class LogoBackground(FloatLayout) :

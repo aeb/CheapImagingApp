@@ -7,6 +7,8 @@ from kivy.uix.button import Button
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty, NumericProperty
 from fancy_mdslider import FancyMDSlider
+# from kivymd.uix.selectioncontrol import MDSwitch
+from fancy_mdswitch import FancyMDSwitch
 
 from kivy.uix.behaviors.touchripple import TouchRippleButtonBehavior
 from kivy.uix.behaviors.button import ButtonBehavior
@@ -210,7 +212,7 @@ def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_t
 
                         
                         
-def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.007810,scale=500.0,total_flux=None,**kwargs) :
+def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.007810,scale=500.0,total_flux=None,taper_image=False,**kwargs) :
 
     if (__data_debug__) :
         print("generate_data_from_file:",file_name,freq,ra,dec,scale,total_flux)
@@ -256,18 +258,48 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
 
         if (__data_debug__) :
             print("Read",file_name,img.shape)        
+
+        if (img.shape[2]==3) :
+            I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 )
+        elif (img.shape[2]==4) :
+            I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 ) * (img[:,:,3].astype(float))
+        else :
+            print("ERROR: Unknown image type in file %s"%(file_name))
+            return None
+
+
+
+
+        # Taper image
+        if (taper_image) :
+            i,j = np.meshgrid(np.linspace(0,1,I.shape[1]),np.linspace(0,1,I.shape[0]))
+
+            # Hann window
+            hi = (np.sin(np.pi*i))**2
+            hj = (np.sin(np.pi*j))**2
+
+            # Blackman window
+            # hi = 0.42 - 0.5*np.cos(2*np.pi*i) + 0.08*np.cos(4*np.pi*i)
+            # hj = 0.42 - 0.5*np.cos(2*np.pi*j) + 0.08*np.cos(4*np.pi*j)
+            
+            taper_func = hi*hj
+            I = I * taper_func**2
+
+            # import matplotlib.pyplot as plt            
+            # plt.figure()
+            # plt.imshow(I)
+            # plt.show()
+
         
-        I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 ) * (img[:,:,3].astype(float))
-
-        drf = 1
-        I = 1 * I / np.max(I)
-
+            
+        # drf = 1
+        # I = 1 * I / np.max(I)
         #I = I**2
 
         if (scale<1000.0) :
             if (__data_debug__) :
                 print("Plot too small in x-direction:",scale)
-            dim = min(2*I.shape[1],int(np.ceil(1000.0/scale * I.shape[1])))
+            dim = min(I.shape[1]+128,int(np.ceil(1000.0/scale * I.shape[1])))
             mpad = (dim-I.shape[1])//2
             ppad = (dim-I.shape[1])-mpad
             if (__data_debug__) :
@@ -283,7 +315,7 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         if (scale*I.shape[0]/I.shape[1]<1000.0) :
             if (__data_debug__) :
                 print("Plot too small in y-direction:",scale)
-            dim = min(2*I.shape[1],int(np.ceil(1000.0/scale * I.shape[1])))
+            dim = min(I.shape[1]+128,int(np.ceil(1000.0/scale * I.shape[1])))
             mpad = (dim-I.shape[0])//2
             ppad = (dim-I.shape[0])-mpad
             if (__data_debug__) :
@@ -377,6 +409,7 @@ class ImageCarousel(Carousel) :
         self.direction = 'right'
         self.loop = True
         self.data_file_list = []
+        self.taperable_list = []
 
         box = BoxLayout()
         box.orientation = "vertical"
@@ -386,14 +419,9 @@ class ImageCarousel(Carousel) :
         box.add_widget(lbl)
         self.add_widget(box)
         self.data_file_list.append("")
-
-    #     self.add_btn.bind(on_press=self.add_file_picker)
-
-    # def add_file_picker(self,widget) :
-    #     print("I want to add a file!")
+        self.taperable_list.append(False)
         
-        
-    def add_image(self,image_file,data_file,caption="") :
+    def add_image(self,image_file,data_file,caption="",taperable=True) :
         box = BoxLayout()
         box.orientation = "vertical"
         image = AsyncImage(source=image_file, allow_stretch=True)
@@ -402,11 +430,12 @@ class ImageCarousel(Carousel) :
         box.add_widget(lbl)
         self.add_widget(box)
         self.data_file_list.append(data_file)
+        self.taperable_list.append(taperable)
         
     def selected_data_file(self) :
         return self.data_file_list[self.index]
-
-
+    
+    
 class DataSelectionSliders(BoxLayout) :
 
     source_size = NumericProperty(None)
@@ -417,6 +446,20 @@ class DataSelectionSliders(BoxLayout) :
         super().__init__(**kwargs)
         self.orientation = 'vertical'
 
+        # Add the taper switch
+        self.its_box = BoxLayout()
+        self.its_box.orientation='horizontal'
+        self.its_label = Label(text='Taper image',color=(1,1,1,0.75))
+        self.its_box.add_widget(self.its_label)
+        self.its_box_box = BoxLayout()
+        self.its = FancyMDSwitch(pos_hint={'center_x':0.5,'center_y':0.5})
+        self.its._thumb_color_down = (1,0.75,0.25,1)
+        #self.its_box.add_widget(self.its)        
+        self.its_box_box.add_widget(self.its)
+        self.its_box.add_widget(self.its_box_box)
+
+        self.add_widget(self.its_box)
+        
         # Add the source size slider
         self.sss_box = BoxLayout()
         self.sss_box.orientation='horizontal'
@@ -478,7 +521,6 @@ class DataSelectionSliders(BoxLayout) :
         self.source_size = self.sss.source_size()
         self.source_flux = self.sfs.flux()
         self.observation_frequency = self.ofs.observation_frequency()
-
         
     def adjust_source_size(self,widget,val) :
         self.source_size = self.sss.source_size()
