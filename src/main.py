@@ -1370,7 +1370,7 @@ class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
 
 class DataSetSelectionPage(BoxLayout) :
 
-    path_info = StringProperty("")
+    # path_info = StringProperty("")
     
     def __init__(self,**kwargs) :
         super().__init__(**kwargs)
@@ -1436,7 +1436,7 @@ class DataSetSelectionPage(BoxLayout) :
 
         home = str(plP.home())
 
-        self.path_info = home
+        # self.path_info = home
         
         if (home!='') :
             topdir = home
