@@ -1443,6 +1443,7 @@ class DataSetSelectionPage(BoxLayout) :
         else :
             topdir = '/'
 
+        topdir = '/'
             
         self.file_manager_obj.show(topdir)
         
