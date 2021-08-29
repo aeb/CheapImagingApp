@@ -1431,13 +1431,14 @@ class DataSetSelectionPage(BoxLayout) :
         self.exit_manager(0)
         
     def open_file_manager(self,widget) :
-        try :
-            self.file_manager_obj.show(str(plP.home()))
-        except :
-            try :
-                self.file_manager_obj.show('/')
-            except :
-                print("Failed to open file manager.  Sorry!")
+
+        home = str(plP.home())
+        if (home!='') :
+            topdir = home
+        else :
+            topdir = '/'
+        
+        self.file_manager_obj.show(topdir)
         
 
     def exit_manager(self,value) :
