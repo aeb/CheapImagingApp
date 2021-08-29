@@ -1,6 +1,6 @@
-__version__ = "0.8"
+__version__ = "0.9"
 
-__main_debug__ = True
+__main_debug__ = False
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -15,7 +15,7 @@ from kivy.uix.spinner import Spinner, SpinnerOption
 from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty, ListProperty
 from kivy.clock import Clock
 from kivy.uix.screenmanager import FadeTransition, SlideTransition
-from kivy.metrics import dp
+from kivy.metrics import dp,sp
 from kivy.uix.image import Image
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import Color, Line, Rectangle
@@ -49,6 +49,7 @@ import data
 import baseline_plot
 import cheap_image
 import map_plot
+import skymap_plot
 
 _on_color = (1,0.75,0.25,1)
 _off_color = (0.5,0,0,1)
@@ -1087,6 +1088,256 @@ class SimpleTargetSelection(Spinner) :
         self.RA_label = self.hr_to_str(_source_RA)
         self.Dec_label = self.deg_to_str(_source_Dec)
         
+
+            
+class TargetSelectionMap(BoxLayout) :
+
+
+    smc = skymap_plot.StarMapCanvas()
+    ismp = skymap_plot.InteractiveSkyMapPlot()
+    # tss = ObjectProperty(None)
+
+    fps = NumericProperty(30)
+    
+    def __init__(self,**kwargs) :
+        global _source_RA, source_Dec
+        
+        super().__init__(**kwargs)
+
+        self.add_widget(self.ismp)
+        self.add_widget(self.smc)
+
+
+        self.tbox = BoxLayout(orientation='vertical',size_hint=(None,None),width=dp(150),height=sp(100)) #,dp(200))) #,pos=(dp(100),dp(100)))
+        # self.tbox = BoxLayout(orientation='vertical',size_hint=(None,None),size=(dp(50),dp(90)))
+        
+        self.targets = {}
+        self.targets['Sgr A*']={'RA':self.RA_hr(17,45,40.049),'Dec':self.Dec_deg(-29,0,28.118)}
+        self.targets['M87']={'RA':self.RA_hr(12,30,49.42338),'Dec':self.Dec_deg(12,23,28.0439)}
+        self.targets['M31']={'RA':self.RA_hr(0,42,44.3),'Dec':self.Dec_deg(41,16,9)}
+        self.targets['Cen A']={'RA':self.RA_hr(13,25,27.6),'Dec':self.Dec_deg(-43,1,9)}
+        self.targets['OJ 287']={'RA':self.RA_hr(8,54,48.9),'Dec':self.Dec_deg(20,6,31)}
+        self.targets['3C 279']={'RA':self.RA_hr(12,56,11.1),'Dec':self.Dec_deg(-5,47,22)}
+        # self.targets['Mkn 421']={'RA':self.RA_hr(11,4,27.314),'Dec':self.Dec_deg(38,12,31.80)}
+        # self.targets['BL Lac']={'RA':self.RA_hr(22,2,43.3),'Dec':self.Dec_deg(42,16,40)}
+        # self.targets['M81']={'RA':self.RA_hr(9,55,33.2),'Dec':self.Dec_deg(69,3,55)}
+        # self.targets['LMC']={'RA':self.RA_hr(5,23,34.5),'Dec':self.Dec_deg(-69,45,22)}
+        # self.targets['SMC']={'RA':self.RA_hr(0,52,44.8),'Dec':self.Dec_deg(-72,49,43)}
+
+        self.targets['--- Select ---']={'RA':None,'Dec':None}
+        
+        if (__main_debug__) :
+            for s in self.targets.keys() :
+                if (s!='--- Select ---') :
+                    print("%10s %15.8g %15.8g"%(s,self.targets[s]['RA'],self.targets[s]['Dec']))
+        
+        self.tss = skymap_plot.TargetSelectionSpinner(self.targets)
+        self.tss.size_hint = (1,1)
+        self.tss.background_color = (1,1,1,0.1)
+        self.tss.color = (1,0.75,0.25,1)
+        self.tss.bind(text=self.select_target)
+        self.tbox.add_widget(self.tss)
+        self.ra_label = Label(text=" RA: ",size_hint=(1,1),color=(1,1,1))
+        self.dec_label = Label(text="Dec: ",size_hint=(1,1),color=(1,1,1))
+        self.tbox.add_widget(self.ra_label)
+        self.tbox.add_widget(self.dec_label)
+
+        self.add_widget(self.tbox)
+        
+        self.pixel_offset = (0,0)
+
+        # Generate some default resizing behaviors
+        self.bind(height=self.resize)
+        self.bind(width=self.resize)
+
+        self.animation_RA_start = 0
+        self.animation_Dec_start = 0
+        self.animation_total_time = 1.0
+        self.animation_type = 'cubic'
+
+
+        # Select a target
+        self.select_target(self,list(self.targets.keys())[0])
+        self.set_map_center(_source_RA,_source_Dec)
+
+        
+        if __main_debug__ :
+            print("mp.__init__: finished")
+
+
+    def select_target(self,widget,value) :
+        if (__main_debug__) :
+            print("Selecting target:",widget,value,self.tss.text)
+        global _source_RA, _source_Dec
+        if (self.tss.text!="--- Select ---") :
+            # print("====== Setting to",self.tss.text)
+            _source_RA = self.targets[self.tss.text]['RA']
+            _source_Dec = self.targets[self.tss.text]['Dec']
+            # print("====== RA,Dec",_source_RA,_source_Dec)
+        self.ra_label.text = " RA: "+self.hr_to_str(_source_RA)
+        self.dec_label.text = "Dec: "+self.deg_to_str(_source_Dec)
+        # print("====== RA,Dec 2",_source_RA,_source_Dec)
+        # print("====== RA,Dec lbls",self.ra_label.text,self.dec_label.text)
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+        if (self.tss.text!="--- Select ---") :
+            self.animate_to_target(0.5)
+
+
+    def set_target(self,widget,value) :
+        if (__main_debug__) :
+            print("Selecting target:",widget,value,self.tss.text)
+        global _source_RA, _source_Dec
+        if (self.tss.text!="--- Select ---") :
+            # print("====== Setting to",self.tss.text)
+            _source_RA = self.targets[self.tss.text]['RA']
+            _source_Dec = self.targets[self.tss.text]['Dec']
+            # print("====== RA,Dec",_source_RA,_source_Dec)
+        self.ra_label.text = " RA: "+self.hr_to_str(_source_RA)
+        self.dec_label.text = "Dec: "+self.deg_to_str(_source_Dec)
+        # print("====== RA,Dec 2",_source_RA,_source_Dec)
+        # print("====== RA,Dec lbls",self.ra_label.text,self.dec_label.text)
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+        self.set_map_center(_source_RA,_source_Dec)
+        #self.animate_to_target(0.5)
+        
+        
+    def RA_hr(self,hh,mm,ss) :
+        return hh+mm/60.0+ss/3600.
+        
+    def Dec_deg(self,deg,arcmin,arcsec) :
+        return (np.sign(deg)*(np.abs(deg)+arcmin/60.0+arcsec/3600.))
+
+    def hr_to_str(self,RA) :
+        hh = int(RA)
+        mm = int((RA-hh)*60.0)
+        ss = ((RA-hh)*60.0-mm)*60.0
+        return ("%02ih %02im %02.0fs"%(hh,mm,ss))
+        
+    def deg_to_str(self,Dec) :
+        if (Dec<0) :
+            ns = '-'
+        else :
+            ns = '+'
+        Dec = np.abs(Dec)
+        dg = int(Dec)
+        mm = int((Dec-dg)*60.0)
+        ss = ((Dec-dg)*60.0-mm)*60.0
+        return ("%1s%02i\u00B0 %02i\' %02.0f\""%(ns,dg,mm,ss))
+
+            
+    def update(self,datadict,statdict) :
+        self.ismp.update()
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+
+    def replot(self) :
+        self.ismp.replot()
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+
+    def on_touch_move(self,touch) :
+        #if (not self.plot_frozen) :
+        self.pixel_offset = ( self.pixel_offset[0] + touch.dpos[0], self.pixel_offset[1] + touch.dpos[1] )
+        self.ismp.on_touch_move(touch)
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+        if __main_debug__ :
+            print("TargetSelectionMap.on_touch_move(): replotting")
+
+    def on_touch_down(self,touch) :
+
+        global _source_RA, _source_Dec
+
+        # print("touch coords:",self.smc.px_to_coords(touch.pos[0],touch.pos[1],self.ismp.rect))
+
+        # Do the normal stuff for the map, whatever that is
+        self.ismp.on_touch_down(touch)
+
+        # Catch the map centering
+        if (touch.is_double_tap) :
+            self.set_map_center(_source_RA,_source_Dec)
+
+        # Pass to the spinner menu to choose a source
+        self.tss.on_touch_down(touch)
+
+        # Make a selection/set the target
+        if (touch.is_touch) :
+            if (self.tss.text=="--- Select ---") :
+
+                snap_source = None
+                for s in self.targets.keys() :
+                    if (s!="--- Select ---") :
+                        xpx_src,ypx_src = self.smc.coords_to_px(self.targets[s]['RA'],self.targets[s]['Dec'],self.ismp.rect)
+                        dxpx = (touch.pos[0] - xpx_src + 0.5*self.ismp.rect.size[0])%self.ismp.rect.size[0] - 0.5*self.ismp.rect.size[0]
+                        dypx = (touch.pos[1] - ypx_src)
+                        if ( dxpx**2 + dypx**2 <= dp(15)**2 ) :
+                            snap_source = s
+                            
+                if (snap_source is None) :
+                    RA,Dec = self.smc.px_to_coords(touch.pos[0],touch.pos[1],self.ismp.rect)
+                    _source_RA = RA
+                    _source_Dec = Dec
+                
+                    self.ra_label.text = " RA: "+self.hr_to_str(_source_RA)
+                    self.dec_label.text = "Dec: "+self.deg_to_str(_source_Dec)
+                    self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+                else :
+                    self.tss.text = snap_source
+                    self.select_target(self,snap_source)
+        
+        
+    def animate_to_target(self,total_time) :
+        self.animation_RA_start, self.animation_Dec_start = self.ismp.get_coord_center()
+        if __main_debug__ :
+            print("TargetSelectionMap.animate_to_target: 1 --",self.animation_RA_start, self.animation_Dec_start)
+        # Get closest branch to new RA
+        self.animation_RA_start = (self.animation_RA_start-_source_RA + 12)%24 - 12 + _source_RA
+        if __main_debug__ :
+            print("TargetSelectionMap.animate_to_target: 2 --",self.animation_RA_start, self.animation_Dec_start)
+        self.animation_total_time = total_time        
+        for dt in np.linspace(0,total_time,int(total_time*self.fps)) :
+            Clock.schedule_once( self.animate_map_center , dt)
+
+    def animate_map_center(self,dt) :
+        ds = self.animation_model(dt/self.animation_total_time)
+        RA = ds*_source_RA + (1.0-ds)*self.animation_RA_start
+        Dec = ds*_source_Dec + (1.0-ds)*self.animation_Dec_start
+        self.set_map_center(RA,Dec)
+
+    def animation_model(self, x) :
+        if (self.animation_type=='cubic') :
+            return 6.0*(0.25*x - 0.3333333333*(x-0.5)**3 - 0.041666666667)
+    
+        else :
+            raise ValueError("animation model type not defined!")
+        
+    def set_map_center(self,RA,Dec) :
+        if (self.size[0]==0 or self.size[1]==0) :
+            return
+        self.ismp.set_coord_center(RA,Dec)
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+
+    
+        
+    def zoom_in(self) :
+        self.ismp.zoom_in()
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+
+    def zoom_out(self) :
+        self.ismp.zoom_out()
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+
+    def resize(self,widget,newsize) :
+        self.ismp.resize(widget,newsize)
+        self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec)
+
+        # Hack to fix the plot resize on initialization
+        # if (self.mp.rect.size[0]==0 or self.mp.rect.size[1]==0) :
+        #     Clock.schedule_once(lambda x : self.replot(), 0.1)
+        # Clock.schedule_once(lambda x : self.smc.plot_targets(self.targets,self.ismp.rect,_source_RA,_source_Dec), 0.1)
+        Clock.schedule_once(lambda x : self.set_target(self,self.tss.text), 0.1)
+
+
+        
+
+        
         
 class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
     def __init__(self, **kwargs):
@@ -1238,6 +1489,9 @@ class LogoBackground(FloatLayout) :
         self.redraw_background()
 
 
+
+
+        
 class TargetSelectionScreen(BoxLayout) :
     pass
 

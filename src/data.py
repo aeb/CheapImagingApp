@@ -10,7 +10,7 @@ import os
 import numpy as np
 import matplotlib.image as mi
 
-__data_debug__ = False
+__data_debug__ = True
 
 
 #########
@@ -198,7 +198,7 @@ def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_t
     s2d = np.append(s2,s1)
 
     if (__data_debug__) :
-        print("Made conjugates, all done!")
+        print("Made conjugates, all done!  Number of data points:",len(u))
 
     
     return {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':(1.0+1.0j)*err}

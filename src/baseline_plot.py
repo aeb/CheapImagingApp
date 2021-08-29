@@ -98,6 +98,17 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
         umax = ((2*umax)//5)*5
         self.plot_location = [0.5*umax,-0.5*umax,-umax,umax]
 
+        # Sparsify if too many points for OpenGL
+        if (len(self.xp)>15000) :
+            skip = int(np.ceil(len(self.xp)/15000))
+            iskip = np.arange(0,len(self.xp),skip)
+            self.xp = self.xp[iskip]
+            self.yp = self.yp[iskip]
+            self.on = self.on[iskip]
+
+        print("SIZES:",self.xp.size,self.yp.size,self.on.size)
+
+            
         self.redraw()
 
     def replot(self,datadict,statdict,**kwargs) :
@@ -277,3 +288,7 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
         self.offset = [ self.offset[0]*0.707 + 0.5*(1.0-0.707)*self.width, self.offset[1]*0.707 + 0.5*(1.0-0.707)*self.height ]
         self.redraw()
 
+
+
+# Lux ex termino
+# LU XE XT ER MI NO 07 08 09 10 11 12
