@@ -1422,8 +1422,8 @@ class DataSetSelectionPage(BoxLayout) :
         self.exit_manager(0)
         
     def open_file_manager(self,widget) :
-        # self.file_manager_obj.show('/')
-        self.file_manager_obj.show(str(plP.home()))
+        self.file_manager_obj.show('/')
+        # self.file_manager_obj.show(str(plP.home()))
 
     def exit_manager(self,value) :
         if (value==1) : # a valid file wasn't selected, return to screen
