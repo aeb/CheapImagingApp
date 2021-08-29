@@ -23,6 +23,7 @@ from kivy.graphics import Color, Line, Rectangle
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.behaviors import CircularRippleBehavior
+from kivymd.uix.filemanager import MDFileManager
 
 import numpy as np
 
@@ -1354,8 +1355,7 @@ class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
         sm.current = "targets"
         sm.transition = SlideTransition()
 
-        
-        
+
 
 class DataSetSelectionPage(BoxLayout) :
 
@@ -1396,7 +1396,29 @@ class DataSetSelectionPage(BoxLayout) :
         self.ic.index = 1
         self.produce_selected_data_set()
 
+        self.file_manager_obj = MDFileManager(
+            select_path=self.select_path,
+            exit_manager=self.exit_manager,
+            preview=True,
+            ext=['png','jpg','gif','jpeg']
+        )
+
+        self.ic.add_btn.bind(on_release=self.open_file_manager)
+
+    def select_path(self,path) :
+        self.ic.add_image(path,path,path)
+        self.exit_manager(0)
         
+    def open_file_manager(self,widget) :
+        self.file_manager_obj.show('/')
+
+    def exit_manager(self,value) :
+        if (value==1) : # a valid file wasn't selected, return to screen
+            self.ic.index = 0
+        else :
+            self.ic.index = -1 # Set to value just added
+            
+        self.file_manager_obj.close()
         
         
     def produce_selected_data_set(self) :

@@ -267,7 +267,7 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         if (scale<1000.0) :
             if (__data_debug__) :
                 print("Plot too small in x-direction:",scale)
-            dim = int(np.ceil(1000.0/scale * I.shape[1]))
+            dim = min(2*I.shape[1],int(np.ceil(1000.0/scale * I.shape[1])))
             mpad = (dim-I.shape[1])//2
             ppad = (dim-I.shape[1])-mpad
             if (__data_debug__) :
@@ -283,7 +283,7 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         if (scale*I.shape[0]/I.shape[1]<1000.0) :
             if (__data_debug__) :
                 print("Plot too small in y-direction:",scale)
-            dim = int(np.ceil(1000.0/scale * I.shape[1]))
+            dim = min(2*I.shape[1],int(np.ceil(1000.0/scale * I.shape[1])))
             mpad = (dim-I.shape[0])//2
             ppad = (dim-I.shape[0])-mpad
             if (__data_debug__) :
@@ -346,12 +346,6 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         return generate_data(freq,ra,dec,x2,y2,I2,statdict,**kwargs)
 
         
-#class SquareRippleButton(TouchRippleButtonBehavior, Image):
-class SquareRippleButton(ButtonBehavior, Image):
-    def __init__(self, **kwargs):
-        # self.ripple_scale = 0.85
-        super().__init__(**kwargs)
-
 class FileImageButton(ButtonBehavior,Image) :
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -384,10 +378,8 @@ class ImageCarousel(Carousel) :
         self.loop = True
         self.data_file_list = []
 
-
         box = BoxLayout()
         box.orientation = "vertical"
-        #self.add_btn = SquareRippleButton(source="./images/image_file_icon.png")
         self.add_btn = FileImageButton()
         lbl = Label(text="Add custom image!",color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
         box.add_widget(self.add_btn)
@@ -395,10 +387,11 @@ class ImageCarousel(Carousel) :
         self.add_widget(box)
         self.data_file_list.append("")
 
-        self.add_btn.bind(on_press=self.add_file_picker)
+    #     self.add_btn.bind(on_press=self.add_file_picker)
 
-    def add_file_picker(self,widget) :
-        print("I want to add a file!")
+    # def add_file_picker(self,widget) :
+    #     print("I want to add a file!")
+        
         
     def add_image(self,image_file,data_file,caption="") :
         box = BoxLayout()
@@ -485,9 +478,8 @@ class DataSelectionSliders(BoxLayout) :
         self.source_size = self.sss.source_size()
         self.source_flux = self.sfs.flux()
         self.observation_frequency = self.ofs.observation_frequency()
+
         
-        
-    
     def adjust_source_size(self,widget,val) :
         self.source_size = self.sss.source_size()
         self.sss_label2.text = self.sss.hint_box_text(0)
@@ -499,8 +491,8 @@ class DataSelectionSliders(BoxLayout) :
     def adjust_observation_frequency(self,widget,val) :
         self.observation_frequency = self.ofs.observation_frequency()
         self.ofs_label2.text = self.ofs.hint_box_text(0)
-        
 
+        
 class ObsFrequencyMDSlider(FancyMDSlider):
 
     def __init__(self,**kwargs):
