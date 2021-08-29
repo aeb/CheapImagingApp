@@ -35,14 +35,21 @@ from pathlib import Path as plP
 
 import hashlib
 
+from kivy.core.window import Window
 
 ####################
 # TESTING
 # import pickle
-# from kivy.core.window import Window
+# 
 # Window.size = (300,500)
 ##################
 
+
+try :
+    from android.permissions import request_permissions, Permission
+    request_permissions([Permission.READ_EXTERNAL_STORAGE])
+except:
+    print("Could not load android permissions stuff, pobably not on android?")
 
 
 import copy
@@ -53,6 +60,8 @@ import baseline_plot
 import cheap_image
 import map_plot
 import skymap_plot
+
+
 
 _on_color = (1,0.75,0.25,1)
 _off_color = (0.5,0,0,1)
@@ -1648,7 +1657,23 @@ class TopBanner(MDBoxLayout) :
 
 class ngEHTApp(MDApp):
     # pass
+    
+    # def __init__(self,**kwargs) :
+    #     Window.bind(on_keyboard=self.key_input)
 
+
+    # def build(self):
+    #     pass
+        
+    # def build(self):
+    #     Window.bind(on_keyboard=self.key_input)
+    #     return ScreenManager # your root widget here as normal
+
+
+    def build(self):
+        Window.bind(on_keyboard=self.key_input)
+        return None
+    
     def twitter_follow(self) :
         import webbrowser
         webbrowser.open("http://www.twitter.com")
@@ -1676,7 +1701,15 @@ class ngEHTApp(MDApp):
 
     def null_func(self) :
         pass
-        
+
+
+    def key_input(self, window, key, scancode, codepoint, modifier):
+        if key == 27:
+            return True  # override the default behaviour
+        else:           # the key now does nothing
+            return False
+
+     
         
 if __name__ == '__main__' :
     ngEHTApp().run()
