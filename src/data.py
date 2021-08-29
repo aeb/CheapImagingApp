@@ -1,10 +1,15 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.carousel import Carousel
 from kivy.uix.image import AsyncImage
+from kivy.uix.image import Image
 from kivy.uix.label import Label
+from kivy.uix.button import Button
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty, NumericProperty
 from fancy_mdslider import FancyMDSlider
+
+from kivy.uix.behaviors.touchripple import TouchRippleButtonBehavior
+from kivy.uix.behaviors.button import ButtonBehavior
 
 import os
 import numpy as np
@@ -341,10 +346,31 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         return generate_data(freq,ra,dec,x2,y2,I2,statdict,**kwargs)
 
         
+#class SquareRippleButton(TouchRippleButtonBehavior, Image):
+class SquareRippleButton(ButtonBehavior, Image):
+    def __init__(self, **kwargs):
+        # self.ripple_scale = 0.85
+        super().__init__(**kwargs)
 
+class FileImageButton(ButtonBehavior,Image) :
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.default_image_source = "./images/image_file_icon.png"
+        self.pressed_image_source = "./images/image_file_icon_pressed.png"
+
+        self.source = self.default_image_source
+        self.allow_stretch = True
         
+        self.bind(on_press=self.press)
+        self.bind(on_release=self.release)
+
+    def press(self,widget) :
+        self.source = self.pressed_image_source
+
+    def release(self,widget) :
+        self.source = self.default_image_source
         
-    
     
 class ImageCarousel(Carousel) :
 
@@ -357,6 +383,22 @@ class ImageCarousel(Carousel) :
         self.direction = 'right'
         self.loop = True
         self.data_file_list = []
+
+
+        box = BoxLayout()
+        box.orientation = "vertical"
+        #self.add_btn = SquareRippleButton(source="./images/image_file_icon.png")
+        self.add_btn = FileImageButton()
+        lbl = Label(text="Add custom image!",color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
+        box.add_widget(self.add_btn)
+        box.add_widget(lbl)
+        self.add_widget(box)
+        self.data_file_list.append("")
+
+        self.add_btn.bind(on_press=self.add_file_picker)
+
+    def add_file_picker(self,widget) :
+        print("I want to add a file!")
         
     def add_image(self,image_file,data_file,caption="") :
         box = BoxLayout()

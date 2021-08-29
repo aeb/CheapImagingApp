@@ -36,8 +36,8 @@ import hashlib
 ####################
 # TESTING
 # import pickle
-# from kivy.core.window import Window
-# Window.size = (300,500)
+from kivy.core.window import Window
+Window.size = (300,500)
 ##################
 
 
@@ -1381,19 +1381,19 @@ class DataSetSelectionPage(BoxLayout) :
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           "First contact!")
-        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"images/image_file_icon.png")),
-                          None,
-                          "Choose a file of your own!")
+        # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"images/image_file_icon.png")),
+        #                   None,
+        #                   "Choose a file of your own!")
 
-        
         self.add_widget(self.ic)
-        
+
         self.dss = data.DataSelectionSliders()
         self.dss.size_hint = 1,0.5
 
         self.add_widget(self.dss)
 
         self.argument_hash = None
+        self.ic.index = 1
         self.produce_selected_data_set()
 
         
