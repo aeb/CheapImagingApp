@@ -1381,6 +1381,10 @@ class DataSetSelectionPage(BoxLayout) :
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           "First contact!")
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"images/image_file_icon.png")),
+                          None,
+                          "Choose a file of your own!")
+
         
         self.add_widget(self.ic)
         
