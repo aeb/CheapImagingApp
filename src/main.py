@@ -1370,6 +1370,8 @@ class CircularRippleButton(CircularRippleBehavior, ButtonBehavior, Image):
 
 class DataSetSelectionPage(BoxLayout) :
 
+    path_info = StringProperty("")
+    
     def __init__(self,**kwargs) :
         super().__init__(**kwargs)
         
@@ -1433,11 +1435,15 @@ class DataSetSelectionPage(BoxLayout) :
     def open_file_manager(self,widget) :
 
         home = str(plP.home())
+
+        self.path_info = home
+        
         if (home!='') :
             topdir = home
         else :
             topdir = '/'
-        
+
+            
         self.file_manager_obj.show(topdir)
         
 
