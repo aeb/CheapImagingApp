@@ -37,8 +37,8 @@ import hashlib
 ####################
 # TESTING
 # import pickle
-from kivy.core.window import Window
-Window.size = (300,500)
+# from kivy.core.window import Window
+# Window.size = (300,500)
 ##################
 
 
