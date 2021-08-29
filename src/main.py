@@ -1438,7 +1438,7 @@ class DataSetSelectionPage(BoxLayout) :
 
         # self.path_info = home
         
-        if (home!='') :
+        if (home!='/data') :
             topdir = home
         else :
             topdir = '/'
