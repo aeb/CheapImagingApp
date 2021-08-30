@@ -243,6 +243,7 @@ ScreenManager:
                 background_color: 1,1,1,0.25
                 on_release:
                     print("--> From map to baselines")
+                    selection_screen.dssp_id.produce_selected_data_set()
                     sm.transition.direction = 'right'
                     sm.current = 'screen2'
                     baselines_screen.ddm_id.refresh()
@@ -605,6 +606,7 @@ ScreenManager:
 
 
 <InteractiveMapsPlot>:
+    id: top_plot
     orientation: "vertical"
     ddm_id: ddm
     otm_id: otm
@@ -644,7 +646,26 @@ ScreenManager:
             background_color: 0,0,0,0
             on_press: plot.zoom_out()
 
+    BoxLayout:
+        id: ad_stn_box
+        orientation: "vertical"
+        size_hint: None,None
+        size: dp(40),dp(80)
+        pos: 0,root.height-dp(80)
+        # Button:
+        #     text: "Add"
+        #     font_size: "14sp"
+        #     color: 0.77,0.55,0.17,1
+        #     background_color: 1,1,1,0.2
+        #     on_press: print("Adding a station!")
+        # Button:
+        #     text: "Sub"
+        #     font_size: "14sp"
+        #     color: 0.77,0.55,0.17,1
+        #     background_color: 1,1,1,0.2
+        #     on_press: print("Removing a station!")
 
+            
     DiameterMenu:
         id: ddm
         plot: plot
@@ -665,7 +686,7 @@ ScreenManager:
 
     StationMenu:
         id: sme
-        rpp: plot
+        rpp: top_plot
         ddm_id: ddm
         size_hint: 1.0,None
         height: dp(40)+dp(15)

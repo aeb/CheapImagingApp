@@ -1,6 +1,6 @@
 __version__ = "0.9"
 
-__main_debug__ = False
+__main_debug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -10,6 +10,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner, SpinnerOption
 from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty, ListProperty
@@ -79,22 +80,24 @@ _existing_station_list = ['PV','AZ','SM','LM','AA','SP','JC','GL','PB','KP','HA'
 _stationdicts={}
 
 _stationdicts={}
-_stationdicts['ngEHT ref1']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT+']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
 _stationdicts['EHT 2017']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
 _stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
 
 
-_array = list(_stationdicts.keys())[0]
-_array_index = 0
+_array_index = 1
+_array = list(_stationdicts.keys())[_array_index]
 
-_statdict_maximum=copy.deepcopy(_stationdicts['ngEHT ref1'])
-_statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
+_statdict_maximum=_stationdicts['ngEHT+']
+_statdict=_stationdicts[_array]
+# _statdict_maximum=copy.deepcopy(_stationdicts['ngEHT ref1'])
+# _statdict=copy.deepcopy(_stationdicts['ngEHT ref1'])
 # _datadict=data.read_data(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 _datadict=data.read_themis_data_file(path.abspath(path.join(path.dirname(__file__),'data/V_M87_ngeht_ref1_230_perfect_scanavg_tygtd.dat')))
 
 _source_RA = 17.7611225
 _source_Dec = -29.007810
-
 
 class MenuedReconstructionPlot(BoxLayout) :
 
@@ -415,6 +418,15 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         self.mp.on_touch_down(touch)
         if (touch.is_double_tap) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        if (touch.is_touch) :
+            snap_source = None
+            # Stuff for snap_source TBD
+            if (snap_source is None) :
+                self.bmc.cursor_lat,self.bmc.cursor_lon = self.bmc.px_to_coords(touch.pos[0],touch.pos[1],self.mp.rect)
+                self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+            else :
+                pass # Stuff for snap_source TBD
+                
         if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.on_touch_down(): replotting",self.size,self.mp.rect.size)
             
@@ -442,10 +454,20 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.resize(): replotting with",newsize,self.size,self.mp.rect.size)
             # Clock.schedule_once(self.delayed_report,0.1)
-
+            
     # def delayed_report(self,dt) :
     #     print("MenuedBaselineMapPlot_kivygraph.delayed_report(): replotting with",self.size,self.mp.rect.size)
 
+    def cursor_on(self) :
+        self.bmc.cursor_on(self.mp.rect)
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+
+    def cursor_off(self) :
+        lat,lon = self.bmc.cursor_off(self.mp.rect)
+        self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+        return lat,lon
+
+    
         
 class DynamicBoxLayout(BoxLayout):
 
@@ -1591,6 +1613,88 @@ class InteractiveMapsPlot(FloatLayout) :
     otm_id = ObjectProperty(None)
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
+
+    def __init__(self,**kwargs) :
+        super().__init__(**kwargs)
+
+        # New station stuff
+        self.add_station_btn = Button(text="Add",font_size=sp(14),color=_on_color,background_color=(1,1,1,0.2))
+        self.del_station_btn = Button(text="Del",font_size=sp(14),color=_on_color,background_color=(1,1,1,0.2))
+        self.add_station_btn.bind(on_release=self.add_station)
+        self.del_station_btn.bind(on_release=self.del_station)
+        self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
+        for j in range(14) :
+            self.new_station_name_list.append('.%02i'%j)
+        self.prototype_station = 'BA'
+        self.number_new_stations = 0
+        self.editing_mode = False
+        
+    def add_stn_buttons(self) :
+        if (__main_debug__) :
+            print("InteractiveMapsPlot.add_stn_buttons called:",len(self.ids['ad_stn_box'].children))
+        if ( len(self.ids['ad_stn_box'].children)==0 ) :
+            self.ids['ad_stn_box'].add_widget(self.add_station_btn)
+            self.ids['ad_stn_box'].add_widget(self.del_station_btn)
+
+    def remove_stn_buttons(self) :
+        if (__main_debug__) :
+            print("InteractiveMapsPlot.remove_stn_buttons called")
+        self.ids['ad_stn_box'].clear_widgets()
+
+    def update(self,ddict,sdict) :
+        if (__main_debug__) :
+            print("InteractiveMapsPlot.update pass through called",_array)
+        self.plot_id.update(ddict,sdict)
+        if (_array_index==0) :
+            self.add_stn_buttons()
+        else :
+            self.remove_stn_buttons()
+            if (self.editing_mode) :
+                self.editing_mode = False
+                self.plot_id.cursor_off()
+
+    def add_station(self,widget) :
+        global _statdict, _datadict
+        if (_array_index==0) :
+            if (self.number_new_stations<len(self.new_station_name_list)) :
+                if (self.editing_mode==False) :
+                    self.editing_mode = True
+                    self.plot_id.cursor_on()
+                    self.add_station_btn.text = '+'+self.new_station_name_list[self.number_new_stations]
+                    self.add_station_btn.color = _off_color
+                else :
+                    self.editing_mode = False
+                    latlon = self.plot_id.cursor_off()
+                    nn = self.new_station_name_list[self.number_new_stations]
+                    _stationdicts['ngEHT+'][nn] = copy.deepcopy(_statdict[self.prototype_station])
+                    _stationdicts['ngEHT+'][nn]['on'] = True
+                    _stationdicts['ngEHT+'][nn]['loc'] = self.plot_id.mp.latlon_to_xyz(latlon,radius=6.371e6)
+                    _stationdicts['ngEHT+'][nn]['name'] = nn
+                    _statdict = _stationdicts['ngEHT+']
+                    print("FOO",_statdict.keys())
+                    self.number_new_stations += 1
+                    self.add_station_btn.text = 'Add'
+                    self.add_station_btn.color = _on_color
+
+                    self.plot_id.update(_datadict,_statdict)
+                    self.menu_id.refresh()
+                    
+        
+    def del_station(self,widget) :
+        global _statdict, _datadict
+        if (_array_index==0) :
+            if (self.number_new_stations>0) :
+                if (self.editing_mode==False) :
+                    self.editing_mode = True
+                    self.plot_id.cursor_on()
+                    self.add_station_btn.text = '-'+self.new_station_name_list[self.number_new_stations-1]
+                    self.add_station_btn.color = _off_color
+                else :
+                    self.editing_mode = False
+                    lat,lon = self.plot_id.cursor_off()
+                    self.add_station_btn.text = 'Del'
+                    self.add_station_btn.color = _on_color
+        
     
 class ReconstructionScreen(BoxLayout) :
     ddm_id = ObjectProperty(None)

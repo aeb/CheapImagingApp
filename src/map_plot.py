@@ -343,7 +343,7 @@ class InteractiveBaselineMapPlot_kivygraph(InteractiveWorldMapWidget):
             print("InteractiveBaselineMapPlot_kivygraph.check_size",self.width,self.height,size,Window.width,Window.height)
         return size
 
-    
+
 
     
 class BaselineMapCanvas(FloatLayout) :
@@ -352,6 +352,9 @@ class BaselineMapCanvas(FloatLayout) :
         super().__init__(**kwargs)
         self.off_color = (0.5,0,0)
         self.on_color = (1,0.75,0.25)
+
+        self.plot_cursor = False
+        self.limits = [-180,180,-90,90]
         
     def plot_stations(self,statdict,lldict,gcdict,rect) :
         if (__map_plot_debug__):
@@ -360,11 +363,11 @@ class BaselineMapCanvas(FloatLayout) :
         if (rect.size[0]==0  or rect.size[1]==0) :
             return
             
-        lims=[-180,180,-90,90]
-        lon_to_xpx_scale = rect.size[0]/(lims[1]-lims[0]) 
-        lon_to_xpx_offset = lon_to_xpx_scale*(-lims[0]) + rect.pos[0] - rect.tex_coords[0]*rect.size[0]/(rect.tex_coords[2]-rect.tex_coords[0])
-        lat_to_ypx_scale = rect.size[1]/(lims[3]-lims[2])
-        lat_to_ypx_offset = lat_to_ypx_scale*(-lims[2]) + rect.pos[1] - rect.tex_coords[5]*rect.size[1]/(rect.tex_coords[5]-rect.tex_coords[1])
+
+        lon_to_xpx_scale = rect.size[0]/(self.limits[1]-self.limits[0]) 
+        lon_to_xpx_offset = lon_to_xpx_scale*(-self.limits[0]) + rect.pos[0] - rect.tex_coords[0]*rect.size[0]/(rect.tex_coords[2]-rect.tex_coords[0])
+        lat_to_ypx_scale = rect.size[1]/(self.limits[3]-self.limits[2])
+        lat_to_ypx_offset = lat_to_ypx_scale*(-self.limits[2]) + rect.pos[1] - rect.tex_coords[5]*rect.size[1]/(rect.tex_coords[5]-rect.tex_coords[1])
 
         
         # Index manipulation stuff
@@ -375,6 +378,13 @@ class BaselineMapCanvas(FloatLayout) :
         
         linewidth = 2
 
+
+        reticle_circ = dp(30)
+        reticle_out = dp(50)
+        reticle_in = dp(10)
+        reticle_linewidth = dp(1)                    
+
+        
         # Get the current limits.
         self.canvas.clear()        
         with self.canvas :
@@ -442,3 +452,48 @@ class BaselineMapCanvas(FloatLayout) :
                     # if (__map_plot_debug__) :
                     #     print("Adding ON circle for",s,xpx,ypx,self.on_color,self.height,rect.size,rect.pos)
 
+
+            if (self.plot_cursor) :
+                # Plot the target (circle + cross hairs?)
+                Color(self.on_color[0],self.on_color[1],self.on_color[2])
+                xpx = (lon_to_xpx_scale*(self.cursor_lon) + lon_to_xpx_offset)%(rect.size[0])
+                ypx = lat_to_ypx_scale*self.cursor_lat + lat_to_ypx_offset
+                Line(circle=(xpx,ypx,reticle_circ),width=reticle_linewidth)
+                Line(points=[(xpx-reticle_out,ypx),(xpx-reticle_in,ypx)],width=reticle_linewidth)
+                Line(points=[(xpx+reticle_out,ypx),(xpx+reticle_in,ypx)],width=reticle_linewidth)
+                Line(points=[(xpx,ypx-reticle_out),(xpx,ypx-reticle_in)],width=reticle_linewidth)
+                Line(points=[(xpx,ypx+reticle_out),(xpx,ypx+reticle_in)],width=reticle_linewidth)
+                
+
+    def px_to_coords(self,xpx,ypx,rect) :
+        lon_to_xpx_scale = rect.size[0]/(self.limits[1]-self.limits[0]) 
+        lon_to_xpx_offset = lon_to_xpx_scale*(-self.limits[0]) + rect.pos[0] - rect.tex_coords[0]*rect.size[0]/(rect.tex_coords[2]-rect.tex_coords[0])
+        lat_to_ypx_scale = rect.size[1]/(self.limits[3]-self.limits[2])
+        lat_to_ypx_offset = lat_to_ypx_scale*(-self.limits[2]) + rect.pos[1] - rect.tex_coords[5]*rect.size[1]/(rect.tex_coords[5]-rect.tex_coords[1])
+        lon = ((xpx) - lon_to_xpx_offset)/lon_to_xpx_scale
+        lat = ((ypx) - lat_to_ypx_offset)/lat_to_ypx_scale
+        lon = (lon+180)%360 + 180
+
+        return (lat,lon)
+            
+    def get_center(self,rect) :
+        return self.px_to_coords(0.5*Window.width,0.5*Window.height,rect)
+
+    def coords_to_px(self,lon,lat,rect) :
+        lon_to_xpx_scale = rect.size[0]/(self.limits[1]-self.limits[0]) 
+        lon_to_xpx_offset = lon_to_xpx_scale*(-self.limits[0]) + rect.pos[0] - rect.tex_coords[0]*rect.size[0]/(rect.tex_coords[2]-rect.tex_coords[0])
+        lat_to_ypx_scale = rect.size[1]/(self.limits[3]-self.limits[2])
+        lat_to_ypx_offset = lat_to_ypx_scale*(-self.limits[2]) + rect.pos[1] - rect.tex_coords[5]*rect.size[1]/(rect.tex_coords[5]-rect.tex_coords[1])
+        xpx = (lon_to_xpx_scale*lon + lon_to_xpx_offset)%(rect.size[0])
+        ypx = lat_to_ypx_scale*lat + lat_to_ypx_offset
+
+        return (xpx,ypx)
+                
+    def cursor_on(self,rect) :
+        (self.cursor_lat,self.cursor_lon) = self.get_center(rect)
+        self.plot_cursor = True
+
+    def cursor_off(self,rect) :
+        self.plot_cursor = False
+        return self.cursor_lat,self.cursor_lon
+    
