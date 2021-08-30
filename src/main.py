@@ -420,7 +420,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
         if (touch.is_touch) :
             snap_source = None
-            for s in _stationdict.keys() :
+            for s in _statdict.keys() :
                 xpx_src,ypx_src = self.bmc.coords_to_px(self.mp.lldict[s][0],self.mp.lldict[s][1],self.mp.rect)
                 dxpx = (touch.pos[0] - xpx_src + 0.5*self.mp.rect.size[0])%self.mp.rect.size[0] - 0.5*self.mp.rect.size[0]
                 dypx = (touch.pos[1] - ypx_src)
@@ -1629,9 +1629,9 @@ class InteractiveMapsPlot(FloatLayout) :
         self.del_station_btn = Button(text="Del",font_size=sp(14),color=_on_color,background_color=(1,1,1,0.2))
         self.add_station_btn.bind(on_release=self.add_station)
         self.del_station_btn.bind(on_release=self.del_station)
-        self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
-        for j in range(14) :
-            self.new_station_name_list.append('.%02i'%j)
+        #self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
+        for j in range(20) :
+            self.new_station_name_list.append('%02i'%j)
         self.prototype_station = 'BA'
         self.number_new_stations = 0
         self.editing_mode = False
@@ -1669,6 +1669,8 @@ class InteractiveMapsPlot(FloatLayout) :
                     self.plot_id.cursor_on()
                     self.add_station_btn.text = '+'+self.new_station_name_list[self.number_new_stations]
                     self.add_station_btn.color = _off_color
+                    self.del_station_btn.text = 'Del'
+                    self.del_station_btn.color = _on_color
                 else :
                     self.editing_mode = False
                     latlon = self.plot_id.cursor_off()
@@ -1678,7 +1680,6 @@ class InteractiveMapsPlot(FloatLayout) :
                     _stationdicts['ngEHT+'][nn]['loc'] = self.plot_id.mp.latlon_to_xyz(latlon,radius=6.371e6)
                     _stationdicts['ngEHT+'][nn]['name'] = nn
                     _statdict = _stationdicts['ngEHT+']
-                    print("FOO",_statdict.keys())
                     self.number_new_stations += 1
                     self.add_station_btn.text = 'Add'
                     self.add_station_btn.color = _on_color
@@ -1694,14 +1695,31 @@ class InteractiveMapsPlot(FloatLayout) :
                 if (self.editing_mode==False) :
                     self.editing_mode = True
                     self.plot_id.cursor_on()
-                    self.add_station_btn.text = '-'+self.new_station_name_list[self.number_new_stations-1]
-                    self.add_station_btn.color = _off_color
+                    self.del_station_btn.text = '-'+self.new_station_name_list[self.number_new_stations-1]
+                    self.del_station_btn.color = _off_color
+                    self.add_station_btn.text = 'Add'
+                    self.add_station_btn.color = _on_color                    
                 else :
                     self.editing_mode = False
                     lat,lon = self.plot_id.cursor_off()
-                    self.add_station_btn.text = 'Del'
-                    self.add_station_btn.color = _on_color
-        
+                    snap_source = None
+                    for s in _statdict.keys() :
+                        xpx_src,ypx_src = self.plot_id.bmc.coords_to_px(self.plot_id.mp.lldict[s][0],self.plot_id.mp.lldict[s][1],self.plot_id.mp.rect)
+                        xpx_sel,ypx_sel = self.plot_id.bmc.coords_to_px(lat,lon,self.plot_id.mp.rect)                        
+                        dxpx = (xpx_sel - xpx_src + 0.5*self.plot_id.mp.rect.size[0])%self.plot_id.mp.rect.size[0] - 0.5*self.plot_id.mp.rect.size[0]
+                        dypx = (ypx_sel - ypx_src)
+                        if ( dxpx**2 + dypx**2 <= dp(15)**2 ) :
+                            snap_source = s
+                    if (snap_source in self.new_station_name_list) :
+                        del _stationdicts['ngEHT+'][snap_source]
+                        self.number_new_stations -= 1
+                        _statdict = _stationdicts['ngEHT+']
+                    self.del_station_btn.text = 'Del'
+                    self.del_station_btn.color = _on_color
+
+                    self.plot_id.update(_datadict,_statdict)
+                    self.menu_id.refresh()
+
     
 class ReconstructionScreen(BoxLayout) :
     ddm_id = ObjectProperty(None)
