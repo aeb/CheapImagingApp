@@ -1,4 +1,4 @@
-__version__ = "0.10"
+__version__ = "0.10.1"
 
 __main_debug__ = False
 
@@ -421,7 +421,8 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
         if (touch.is_touch) :
             snap_source = None
-            for s in _statdict.keys() :
+            # for s in _statdict.keys() :
+            for s in self.mp.statdict.keys() :
                 xpx_src,ypx_src = self.bmc.coords_to_px(self.mp.lldict[s][0],self.mp.lldict[s][1],self.mp.rect)
                 dxpx = (touch.pos[0] - xpx_src + 0.5*self.mp.rect.size[0])%self.mp.rect.size[0] - 0.5*self.mp.rect.size[0]
                 dypx = (touch.pos[1] - ypx_src)
