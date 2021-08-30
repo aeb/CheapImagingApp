@@ -15,7 +15,7 @@ import copy
 
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
-__map_plot_debug__ = True
+__map_plot_debug__ = False
 
 
 class InteractiveWorldMapWidget(Widget):

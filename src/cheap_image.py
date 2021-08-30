@@ -23,7 +23,7 @@ import hashlib
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 
-__cheap_image_debug__ = True
+__cheap_image_debug__ = False
 
 
 class InteractivePlotWidget(Widget):

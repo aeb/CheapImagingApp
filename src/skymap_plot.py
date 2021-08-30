@@ -16,7 +16,7 @@ import copy
 
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
-__skymap_debug__ = True
+__skymap_debug__ = False
 
 
 class InteractiveSkyMapWidget(Widget):

@@ -1,6 +1,6 @@
-__version__ = "0.9"
+__version__ = "0.10"
 
-__main_debug__ = True
+__main_debug__ = False
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -37,6 +37,7 @@ from pathlib import Path as plP
 import hashlib
 
 from kivy.core.window import Window
+import time
 
 ####################
 # TESTING
@@ -1491,11 +1492,23 @@ class DataSetSelectionPage(BoxLayout) :
         Clock.schedule_once(lambda x: self.on_selection(), self.ic.anim_move_duration+0.1)
         
     def on_selection(self) :
-        print("Setting taper switch to active?",self.ic.taperable_list[self.ic.index])
+        if (__main_debug__) :
+            print("Setting taper switch to active?",self.ic.taperable_list[self.ic.index])
         self.dss.its.disabled = not self.ic.taperable_list[self.ic.index]
-        print("Setting taper switch to active?",self.ic.taperable_list[self.ic.index])
-        
-        
+        if (__main_debug__) :
+            print("Setting taper switch to active?",self.ic.taperable_list[self.ic.index])
+
+    def selection_check(self) :
+        if (self.ic.index==0) :
+            if (__main_debug__) :
+                print("Bad selection!  Setting to index 1.")
+            # 
+            self.ic.load_slide(self.ic.slides[1])
+            #self.ic.index = 1
+
+            return False
+        return True
+            
     def produce_selected_data_set(self) :
         if (__main_debug__) :
             print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
@@ -1630,6 +1643,7 @@ class InteractiveMapsPlot(FloatLayout) :
         self.add_station_btn.bind(on_release=self.add_station)
         self.del_station_btn.bind(on_release=self.del_station)
         #self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
+        self.new_station_name_list = []
         for j in range(20) :
             self.new_station_name_list.append('%02i'%j)
         self.prototype_station = 'BA'

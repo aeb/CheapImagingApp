@@ -107,8 +107,7 @@ ScreenManager:
                     # print("<-- From data to map")
                     print("--> From data to target")
                     # selection_screen.dssp_id.produce_selected_data_set()
-                    sm.transition.direction = 'right'
-                    sm.current = 'targets'
+                    if selection_screen.dssp_id.selection_check() : sm.transition.direction = 'right'; sm.current = 'targets';
                     print("<-- From data to target")
                     
             
@@ -123,13 +122,7 @@ ScreenManager:
                 background_color: 1,1,1,0.25
                 on_release:
                     print("--> From data to reconstruction")
-                    selection_screen.dssp_id.produce_selected_data_set()
-                    sm.transition.direction = 'left'
-                    sm.current = 'screen1'
-                    reconstruction_screen.ddm_id.refresh()
-                    reconstruction_screen.otm_id.refresh()
-                    reconstruction_screen.menu_id.refresh()
-                    reconstruction_screen.plot_id.replot()
+                    if selection_screen.dssp_id.selection_check() : selection_screen.dssp_id.produce_selected_data_set(); sm.transition.direction = 'left'; sm.current = 'screen1'; reconstruction_screen.ddm_id.refresh(); reconstruction_screen.otm_id.refresh(); reconstruction_screen.menu_id.refresh(); reconstruction_screen.plot_id.replot()
                     print("<-- From data to reconstruction")
                     
 

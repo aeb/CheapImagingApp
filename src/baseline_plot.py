@@ -8,7 +8,7 @@ from kivy.uix.label import Label
 # Data dictionary: datadict has form {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':err}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
-__baseline_plot_debug__ = True
+__baseline_plot_debug__ = False
 
 
 class InteractiveBaselinePlot_kivygraph(FloatLayout) :
@@ -106,7 +106,9 @@ class InteractiveBaselinePlot_kivygraph(FloatLayout) :
             self.yp = self.yp[iskip]
             self.on = self.on[iskip]
 
-        print("SIZES:",self.xp.size,self.yp.size,self.on.size)
+            
+        if __baseline_plot_debug__ :
+            print("SIZES:",self.xp.size,self.yp.size,self.on.size)
 
             
         self.redraw()
