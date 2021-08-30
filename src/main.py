@@ -1,6 +1,6 @@
-__version__ = "0.10.1"
+__version__ = "0.11"
 
-__main_debug__ = False
+__main_debug__ = True
 
 from kivy.app import App
 from kivymd.app import MDApp
@@ -81,10 +81,15 @@ _existing_station_list = ['PV','AZ','SM','LM','AA','SP','JC','GL','PB','KP','HA'
 _stationdicts={}
 
 _stationdicts={}
-_stationdicts['ngEHT+']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
-_stationdicts['ngEHT']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
-_stationdicts['EHT 2017']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
-_stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
+_stationdicts['ngEHT+']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1.txt')), existing_station_list=_existing_station_list)
+_stationdicts['EHT 2017']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017.txt')),existing_station_list=_existing_station_list)
+_stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022.txt')),existing_station_list=_existing_station_list)
+
+# _stationdicts['ngEHT+']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
+# _stationdicts['ngEHT']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_230_ehtim.txt')), existing_station_list=_existing_station_list)
+# _stationdicts['EHT 2017']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017_230_ehtim.txt')),existing_station_list=_existing_station_list)
+# _stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022_230_ehtim.txt')),existing_station_list=_existing_station_list)
 
 
 _array_index = 1
@@ -363,6 +368,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
             print("mp.__init__: finished")
 
     def update(self,datadict,statdict) :
+        global _datadict, _statdict
         self.mp.update(datadict,statdict)
         self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
         if __main_debug__ :
@@ -571,14 +577,17 @@ class VariableToggleList(StackLayout) :
         self.bs = []
         for s in np.sort(list(self.sdict.keys())) :
             if (self.sdict[s]['on']) :
-                b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_on_color,background_color=self.bkgnd_color)
+                b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_on_color,background_color=self.bkgnd_color,state="normal")
             else :
-                b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_off_color,background_color=self.bkgnd_color)
+                b = ToggleButton(text=s,size_hint=(None,None),size=self.button_size,color=_off_color,background_color=self.bkgnd_color,state="down")
             b.bind(on_press=self.on_toggle)
             self.add_widget(b)
             self.bs.append(b)
             #self.sdict[s]['on']=True
 
+        if (__main_debug__) :
+            print("VariableToggleList.remake: updating plot")
+            
         self.rpp.update(_datadict,self.sdict)
         
     def refresh(self,sdict) :

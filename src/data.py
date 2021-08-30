@@ -71,6 +71,11 @@ def bilinear(x1d,y1d,f,X,Y,indexing='xy') :
     return F
 
 
+def nearest_neighbor(X,xp,yp) :
+    return yp[np.argmin(np.abs(X-xp))]
+    
+    
+
 #########
 # To generate data from a station dictionary and image
 def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_time=600,min_elev=15,bandwidth=8.0,day=80) :
@@ -140,7 +145,10 @@ def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_t
                         s1.append( stat1 )
                         s2.append( stat2 )
 
-                        err.append( np.sqrt( statdict[stat1]['sefd']*statdict[stat2]['sefd'] ) * thermal_error_factor )
+                        sefd1 = nearest_neighbor(freq,statdict[stat1]['sefd_freq'],statdict[stat1]['sefd'])
+                        sefd2 = nearest_neighbor(freq,statdict[stat1]['sefd_freq'],statdict[stat2]['sefd'])
+
+                        err.append( np.sqrt( sefd1*sefd2 ) * thermal_error_factor )
                         
     u = np.array(u)
     v = np.array(v)
