@@ -1638,8 +1638,8 @@ class InteractiveMapsPlot(FloatLayout) :
         super().__init__(**kwargs)
 
         # New station stuff
-        self.add_station_btn = Button(text="Add",font_size=sp(14),color=_on_color,background_color=(1,1,1,0.2))
-        self.del_station_btn = Button(text="Del",font_size=sp(14),color=_on_color,background_color=(1,1,1,0.2))
+        self.add_station_btn = Button(text="Add",font_size=sp(16),color=_on_color,background_color=(1,1,1,0.2))
+        self.del_station_btn = Button(text="Del",font_size=sp(16),color=_on_color,background_color=(1,1,1,0.2))
         self.add_station_btn.bind(on_release=self.add_station)
         self.del_station_btn.bind(on_release=self.del_station)
         #self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
