@@ -479,7 +479,7 @@ class BaselineMapCanvas(FloatLayout) :
     def get_center(self,rect) :
         return self.px_to_coords(0.5*Window.width,0.5*Window.height,rect)
 
-    def coords_to_px(self,lon,lat,rect) :
+    def coords_to_px(self,lat,lon,rect) :
         lon_to_xpx_scale = rect.size[0]/(self.limits[1]-self.limits[0]) 
         lon_to_xpx_offset = lon_to_xpx_scale*(-self.limits[0]) + rect.pos[0] - rect.tex_coords[0]*rect.size[0]/(rect.tex_coords[2]-rect.tex_coords[0])
         lat_to_ypx_scale = rect.size[1]/(self.limits[3]-self.limits[2])

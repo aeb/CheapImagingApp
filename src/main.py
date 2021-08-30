@@ -420,12 +420,19 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
         if (touch.is_touch) :
             snap_source = None
-            # Stuff for snap_source TBD
+            for s in _stationdict.keys() :
+                xpx_src,ypx_src = self.bmc.coords_to_px(self.mp.lldict[s][0],self.mp.lldict[s][1],self.mp.rect)
+                dxpx = (touch.pos[0] - xpx_src + 0.5*self.mp.rect.size[0])%self.mp.rect.size[0] - 0.5*self.mp.rect.size[0]
+                dypx = (touch.pos[1] - ypx_src)
+                if ( dxpx**2 + dypx**2 <= dp(15)**2 ) :
+                    snap_source = s
             if (snap_source is None) :
                 self.bmc.cursor_lat,self.bmc.cursor_lon = self.bmc.px_to_coords(touch.pos[0],touch.pos[1],self.mp.rect)
                 self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
             else :
-                pass # Stuff for snap_source TBD
+                self.bmc.cursor_lat,self.bmc.cursor_lon = self.mp.lldict[snap_source]
+                self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+                
                 
         if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.on_touch_down(): replotting",self.size,self.mp.rect.size)
