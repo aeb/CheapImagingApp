@@ -17,7 +17,7 @@ import os
 import numpy as np
 import matplotlib.image as mi
 
-__data_debug__ = False
+__data_debug__ = True
 
 
 #########
@@ -416,6 +416,7 @@ class ImageCarousel(Carousel) :
 
         self.direction = 'right'
         self.loop = True
+        self.image_file_list = []
         self.data_file_list = []
         self.taperable_list = []
 
@@ -426,24 +427,47 @@ class ImageCarousel(Carousel) :
         box.add_widget(self.add_btn)
         box.add_widget(lbl)
         self.add_widget(box)
+        self.image_file_list.append("")
         self.data_file_list.append("")
         self.taperable_list.append(False)
+
+        # Expects image for each frequency
+        self.frequency_index = 1
+        self.frequency_list = np.array([86,230,345,480,690])
         
     def add_image(self,image_file,data_file,caption="",taperable=True) :
+
+        if (not isinstance(image_file,list)) :
+            image_file = [image_file,image_file,image_file,image_file,image_file]
+            data_file = [data_file,data_file,data_file,data_file,data_file]
+            
+        
+        img_file = image_file[self.frequency_index]
+        
         box = BoxLayout()
         box.orientation = "vertical"
-        image = AsyncImage(source=image_file, allow_stretch=True)
+        image = AsyncImage(source=img_file, allow_stretch=True)
         lbl = Label(text=caption,color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
         box.add_widget(image)
         box.add_widget(lbl)
         self.add_widget(box)
+
+        self.image_file_list.append(image_file)
         self.data_file_list.append(data_file)
         self.taperable_list.append(taperable)
         
     def selected_data_file(self) :
-        return self.data_file_list[self.index]
-    
-    
+        return self.data_file_list[self.index][self.frequency_index]
+
+    def set_frequency(self,widget,val) :
+        self.frequency_index = int(val)
+        if (__data_debug__) :
+            print("ImageCarousel.set_frequency:",self.frequency_index,val,self.frequency_list)
+        for j,w in enumerate(self.slides) :
+            if (j>0) :
+                w.children[1].source = self.image_file_list[j][self.frequency_index]
+            
+        
 class DataSelectionSliders(BoxLayout) :
 
     source_size = NumericProperty(None)
@@ -541,6 +565,8 @@ class DataSelectionSliders(BoxLayout) :
     def adjust_observation_frequency(self,widget,val) :
         self.observation_frequency = self.ofs.observation_frequency()
         self.ofs_label2.text = self.ofs.hint_box_text(0)
+        if (__data_debug__) :
+            print("DataSelectionSliders.adjust_observation_frequency:",self.observation_frequency,val,self.ofs_label2.text)
 
         
 class ObsFrequencyMDSlider(FancyMDSlider):

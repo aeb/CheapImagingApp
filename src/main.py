@@ -1419,22 +1419,46 @@ class DataSetSelectionPage(BoxLayout) :
         
         self.ic = data.ImageCarousel()
 
-        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
-                          path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png"))],
+                          [path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy"))],
                           "Simulated jet at 230 GHz.",
                           False)
-        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
-                          path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
-                          "Simulated jet at 345 GHz.",
-                          False)
-        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
-                          path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
+        # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
+        #                   path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
+        #                   "Simulated jet at 230 GHz.",
+        #                   False)
+        # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
+        #                   path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
+        #                   "Simulated jet at 345 GHz.",
+        #                   False)
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png"))],
+                          [path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy"))],
                           "Simulated RIAF at 230 GHz.",
                           False)
-        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
-                          path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
-                          "Simulated RIAF at 345 GHz.",
-                          False)
+        # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
+        #                   path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
+        #                   "Simulated RIAF at 230 GHz.",
+        #                   False)
+        # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
+        #                   path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
+        #                   "Simulated RIAF at 345 GHz.",
+        #                   False)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           "First contact!",
@@ -1466,6 +1490,9 @@ class DataSetSelectionPage(BoxLayout) :
         # self.file_manager_obj.toolbar.specific_text_color = (0.77,0.55,0.17,1)
 
         self.ic.add_btn.bind(on_release=self.open_file_manager)
+
+        self.dss.ofs.bind(value=self.ic.set_frequency)
+
         
     def select_path(self,path) :
         self.ic.add_image(path,path,path,True)
