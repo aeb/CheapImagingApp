@@ -267,10 +267,13 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
         if (__data_debug__) :
             print("Read",file_name,img.shape)        
 
-        if (img.shape[2]==3) :
-            I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 )
-        elif (img.shape[2]==4) :
-            I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 ) * (img[:,:,3].astype(float))
+        if (len(img.shape)==2) : # BW img
+            I = img
+        elif (len(img.shape)==3) : # Color img
+            if (img.shape[2]==3) : # rgb
+                I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 )
+            elif (img.shape[2]==4) : # rgba
+                I = np.sqrt( (img[:,:,0].astype(float))**2 + (img[:,:,1].astype(float))**2 + (img[:,:,2].astype(float))**2 ) * (img[:,:,3].astype(float))
         else :
             print("ERROR: Unknown image type in file %s"%(file_name))
             return None
@@ -298,6 +301,22 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
             # plt.imshow(I)
             # plt.show()
 
+        else :
+            # Edge smoothing (which we do no matter what)
+            px_smooth = 0.05
+            i,j = np.meshgrid(np.linspace(0,1,I.shape[1]),np.linspace(0,1,I.shape[0]))
+            hi = np.sin(0.5*np.pi*i/px_smooth)*(i<px_smooth) + 1.0*(i>=px_smooth)*(i<=1.0-px_smooth) + np.sin(0.5*np.pi*(1-i)/px_smooth)*(1-i<px_smooth)
+            hj = np.sin(0.5*np.pi*j/px_smooth)*(j<px_smooth) + 1.0*(j>=px_smooth)*(j<=1.0-px_smooth) + np.sin(0.5*np.pi*(1-j)/px_smooth)*(1-j<px_smooth)
+
+            taper_func = hi*hj
+            I = I * taper_func
+            
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.pcolor(i,j,taper_func,cmap='afmhot')
+            # plt.figure()
+            # plt.pcolor(i,j,I,cmap='afmhot')
+            # plt.show()
         
             
         # drf = 1
@@ -373,9 +392,10 @@ def generate_data_from_file(file_name,statdict,freq=230,ra=17.7611225,dec=-29.00
             print("Shapes:",x2.shape,y2.shape,I2.shape)
             print("x2:",x2[:5,0],x2[:,0].shape)
             print("y2:",y2[0,:5],y2[0,:].shape)
+
         # import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.pcolor(x,y,I,cmap='afmhot')
+        # # plt.figure()
+        # # plt.pcolor(x,y,I,cmap='afmhot')
         # plt.figure()
         # plt.pcolor(x2,y2,I2,cmap='afmhot')
         # plt.show()

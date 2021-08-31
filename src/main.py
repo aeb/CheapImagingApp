@@ -1488,6 +1488,10 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0007.npy"))],
                           "Simulated accretion disk around a slowly spinning black hole viewed from 50 degrees.",
                           False)        
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/Einstein.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/Einstein.png")),
+                          "First contact!",
+                          True)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           "First contact!",
