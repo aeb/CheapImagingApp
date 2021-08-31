@@ -1,4 +1,4 @@
-__version__ = "0.11"
+__version__ = "0.12"
 
 __main_debug__ = False
 
@@ -1434,7 +1434,7 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy"))],
-                          "Simulated jet at 230 GHz.",
+                          "Simulated jet appropriate for M87 (credit: A. Chael).",
                           False)
         # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
         #                   path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
@@ -1454,7 +1454,7 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy"))],
-                          "Simulated RIAF at 230 GHz.",
+                          "Simulated accretion disk after scattering through the Galactic disk. (credit: C. Fromm)",
                           False)
         # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
         #                   path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
@@ -1464,6 +1464,30 @@ class DataSetSelectionPage(BoxLayout) :
         #                   path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
         #                   "Simulated RIAF at 345 GHz.",
         #                   False)
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0003.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0003.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0003.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0003.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0003.png"))],
+                          [path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0003.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0003.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0003.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0003.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0003.npy"))],
+                          "Simulated accretion disk viewed from 70 degrees.",
+                          False)
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0007.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0007.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0007.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0007.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0007.png"))],
+                          [path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0007.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0007.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0007.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0007.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0007.npy"))],
+                          "Simulated accretion disk around a slowly spinning black hole viewed from 50 degrees.",
+                          False)        
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           "First contact!",
