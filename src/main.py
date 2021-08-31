@@ -1,6 +1,6 @@
 __version__ = "0.11"
 
-__main_debug__ = True
+__main_debug__ = False
 
 from kivy.app import App
 from kivymd.app import MDApp
