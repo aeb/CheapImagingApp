@@ -528,8 +528,8 @@ ScreenManager:
         rpp: plot
         ddm_id: ddm
         size_hint: 1.0,None
-        height: dp(50)+dp(30)
-        closed_height: dp(50)+dp(30)
+        height: dp(50)+dp(25)
+        closed_height: dp(50)+dp(25)
         
 
 
@@ -594,8 +594,8 @@ ScreenManager:
         rpp: plot
         ddm_id: ddm
         size_hint: 1.0,None
-        height: dp(50)+dp(30)
-        closed_height: dp(50)+dp(30)
+        height: dp(50)+dp(25)
+        closed_height: dp(50)+dp(25)
 
 
 
@@ -683,8 +683,8 @@ ScreenManager:
         rpp: top_plot
         ddm_id: ddm
         size_hint: 1.0,None
-        height: dp(50)+dp(30)
-        closed_height: dp(50)+dp(30)
+        height: dp(50)+dp(25)
+        closed_height: dp(50)+dp(25)
         
 
 <DiameterMenu>:
@@ -700,25 +700,24 @@ ScreenManager:
         Color:
             rgba: 0.77,0.55,0.17,0.25
         Rectangle:
-            # size: root.width, root.height-dp(15)
-            size: root.width, root.height-dp(30)
+            size: root.width, root.height-dp(25)
     orientation: "vertical"
     Button:
         canvas:
             Color:
                 rgba: 0.77,0.55,0.17,0.75
             RoundedRectangle:
-                radius: [(20,),(20,),(0,),(0,)]
+                # radius: [(20,),(20,),(0,),(0,)]
+                radius: [(40,),(40,),(0,),(0,)]
                 size: root.tab_width,self.size[1]
-                # pos: self.pos[0],root.height-dp(15)
-                pos: self.pos[0],root.height-dp(30)
+                pos: self.pos[0],root.height-dp(25)
             Color:
                 rgba: 0.14,0.14,0.14,0.75
             Triangle:
-                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(30)+0.8*self.height-0.6*self.height*root.is_open)
+                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(25)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(25)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(25)+0.8*self.height-0.6*self.height*root.is_open)
         size_hint: None,None
         width: root.tab_width
-        height: dp(30)
+        height: dp(25)
         pos_hint: {'right':(root.tab_width+root.tab_pos_x)/root.width}
         background_color: 0,0,0,0
         background_normal: ''
@@ -731,7 +730,7 @@ ScreenManager:
         plot: root.plot
         top_menu: root
         size_hint: 1,None
-        height: root.height-dp(30)-root.closed_height
+        height: root.height-dp(25)-root.closed_height
 
     BoxLayout:
         size_hint: 1,None
@@ -751,23 +750,24 @@ ScreenManager:
         Color:
             rgba: 0.77,0.55,0.17,0.25
         Rectangle:
-            size: root.width, root.height-dp(30)
+            size: root.width, root.height-dp(25)
     orientation: "vertical"
     Button:
         canvas:
             Color:
                 rgba: 0.77,0.55,0.17,0.75
             RoundedRectangle:
-                radius: [(20,),(20,),(0,),(0,)]
+                # radius: [(20,),(20,),(0,),(0,)]
+                radius: [(40,),(40,),(0,),(0,)]
                 size: root.tab_width,self.size[1]
-                pos: self.pos[0],root.height-dp(30)
+                pos: self.pos[0],root.height-dp(25)
             Color:
                 rgba: 0.14,0.14,0.14,0.75
             Triangle:
-                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(30)+0.8*self.height-0.6*self.height*root.is_open)
+                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(25)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(25)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(25)+0.8*self.height-0.6*self.height*root.is_open)
         size_hint: None,None
         width: root.tab_width
-        height: dp(30)
+        height: dp(25)
         pos_hint: {'right':(root.tab_width+root.tab_pos_x)/root.width}
         background_color: 0,0,0,0
         background_normal: ''
@@ -780,7 +780,7 @@ ScreenManager:
         plot: root.plot
         top_menu: root
         size_hint: 1,None
-        height: root.height-dp(30)-root.closed_height
+        height: root.height-dp(25)-root.closed_height
 
     BoxLayout:
         size_hint: 1,None
@@ -799,14 +799,15 @@ ScreenManager:
         Color:
             rgba: 0.77,0.55,0.17,0.125
         Rectangle:
-            size: root.width, root.height-dp(30)
+            size: root.width, root.height-dp(25)
     orientation: "vertical"
     Button:
         canvas.after:
             Color:
                 rgba: 0.77,0.55,0.17,0.75
             RoundedRectangle:
-                radius: [(20,),(20,),(0,),(0,)]
+                # radius: [(20,),(20,),(0,),(0,)]
+                radius: [(40,),(40,),(0,),(0,)]
                 size: root.tab_width,self.size[1]
                 pos: self.pos
             Color:
@@ -816,7 +817,7 @@ ScreenManager:
         size_hint: None,None
         width: root.tab_width
         pos_x: root.tab_pos_x
-        height: dp(30)
+        height: dp(25)
         pos_y: self.height
         background_color: 0,0,0,0
         background_normal: ''
