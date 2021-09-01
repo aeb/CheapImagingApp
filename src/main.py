@@ -554,7 +554,7 @@ class VariableToggleList(StackLayout) :
     
     rpp = ObjectProperty(None)
     nstations = NumericProperty(0)
-    button_size = ("30dp","30dp")
+    button_size = ListProperty((dp(50),dp(50)),size=2)
 
     bkgnd_color = [0,0,0,0]
     
@@ -717,7 +717,7 @@ class SMESpinnerOption(SpinnerOption):
         # self.background_color = [0.14,0.14,0.14, 0.75]    # blue colour
         self.background_color = [0.77,0.55,0.17,0.7]    # blue colour        
         self.color = [1, 1, 1, 1]
-        self.height = dp(30)
+        self.height = dp(50)
 
 class SMESpinner(Spinner):
 
@@ -1476,17 +1476,17 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0003.npy"))],
                           "Simulated accretion disk viewed from 70 degrees.",
                           False)
-        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0007.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0007.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0007.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0007.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0007.png"))],
-                          [path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0007.npy")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0007.npy")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0007.npy")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0007.npy")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0007.npy"))],
-                          "Simulated accretion disk around a slowly spinning black hole viewed from 50 degrees.",
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0006.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0006.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0006.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0006.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0006.png"))],
+                          [path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0006.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0006.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0006.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0006.npy")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0006.npy"))],
+                          "Simulated accretion disk viewed from 50 degrees.",
                           False)        
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/Einstein.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/Einstein.png")),
@@ -1708,8 +1708,8 @@ class InteractiveMapsPlot(FloatLayout) :
         super().__init__(**kwargs)
 
         # New station stuff
-        self.add_station_btn = Button(text="Add",font_size=sp(16),color=_on_color,background_color=(1,1,1,0.2))
-        self.del_station_btn = Button(text="Del",font_size=sp(16),color=_on_color,background_color=(1,1,1,0.2))
+        self.add_station_btn = Button(text="Add",font_size=sp(18),color=_on_color,background_color=(1,1,1,0.2))
+        self.del_station_btn = Button(text="Del",font_size=sp(18),color=_on_color,background_color=(1,1,1,0.2))
         self.add_station_btn.bind(on_release=self.add_station)
         self.del_station_btn.bind(on_release=self.del_station)
         #self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
@@ -1831,7 +1831,8 @@ class TopBanner(MDBoxLayout) :
 
         menu_list = ["Splash Screen","Reconstructions","News","ngEHT","About"]
         
-        menu_items = [{ 'viewclass':'OneLineListItem', 'text':f"{menu_list[i]}", "height": dp(40), "on_release": lambda x=f"{menu_list[i]}": self.menu_callback(x), 'text_color':(1,1,1,1), 'theme_text_color':"Custom",} for i in range(len(menu_list)) ]
+        menu_items = [{ 'viewclass':'OneLineListItem', 'text':f"{menu_list[i]}", "height": dp(50), "on_release": lambda x=f"{menu_list[i]}": self.menu_callback(x), 'text_color':(1,1,1,1), 'theme_text_color':"Custom",} for i in range(len(menu_list)) ]
+        # menu_items = [{ 'viewclass':'OneLineListItem', 'text':f"{menu_list[i]}", "on_release": lambda x=f"{menu_list[i]}": self.menu_callback(x), 'text_color':(1,1,1,1), 'theme_text_color':"Custom",} for i in range(len(menu_list)) ]
 
         self.menu = MDDropdownMenu(items=menu_items,width_mult=2.5,background_color=(0.7,0.7,0.7,0.5))
 

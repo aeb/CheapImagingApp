@@ -316,23 +316,23 @@ ScreenManager:
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
-        size: dp(40),dp(80)
-        pos: root.width-dp(40),root.height-dp(80)
+        size: dp(50),dp(100)
+        pos: root.width-dp(50),root.height-dp(100)
         Button:
-            text: "+"
-            font_size: "20sp"
-            size_hint: None,None
-            size: "40dp","40dp"
-            color: 1,1,1,0.75
-            background_color: 0,0,0,0
-            on_press: plot.zoom_in()
-        Button:
-            text: "-"
+            text: "\u002B"
             font_size: "36sp"
             size_hint: None,None
-            size: "40dp","40dp"
+            size: "50dp","50dp"
             color: 1,1,1,0.75
-            background_color: 0,0,0,0
+            background_color: 0,0,0,0.25
+            on_press: plot.zoom_in()
+        Button:
+            text: "\u2212"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
             on_press: plot.zoom_out()
 
 <TargetSelectionScreen>:
@@ -486,31 +486,31 @@ ScreenManager:
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
-        size: dp(40),dp(80)
-        pos: root.width-dp(40),root.height-dp(80)
+        size: dp(50),dp(100)
+        pos: root.width-dp(50),root.height-dp(100)
         Button:
-            text: "+"
-            font_size: "20sp"
-            size_hint: None,None
-            size: "40dp","40dp"
-            color: 1,1,1,0.75
-            background_color: 0,0,0,0
-            on_press: plot.irp.zoom_in()
-        Button:
-            text: "-"
+            text: "\u002B"
             font_size: "36sp"
             size_hint: None,None
-            size: "40dp","40dp"
+            size: "50dp","50dp"
             color: 1,1,1,0.75
-            background_color: 0,0,0,0
+            background_color: 0,0,0,0.25
+            on_press: plot.irp.zoom_in()
+        Button:
+            text: "\u2212"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
             on_press: plot.irp.zoom_out()
 
     DiameterMenu:
         id: ddm
         plot: plot
         size_hint: 1.0,None
-        opened_height: dp(80)+otm.height
-        height: ( otm.height + dp(80) if self.is_open else otm.height )
+        opened_height: dp(100)+otm.height
+        height: ( self.opened_height if self.is_open else otm.height )
         closed_height: otm.height
         current_opened_height: self.opened_height
             
@@ -518,8 +518,8 @@ ScreenManager:
         id: otm
         plot: plot
         size_hint: 1.0,None
-        opened_height: dp(80)+sme.height
-        height: ( sme.height + dp(80) if self.is_open else sme.height )
+        opened_height: dp(100)+sme.height
+        height: ( self.opened_height if self.is_open else sme.height )
         closed_height: sme.height
         current_opened_height: self.opened_height
 
@@ -528,8 +528,8 @@ ScreenManager:
         rpp: plot
         ddm_id: ddm
         size_hint: 1.0,None
-        height: dp(40)+dp(15)
-        closed_height: dp(40)+dp(15)
+        height: dp(50)+dp(30)
+        closed_height: dp(50)+dp(30)
         
 
 
@@ -552,31 +552,31 @@ ScreenManager:
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
-        size: dp(40),dp(80)
-        pos: root.width-dp(40),root.height-dp(80)
+        size: dp(50),dp(100)
+        pos: root.width-dp(50),root.height-dp(100)
         Button:
-            text: "+"
-            font_size: "20sp"
-            size_hint: None,None
-            size: "40dp","40dp"
-            color: 1,1,1,0.75
-            background_color: 0,0,0,0
-            on_press: plot.zoom_in()
-        Button:
-            text: "-"
+            text: "\u002B"
             font_size: "36sp"
             size_hint: None,None
-            size: "40dp","40dp"
+            size: "50dp","50dp"
             color: 1,1,1,0.75
-            background_color: 0,0,0,0
+            background_color: 0,0,0,0.25
+            on_press: plot.zoom_in()
+        Button:
+            text: "\u2212"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
             on_press: plot.zoom_out()
 
     DiameterMenu:
         id: ddm
         plot: plot
         size_hint: 1.0,None
-        opened_height: dp(80)+otm.height
-        height: ( otm.height + dp(80) if self.is_open else otm.height )
+        opened_height: dp(100)+otm.height
+        height: ( self.opened_height if self.is_open else otm.height )
         closed_height: otm.height
         current_opened_height: self.opened_height
             
@@ -584,8 +584,8 @@ ScreenManager:
         id: otm
         plot: plot
         size_hint: 1.0,None
-        opened_height: dp(80)+sme.height
-        height: ( sme.height + dp(80) if self.is_open else sme.height )
+        opened_height: dp(100)+sme.height
+        height: ( self.opened_height if self.is_open else sme.height )
         closed_height: sme.height
         current_opened_height: self.opened_height
         
@@ -594,8 +594,8 @@ ScreenManager:
         rpp: plot
         ddm_id: ddm
         size_hint: 1.0,None
-        height: dp(40)+dp(15)
-        closed_height: dp(40)+dp(15)
+        height: dp(50)+dp(30)
+        closed_height: dp(50)+dp(30)
 
 
 
@@ -621,23 +621,23 @@ ScreenManager:
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
-        size: dp(40),dp(80)
-        pos: root.width-dp(40),root.height-dp(80)
+        size: dp(50),dp(100)
+        pos: root.width-dp(50),root.height-dp(100)
         Button:
-            text: "+"
-            font_size: "20sp"
-            size_hint: None,None
-            size: "40dp","40dp"
-            color: 1,1,1,0.75
-            background_color: 0,0,0,0
-            on_press: plot.zoom_in()
-        Button:
-            text: "-"
+            text: "\u002B"
             font_size: "36sp"
             size_hint: None,None
-            size: "40dp","40dp"
+            size: "50dp","50dp"
             color: 1,1,1,0.75
-            background_color: 0,0,0,0
+            background_color: 0,0,0,0.25
+            on_press: plot.zoom_in()
+        Button:
+            text: "\u2212"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
             on_press: plot.zoom_out()
 
     BoxLayout:
@@ -664,8 +664,8 @@ ScreenManager:
         id: ddm
         plot: plot
         size_hint: 1.0,None
-        opened_height: dp(80)+otm.height
-        height: ( otm.height + dp(80) if self.is_open else otm.height )
+        opened_height: dp(100)+otm.height
+        height: ( self.opened_height if self.is_open else otm.height )
         closed_height: otm.height
         current_opened_height: self.opened_height
             
@@ -673,8 +673,8 @@ ScreenManager:
         id: otm
         plot: plot
         size_hint: 1.0,None
-        opened_height: dp(80)+sme.height
-        height: ( sme.height + dp(80) if self.is_open else sme.height )
+        opened_height: dp(100)+sme.height
+        height: ( self.opened_height if self.is_open else sme.height )
         closed_height: sme.height
         current_opened_height: self.opened_height
 
@@ -683,8 +683,8 @@ ScreenManager:
         rpp: top_plot
         ddm_id: ddm
         size_hint: 1.0,None
-        height: dp(40)+dp(15)
-        closed_height: dp(40)+dp(15)
+        height: dp(50)+dp(30)
+        closed_height: dp(50)+dp(30)
         
 
 <DiameterMenu>:
@@ -700,7 +700,8 @@ ScreenManager:
         Color:
             rgba: 0.77,0.55,0.17,0.25
         Rectangle:
-            size: root.width, root.height-dp(15)
+            # size: root.width, root.height-dp(15)
+            size: root.width, root.height-dp(30)
     orientation: "vertical"
     Button:
         canvas:
@@ -709,14 +710,15 @@ ScreenManager:
             RoundedRectangle:
                 radius: [(20,),(20,),(0,),(0,)]
                 size: root.tab_width,self.size[1]
-                pos: self.pos[0],root.height-dp(15)
+                # pos: self.pos[0],root.height-dp(15)
+                pos: self.pos[0],root.height-dp(30)
             Color:
                 rgba: 0.14,0.14,0.14,0.75
             Triangle:
-                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(15)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(15)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(15)+0.8*self.height-0.6*self.height*root.is_open)
+                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(30)+0.8*self.height-0.6*self.height*root.is_open)
         size_hint: None,None
         width: root.tab_width
-        height: dp(15)
+        height: dp(30)
         pos_hint: {'right':(root.tab_width+root.tab_pos_x)/root.width}
         background_color: 0,0,0,0
         background_normal: ''
@@ -729,7 +731,7 @@ ScreenManager:
         plot: root.plot
         top_menu: root
         size_hint: 1,None
-        height: root.height-dp(15)-root.closed_height
+        height: root.height-dp(30)-root.closed_height
 
     BoxLayout:
         size_hint: 1,None
@@ -749,7 +751,7 @@ ScreenManager:
         Color:
             rgba: 0.77,0.55,0.17,0.25
         Rectangle:
-            size: root.width, root.height-dp(15)
+            size: root.width, root.height-dp(30)
     orientation: "vertical"
     Button:
         canvas:
@@ -758,14 +760,14 @@ ScreenManager:
             RoundedRectangle:
                 radius: [(20,),(20,),(0,),(0,)]
                 size: root.tab_width,self.size[1]
-                pos: self.pos[0],root.height-dp(15)
+                pos: self.pos[0],root.height-dp(30)
             Color:
                 rgba: 0.14,0.14,0.14,0.75
             Triangle:
-                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(15)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(15)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(15)+0.8*self.height-0.6*self.height*root.is_open)
+                points: (0.5*root.tab_width+root.tab_pos_x-dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x+dp(10),root.height-dp(30)+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+root.tab_pos_x,root.height-dp(30)+0.8*self.height-0.6*self.height*root.is_open)
         size_hint: None,None
         width: root.tab_width
-        height: dp(15)
+        height: dp(30)
         pos_hint: {'right':(root.tab_width+root.tab_pos_x)/root.width}
         background_color: 0,0,0,0
         background_normal: ''
@@ -778,7 +780,7 @@ ScreenManager:
         plot: root.plot
         top_menu: root
         size_hint: 1,None
-        height: root.height-dp(15)-root.closed_height
+        height: root.height-dp(30)-root.closed_height
 
     BoxLayout:
         size_hint: 1,None
@@ -790,13 +792,14 @@ ScreenManager:
     submenu_id: menu
     expand_time: 0.5
     fps: 60
-    opened_height: dp(40)+menu.minimum_height+dp(20)
+    opened_height: dp(50)+menu.minimum_height+dp(25)
+    # opened_height: dp(50)+menu.minimum_height+dp(50)
     tab_width: 0.333333*self.width
     canvas:
         Color:
             rgba: 0.77,0.55,0.17,0.125
         Rectangle:
-            size: root.width, root.height-dp(15)
+            size: root.width, root.height-dp(30)
     orientation: "vertical"
     Button:
         canvas.after:
@@ -813,7 +816,7 @@ ScreenManager:
         size_hint: None,None
         width: root.tab_width
         pos_x: root.tab_pos_x
-        height: "15dp"
+        height: dp(30)
         pos_y: self.height
         background_color: 0,0,0,0
         background_normal: ''
@@ -824,34 +827,36 @@ ScreenManager:
     BoxLayout:
         id: menu_topbox
         size_hint: 1,None
-        height: min(dp(40),root.height)
+        height: min(dp(50),root.height)
         Button:
             text: "All"
+            font_size: sp(16)
             color: 1,0.75,0.25,1
             background_color: 0,0,0,0
             size_hint: 0.5,None
-            size: 1,dp(40)
+            size: 1,dp(50)
             on_press:
                 menu.turn_all_stations_on()
         SMESpinner:
             sme_id: sme
             ddm_id: sme.ddm_id
             text: sme.array_name
-            font_size: "18sp"
+            font_size: sp(18)
             color: 1,1,1,1
             background_color: 0,0,0,0
             size_hint: 1,None
-            size: 1,dp(40)
-            height: "30dp"
-            pos: self.pos[0],menu_topbox.pos[1]+dp(5)
+            size: 1,dp(50)
+            height: dp(50)
+            pos: self.pos[0],menu_topbox.pos[1]+dp(0)
             on_text:
                 self.on_selection(self.text)
         Button:
             text: "None"
+            font_size: sp(16)
             color: 1,0.75,0.25,1
             background_color: 0,0,0,0
             size_hint: 0.5,None
-            size: 1,dp(40)
+            size: 1,dp(50)
             on_press:
                 menu.turn_all_stations_off()
     ScrollView:
@@ -859,7 +864,7 @@ ScreenManager:
             id: menu
             size_hint: 1, None
             height: self.minimum_height
-            padding: 0.5*(root.width-min(self.nstations,int(root.width/dp(30)))*dp(30)),0
+            padding: 0.5*(root.width-min(self.nstations,int(root.width/self.button_size[0]))*self.button_size[0]),0
             rpp: root.rpp
 
     

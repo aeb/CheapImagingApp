@@ -164,7 +164,7 @@ class TargetSelectionSpinnerOptions(SpinnerOption) :
         super().__init__(**kwargs)
 
         self.background_color=(1,1,1,0.25)
-        self.height = dp(30)
+        self.height = dp(50)
         
     
 class TargetSelectionSpinner(Spinner) :
