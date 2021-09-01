@@ -342,6 +342,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
     bmc = map_plot.BaselineMapCanvas()
     mp = map_plot.InteractiveBaselineMapPlot_kivygraph()
     menu_id = ObjectProperty(None)
+    ad_stn_box = ObjectProperty(None)
     
     def __init__(self,**kwargs) :
         global _datadict, _statdict
@@ -368,10 +369,101 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
 
         # Generate first set of baselines
         self.mp.replot(self.ddict,self.sdict)
+
+        # New station stuff
+        self.add_station_btn = Button(text="Add",font_size=sp(18),color=(1,1,1,1),background_color=(0,0,0,0.25))
+        self.del_station_btn = Button(text="Del",font_size=sp(18),color=(1,1,1,1),background_color=(0,0,0,0.25))
+        self.add_station_btn.bind(on_release=self.add_station)
+        self.del_station_btn.bind(on_release=self.del_station)
+        self.new_station_name_list_avail = []
+        for j in range(20) :
+            self.new_station_name_list_avail.append('%02i'%j)
+        self.new_station_name_list_used = []
+        self.prototype_station = 'BA'
+        self.editing_mode_add = False
+        self.editing_mode_del = False
+
+        # Snap to source source name
+        self.snap_source = None
         
         if __main_debug__ :
             print("mp.__init__: finished")
 
+        
+    def add_stn_buttons(self) :
+        if (__main_debug__) :
+            print("MenuedBaselineMapPlot_kivygraph.add_stn_buttons called:",len(self.ad_stn_box.children))
+        if ( len(self.ad_stn_box.children)==0 ) :
+            self.ad_stn_box.add_widget(self.add_station_btn)
+            self.ad_stn_box.add_widget(self.del_station_btn)
+
+    def remove_stn_buttons(self) :
+        if (__main_debug__) :
+            print("MenuedBaselineMapPlot_kivygraph.remove_stn_buttons called")
+        self.ad_stn_box.clear_widgets()
+
+    def add_station(self,widget) :
+        global _statdict, _datadict
+        if (_array_index==0) :
+            if (len(self.new_station_name_list_avail)>0) :
+                if (self.editing_mode_add==False) :
+                    self.editing_mode_add = True
+                    self.editing_mode_del = False
+                    self.cursor_on()
+                    self.add_station_btn.text = '+'+self.new_station_name_list_avail[0]
+                    self.add_station_btn.color = _on_color
+                    self.add_station_btn.background_color = (_on_color[0],_on_color[1],_on_color[2],0.75)
+                    self.del_station_btn.text = 'Del'
+                    self.del_station_btn.color = (1,1,1,1)
+                    self.del_station_btn.background_color = (0,0,0,0.25)
+                else :
+                    self.editing_mode_add = False
+                    latlon = self.cursor_off()
+                    nn = self.new_station_name_list_avail[0]
+                    _stationdicts['ngEHT+'][nn] = copy.deepcopy(_statdict[self.prototype_station])
+                    _stationdicts['ngEHT+'][nn]['on'] = True
+                    _stationdicts['ngEHT+'][nn]['loc'] = self.mp.latlon_to_xyz(latlon,radius=6.371e6)
+                    _stationdicts['ngEHT+'][nn]['name'] = nn
+                    _statdict = _stationdicts['ngEHT+']
+                    self.new_station_name_list_used.append(nn)
+                    self.new_station_name_list_avail.remove(nn)
+                    self.add_station_btn.text = 'Add'
+                    self.add_station_btn.color = (1,1,1,1)
+                    self.add_station_btn.background_color = (0,0,0,0.25)
+                    self.update(_datadict,_statdict)
+                    self.menu_id.refresh()
+                    
+        
+    def del_station(self,widget) :
+        global _statdict, _datadict
+        if (_array_index==0) :
+            if (len(self.new_station_name_list_used)>0) :
+                if (self.editing_mode_del==False) :
+                    self.editing_mode_del = True
+                    self.editing_mode_add = False
+                    self.cursor_on()
+                    self.del_station_btn.text = '-??'
+                    self.del_station_btn.color = (1,0,0,1)
+                    self.del_station_btn.background_color = (1,0,0,0.75)
+                    self.add_station_btn.text = 'Add'
+                    self.add_station_btn.color = (1,1,1,1)
+                    self.add_station_btn.background_color = (0,0,0,0.25)
+                else :
+                    self.editing_mode_del = False
+                    self.cursor_off()
+                    if (self.snap_source in self.new_station_name_list_used) :
+                        del _stationdicts['ngEHT+'][self.snap_source]
+                        self.new_station_name_list_used.remove(self.snap_source)
+                        self.new_station_name_list_avail.append(self.snap_source)
+                        self.new_station_name_list_avail.sort()
+                        _statdict = _stationdicts['ngEHT+']
+                    self.del_station_btn.text = 'Del'
+                    self.del_station_btn.color = (1,1,1,1)
+                    self.del_station_btn.background_color = (0,0,0,0.25)
+
+                    self.update(_datadict,_statdict)
+                    self.menu_id.refresh()
+            
     def update(self,datadict,statdict) :
         global _datadict, _statdict
         self.mp.update(datadict,statdict)
@@ -381,6 +473,16 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
             print("         :",_statdict.keys(),self.size)
             print("         :",statdict.keys(),self.size)
 
+        if (_array_index==0) :
+            self.add_stn_buttons()
+        else :
+            self.remove_stn_buttons()
+            if (self.editing_mode_add or self.editing_mode_del) :
+                self.editing_mode_add = False
+                self.editing_mode_del = False
+                self.plot_id.cursor_off()
+
+            
     def replot(self) :
         global _datadict, _statdict
         self.ddict = _datadict
@@ -431,21 +533,26 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         if (touch.is_double_tap) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
         if (touch.is_touch) :
-            snap_source = None
-            # for s in _statdict.keys() :
-            for s in self.mp.statdict.keys() :
-                xpx_src,ypx_src = self.bmc.coords_to_px(self.mp.lldict[s][0],self.mp.lldict[s][1],self.mp.rect)
-                dxpx = (touch.pos[0] - xpx_src + 0.5*self.mp.rect.size[0])%self.mp.rect.size[0] - 0.5*self.mp.rect.size[0]
-                dypx = (touch.pos[1] - ypx_src)
-                if ( dxpx**2 + dypx**2 <= dp(15)**2 ) :
-                    snap_source = s
-            if (snap_source is None) :
-                self.bmc.cursor_lat,self.bmc.cursor_lon = self.bmc.px_to_coords(touch.pos[0],touch.pos[1],self.mp.rect)
-                self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-            else :
-                self.bmc.cursor_lat,self.bmc.cursor_lon = self.mp.lldict[snap_source]
-                self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-                
+            if (self.editing_mode_add or self.editing_mode_del) :
+                self.snap_source = None
+                for s in self.mp.statdict.keys() :
+                    xpx_src,ypx_src = self.bmc.coords_to_px(self.mp.lldict[s][0],self.mp.lldict[s][1],self.mp.rect)
+                    dxpx = (touch.pos[0] - xpx_src + 0.5*self.mp.rect.size[0])%self.mp.rect.size[0] - 0.5*self.mp.rect.size[0]
+                    dypx = (touch.pos[1] - ypx_src)
+                    if ( dxpx**2 + dypx**2 <= dp(15)**2 ) :
+                        self.snap_source = s
+                if (self.snap_source is None) :
+                    self.bmc.cursor_lat,self.bmc.cursor_lon = self.bmc.px_to_coords(touch.pos[0],touch.pos[1],self.mp.rect)
+                    self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+                else :
+                    self.bmc.cursor_lat,self.bmc.cursor_lon = self.mp.lldict[self.snap_source]
+                    self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
+                    if (self.del_station_btn.text!='Del') : # Looking to delete
+                        if (self.snap_source in self.new_station_name_list_used) :
+                            self.del_station_btn.text = '-'+self.snap_source # Set name
+                        else :
+                            self.del_station_btn.text = '-??' # Unset name
+
                 
         if __main_debug__ :
             print("MenuedBaselineMapPlot_kivygraph.on_touch_down(): replotting",self.size,self.mp.rect.size)
@@ -1434,7 +1541,7 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy"))],
-                          "Simulated jet appropriate for M87 (credit: A. Chael).",
+                          "Simulated jet appropriate for M87. (Credit: A. Chael)",
                           False)
         # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
         #                   path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
@@ -1454,7 +1561,7 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy"))],
-                          "Simulated accretion disk after scattering through the Galactic disk. (credit: C. Fromm)",
+                          "Simulated accretion disk, scattered by the Galactic disk. (Credit: C. Fromm)",
                           False)
         # self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
         #                   path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
@@ -1474,7 +1581,7 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0003.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0003.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0003.npy"))],
-                          "Simulated accretion disk viewed from 70 degrees.",
+                          "Simulated accretion disk viewed from 70 degrees. (Credit: P. Tiede)",
                           False)
         self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_8.6e+10_0006.png")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_2.3e+11_0006.png")),
@@ -1486,11 +1593,11 @@ class DataSetSelectionPage(BoxLayout) :
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_3.45e+11_0006.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_4.5e+11_0006.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/riaf_freq_6.9e+11_0006.npy"))],
-                          "Simulated accretion disk viewed from 50 degrees.",
+                          "Simulated accretion disk viewed from 50 degrees. (Credit: P. Tiede)",
                           False)        
-        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/Einstein.png")),
-                          path.abspath(path.join(path.dirname(__file__),"source_images/Einstein.png")),
-                          "First contact!",
+        self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/Einstein2.png")),
+                          path.abspath(path.join(path.dirname(__file__),"source_images/Einstein2.png")),
+                          "The face of gravity.",
                           True)
         self.ic.add_image(path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
                           path.abspath(path.join(path.dirname(__file__),"source_images/toy_story_aliens.png")),
@@ -1542,8 +1649,6 @@ class DataSetSelectionPage(BoxLayout) :
             topdir = home
         else :
             topdir = '/'
-
-        topdir = '/'
             
         self.file_manager_obj.show(topdir)
         
@@ -1703,107 +1808,6 @@ class InteractiveMapsPlot(FloatLayout) :
     otm_id = ObjectProperty(None)
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
-
-    def __init__(self,**kwargs) :
-        super().__init__(**kwargs)
-
-        # New station stuff
-        self.add_station_btn = Button(text="Add",font_size=sp(18),color=_on_color,background_color=(1,1,1,0.2))
-        self.del_station_btn = Button(text="Del",font_size=sp(18),color=_on_color,background_color=(1,1,1,0.2))
-        self.add_station_btn.bind(on_release=self.add_station)
-        self.del_station_btn.bind(on_release=self.del_station)
-        #self.new_station_name_list = ['.LU', '.XE', '.XT', '.ER', '.MI', '.NO']
-        self.new_station_name_list = []
-        for j in range(20) :
-            self.new_station_name_list.append('%02i'%j)
-        self.prototype_station = 'BA'
-        self.number_new_stations = 0
-        self.editing_mode = False
-        
-    def add_stn_buttons(self) :
-        if (__main_debug__) :
-            print("InteractiveMapsPlot.add_stn_buttons called:",len(self.ids['ad_stn_box'].children))
-        if ( len(self.ids['ad_stn_box'].children)==0 ) :
-            self.ids['ad_stn_box'].add_widget(self.add_station_btn)
-            self.ids['ad_stn_box'].add_widget(self.del_station_btn)
-
-    def remove_stn_buttons(self) :
-        if (__main_debug__) :
-            print("InteractiveMapsPlot.remove_stn_buttons called")
-        self.ids['ad_stn_box'].clear_widgets()
-
-    def update(self,ddict,sdict) :
-        if (__main_debug__) :
-            print("InteractiveMapsPlot.update pass through called",_array)
-        self.plot_id.update(ddict,sdict)
-        if (_array_index==0) :
-            self.add_stn_buttons()
-        else :
-            self.remove_stn_buttons()
-            if (self.editing_mode) :
-                self.editing_mode = False
-                self.plot_id.cursor_off()
-
-    def add_station(self,widget) :
-        global _statdict, _datadict
-        if (_array_index==0) :
-            if (self.number_new_stations<len(self.new_station_name_list)) :
-                if (self.editing_mode==False) :
-                    self.editing_mode = True
-                    self.plot_id.cursor_on()
-                    self.add_station_btn.text = '+'+self.new_station_name_list[self.number_new_stations]
-                    self.add_station_btn.color = _off_color
-                    self.del_station_btn.text = 'Del'
-                    self.del_station_btn.color = _on_color
-                else :
-                    self.editing_mode = False
-                    latlon = self.plot_id.cursor_off()
-                    nn = self.new_station_name_list[self.number_new_stations]
-                    _stationdicts['ngEHT+'][nn] = copy.deepcopy(_statdict[self.prototype_station])
-                    _stationdicts['ngEHT+'][nn]['on'] = True
-                    _stationdicts['ngEHT+'][nn]['loc'] = self.plot_id.mp.latlon_to_xyz(latlon,radius=6.371e6)
-                    _stationdicts['ngEHT+'][nn]['name'] = nn
-                    _statdict = _stationdicts['ngEHT+']
-                    self.number_new_stations += 1
-                    self.add_station_btn.text = 'Add'
-                    self.add_station_btn.color = _on_color
-
-                    self.plot_id.update(_datadict,_statdict)
-                    self.menu_id.refresh()
-                    
-        
-    def del_station(self,widget) :
-        global _statdict, _datadict
-        if (_array_index==0) :
-            if (self.number_new_stations>0) :
-                if (self.editing_mode==False) :
-                    self.editing_mode = True
-                    self.plot_id.cursor_on()
-                    self.del_station_btn.text = '-'+self.new_station_name_list[self.number_new_stations-1]
-                    self.del_station_btn.color = _off_color
-                    self.add_station_btn.text = 'Add'
-                    self.add_station_btn.color = _on_color                    
-                else :
-                    self.editing_mode = False
-                    lat,lon = self.plot_id.cursor_off()
-                    snap_source = None
-                    for s in _statdict.keys() :
-                        xpx_src,ypx_src = self.plot_id.bmc.coords_to_px(self.plot_id.mp.lldict[s][0],self.plot_id.mp.lldict[s][1],self.plot_id.mp.rect)
-                        xpx_sel,ypx_sel = self.plot_id.bmc.coords_to_px(lat,lon,self.plot_id.mp.rect)                        
-                        dxpx = (xpx_sel - xpx_src + 0.5*self.plot_id.mp.rect.size[0])%self.plot_id.mp.rect.size[0] - 0.5*self.plot_id.mp.rect.size[0]
-                        dypx = (ypx_sel - ypx_src)
-                        if ( dxpx**2 + dypx**2 <= dp(15)**2 ) :
-                            snap_source = s
-                    if (snap_source in self.new_station_name_list) :
-                        del _stationdicts['ngEHT+'][snap_source]
-                        self.number_new_stations -= 1
-                        _statdict = _stationdicts['ngEHT+']
-                    self.del_station_btn.text = 'Del'
-                    self.del_station_btn.color = _on_color
-
-                    self.plot_id.update(_datadict,_statdict)
-                    self.menu_id.refresh()
-
     
 class ReconstructionScreen(BoxLayout) :
     ddm_id = ObjectProperty(None)

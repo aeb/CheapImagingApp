@@ -598,7 +598,7 @@ ScreenManager:
         closed_height: dp(50)+dp(25)
 
 
-
+        
 <InteractiveMapsPlot>:
     id: top_plot
     orientation: "vertical"
@@ -617,6 +617,8 @@ ScreenManager:
         MenuedBaselineMapPlot_kivygraph:
             id: plot
             size: root.width,root.height
+            ad_stn_box: ad_stn_box
+            menu_id: sme
 
     BoxLayout:
         orientation: "vertical"
@@ -680,7 +682,8 @@ ScreenManager:
 
     StationMenu:
         id: sme
-        rpp: top_plot
+        # rpp: top_plot
+        rpp: plot
         ddm_id: ddm
         size_hint: 1.0,None
         height: dp(50)+dp(25)
