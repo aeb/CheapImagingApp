@@ -1,4 +1,4 @@
-__version__ = "0.13"
+__version__ = "0.14"
 
 __main_debug__ = False
 
@@ -723,7 +723,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         self.mp.on_touch_down(touch)
         if (touch.is_double_tap) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if (touch.is_touch) :
+        if (touch.pos[1]<self.pos[1]+self.height and  touch.is_touch) : ####
             if (self.editing_mode_add or self.editing_mode_del) :
                 self.snap_source = None
                 for s in self.mp.statdict.keys() :
@@ -1558,7 +1558,7 @@ class TargetSelectionMap(BoxLayout) :
 
         # Make a selection/set the target
         if (touch.is_touch) :
-            if (self.tss.text=="--- Select ---") :
+            if (touch.pos[1]<self.pos[1]+self.height and self.tss.text=="--- Select ---") :
 
                 snap_source = None
                 for s in self.targets.keys() :
