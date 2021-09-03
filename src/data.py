@@ -17,7 +17,7 @@ import os
 import numpy as np
 import matplotlib.image as mi
 
-__data_debug__ = False
+__data_debug__ = True
 
 
 #########

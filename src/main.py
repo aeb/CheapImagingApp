@@ -1,6 +1,8 @@
 __version__ = "0.14"
 
-__main_debug__ = False
+__main_debug__ = True
+
+__generate_fast_start_data__ = False
 
 # Fix the icon imports
 import os
@@ -215,11 +217,23 @@ class Abbrv_MenuedReconstructionPlot(BoxLayout) :
         self.show_contours = False
         
         self.argument_hash = None
-        
-        self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+
+        if __generate_fast_start_data__ :
+            print("Abbrv_MenuedReconstructionPlot: Generating fast start data")
+            self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+            np.save("fast_start_data/Abbrv_MenuedReconstructionPlot.npy",[self.argument_hash,self.irp.buf,self.irp.arr])
+        else :
+            self.argument_hash,self.irp.buf,self.irp.arr = np.load("fast_start_data/Abbrv_MenuedReconstructionPlot.npy",allow_pickle=True)
+            self.irp.texture.blit_buffer(self.irp.arr,colorfmt='rgba',bufferfmt='ubyte')
+            # self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+            if (__main_debug__) :
+                print("Abbrv_MenuedReconstructionPlot: Reloaded fast start data")
+                print("   hash:",self.argument_hash)
+
 
         self.add_widget(self.irp)
 
+        
         
         if __main_debug__ :
             print("mrp.__init__: finished")
@@ -318,8 +332,18 @@ class MenuedReconstructionPlot(BoxLayout) :
         self.show_contours = True
         
         self.argument_hash = None
-        
-        self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+
+        if __generate_fast_start_data__ :
+            print("MenuedReconstructionPlot: Generating fast start data")
+            self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+            np.save("fast_start_data/MenuedReconstructionPlot.npy",[self.argument_hash,self.irp.buf,self.irp.arr])
+        else :
+            self.argument_hash,self.irp.buf,self.irp.arr = np.load("fast_start_data/Abbrv_MenuedReconstructionPlot.npy",allow_pickle=True)
+            self.irp.texture.blit_buffer(self.irp.arr,colorfmt='rgba',bufferfmt='ubyte')
+            # self.update(self.ddict,self.sdict,time_range=self.time_range,snr_cut=self.snr_cut,ngeht_diameter=self.ngeht_diameter,limits=self.limits)
+            if (__main_debug__) :
+                print("MenuedReconstructionPlot: Reloaded fast start data")
+                print("   hash:",self.argument_hash)
 
         self.add_widget(self.irp)
 
@@ -723,7 +747,7 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         self.mp.on_touch_down(touch)
         if (touch.is_double_tap) :
             self.bmc.plot_stations(self.mp.statdict,self.mp.lldict,self.mp.gcdict,self.mp.rect)
-        if (touch.pos[1]<self.pos[1]+self.height and  touch.is_touch) : ####
+        if (touch.pos[1]<self.pos[1]+self.height and  touch.is_touch) :
             if (self.editing_mode_add or self.editing_mode_del) :
                 self.snap_source = None
                 for s in self.mp.statdict.keys() :
@@ -1733,7 +1757,18 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
 
         self.argument_hash = None
         self.ic.index = 1
-        self.produce_selected_data_set()
+
+        global _source_RA,_source_Dec,_datadict
+        if __generate_fast_start_data__ :
+            print("Abbrv_DataSetSelectionPage: Generating fast start data")
+            self.produce_selected_data_set()
+            np.save("fast_start_data/Abbrv_DataSetSelectionPage.npy",[self.argument_hash,_source_RA,_source_Dec,_datadict])
+        else :
+            self.argument_hash,_source_RA,_source_Dec,_datadict = np.load("fast_start_data/Abbrv_DataSetSelectionPage.npy",allow_pickle=True)
+            # self.produce_selected_data_set()
+            if (__main_debug__) :
+                print("Abbrv_DataSetSelectionPage: Reloaded fast start data")
+                print("   hash:",self.argument_hash)        
 
         self.file_manager_obj = MDFileManager(
             select_path=self.select_path,
@@ -1954,7 +1989,18 @@ class DataSetSelectionPage(BoxLayout) :
 
         self.argument_hash = None
         self.ic.index = 1
-        self.produce_selected_data_set()
+
+        global _source_RA,_source_Dec,_datadict
+        if __generate_fast_start_data__ :
+            print("DataSetSelectionPage: Generating fast start data")
+            self.produce_selected_data_set()
+            np.save("fast_start_data/DataSetSelectionPage.npy",[self.argument_hash,_source_RA,_source_Dec,_datadict])
+        else :
+            self.argument_hash,_source_RA,_source_Dec,_datadict = np.load("fast_start_data/DataSetSelectionPage.npy",allow_pickle=True)
+            # self.produce_selected_data_set()
+            if (__main_debug__) :
+                print("DataSetSelectionPage: Reloaded fast start data")
+                print("   hash:",self.argument_hash)        
 
         self.file_manager_obj = MDFileManager(
             select_path=self.select_path,

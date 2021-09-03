@@ -23,7 +23,7 @@ import hashlib
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 
-__cheap_image_debug__ = False
+__cheap_image_debug__ = True
 
 
 class InteractivePlotWidget(Widget):
@@ -96,7 +96,6 @@ class InteractivePlotWidget(Widget):
             self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
             self.rect.tex_coords = self.tex_coords
             maxwidth = self.default_zoom_factor*max(self.width,self.height*self.nx/self.ny)
-            print("FOO:",self.default_zoom_factor,maxwidth)
             self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
             self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
             x_shift = 0.0
@@ -244,7 +243,7 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         
         super().__init__(**kwargs)
 
-
+        
     ##########
     # Low-level image reconstruction function
     def reconstruct_image(self,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,f=2,method='cubic',make_hermitian=False) :
