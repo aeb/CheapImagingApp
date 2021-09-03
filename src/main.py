@@ -1652,11 +1652,11 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
         
         self.ic = data.ImageCarousel()
         self.targets = [{'RA':None,'Dec':None}]
-        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_230.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/M87_345.png"))],
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_M87_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_M87_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_M87_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_M87_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_M87_345.png"))],
                           [path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq230.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/GRRT_IMAGE_data1400_freq345.npy")),
@@ -1667,11 +1667,11 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
         # M87
         self.targets.append({'RA':self.RA_hr(12,30,49.42338),'Dec':self.Dec_deg(12,23,28.0439)})
         
-        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_230.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png")),
-                           path.abspath(path.join(path.dirname(__file__),"source_images/SGRA_345.png"))],
+        self.ic.add_image([path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_SGRA_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_SGRA_230.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_SGRA_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_SGRA_345.png")),
+                           path.abspath(path.join(path.dirname(__file__),"source_images/quickstart_SGRA_345.png"))],
                           [path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm230_scat.npy")),
                            path.abspath(path.join(path.dirname(__file__),"source_images/fromm345_scat.npy")),
