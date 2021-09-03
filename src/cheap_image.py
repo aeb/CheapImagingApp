@@ -10,7 +10,7 @@ from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy.graphics import RenderContext, Color, Rectangle, BindTexture
 from kivy.graphics.texture import Texture
-from kivy.properties import ListProperty
+from kivy.properties import ListProperty, NumericProperty
 
 import copy
 from array import array
@@ -29,6 +29,8 @@ __cheap_image_debug__ = False
 class InteractivePlotWidget(Widget):
 
     tex_coords = ListProperty([0, 1, 1, 1, 1, 0, 0, 0])
+    
+    default_zoom_factor = NumericProperty(1.0)
     
     def __init__(self, **kwargs):
         self.canvas = RenderContext()
@@ -50,7 +52,7 @@ class InteractivePlotWidget(Widget):
             
             # create a rectangle on which to plot texture (will be at index 0)
             Color(1,1,1)
-            self.rect = Rectangle(size=(self.nx,self.ny),texture=self.texture)
+            self.rect = Rectangle(size=(self.default_zoom_factor*self.nx,self.default_zoom_factor*self.ny),texture=self.texture)
             self.rect.tex_coords = self.tex_coords
             
 
@@ -93,7 +95,8 @@ class InteractivePlotWidget(Widget):
         if (touch.is_double_tap) :
             self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
             self.rect.tex_coords = self.tex_coords
-            maxwidth = max(self.width,self.height*self.nx/self.ny)
+            maxwidth = self.default_zoom_factor*max(self.width,self.height*self.nx/self.ny)
+            print("FOO:",self.default_zoom_factor,maxwidth)
             self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
             self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
             x_shift = 0.0
@@ -141,7 +144,7 @@ class InteractivePlotWidget(Widget):
             print("InteractivePlotWidget.resize:",newsize)
         self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]
         self.rect.tex_coords = self.tex_coords
-        maxwidth = max(self.width,self.height*self.nx/self.ny)
+        maxwidth = self.default_zoom_factor*max(self.width,self.height*self.nx/self.ny)
         self.rect.size = self.check_size((maxwidth,self.ny*maxwidth/self.nx))
         self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
         x_shift = 0.0
@@ -152,17 +155,36 @@ class InteractivePlotWidget(Widget):
         self.tex_coords = self.check_boundaries(self.tex_coords)
         self.rect.tex_coords = self.tex_coords
         
+    # def set_zoom_factor(self,value) :
+    #     self.rect.size = self.check_size([self.nx*value,self.ny*value])
+    #     x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
+    #     y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
+    #     self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
+    #     for i in range(0,8,2) :
+    #         self.tex_coords[i] = self.tex_coords[i] + x_shift
+    #         self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
+    #     self.tex_coords = self.check_boundaries(self.tex_coords)
+    #     self.rect.tex_coords = self.tex_coords
+    #     self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+
     def set_zoom_factor(self,value) :
-        self.rect.size = self.check_size(self.nx*value,self.ny*value)
-        x_shift = -0.5*(self.width-self.rect.size[0])/float(self.rect.size[0])
-        y_shift = 0.5*(self.height-self.rect.size[1])/float(self.rect.size[1])
-        self.tex_coords = [0, 1, 1, 1, 1, 0, 0, 0]        
+        if (__cheap_image_debug__) :
+            print("InteractivePlotWidget.set_zoom_factor:",self.rect.tex_coords,self.height)
+        old_size = self.rect.size
+        self.rect.size = self.check_size((self.nx*value,self.ny*value))
+        self.rect.pos = (0.5*(self.width-self.rect.size[0]),(self.height-self.rect.size[1]))
+        y_shift = 0.5 * (self.rect.size[0]/old_size[0]-1.0) * self.height/self.rect.size[1]
+        x_shift = 0
+        if (__cheap_image_debug__) :
+            print("InteractivePlotWidget.set_zoom_factor:",old_size,self.rect.size,y_shift)
         for i in range(0,8,2) :
             self.tex_coords[i] = self.tex_coords[i] + x_shift
             self.tex_coords[i+1] = self.tex_coords[i+1] + y_shift
         self.tex_coords = self.check_boundaries(self.tex_coords)
         self.rect.tex_coords = self.tex_coords
-        self.rect.pos = (max(0,0.5*(self.width-self.rect.size[0])),(self.height-self.rect.size[1]))
+        if (__cheap_image_debug__) :
+            print("                             :",self.rect.tex_coords,self.height)
+
         
     def check_boundaries(self,tex_coords) :
         new_tex_coords = [0]*len(tex_coords)

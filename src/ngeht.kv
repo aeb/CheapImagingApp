@@ -3,307 +3,285 @@
 #:import images_path kivymd.images_path
 #:import Clock kivy.clock.Clock
 
-ScreenManager:
-    id: sm
-    transition: Factory.SlideTransition()
-
-    Screen:
-        name: "home"
-
-        MovieSplashScreen:
-            id: home_screen
-            
-        CircularRippleButton:
-            source: "./images/ngeht_medallion2.png"
-            size_hint: 0.4,None
-            height: self.width
-            pos_hint: {"center": (0.5,0.3)}            
-            allow_stretch: True
-            ripple_duration_in_fast: 0.1
-            on_release:
-                print("--> From home to targets")
-                self.delayed_switch_to_imaging(delay=0.2)
-                print("<-- From home to targets")
-
-
-    Screen:
-        name: 'targets'
-
-        LogoBackground:
-            logo_size: 0.5*max(root.height,root.width)
-            logo_offset: (0.5*root.width,0.5*root.height)
-            size: root.size
+Screen:
+    
+    LogoBackground:
+        background_color: app.theme_cls.colors[app.theme_cls.theme_style]["Background"]
+        logo_color: app.theme_cls.accent_dark
+        highlight_color: app.theme_cls.accent_light
         
-        TargetSelectionScreen:
-            id: selection_screen
-
-        AnchorLayout:
-            anchor_x: "left"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '<'
-                icon: "./images/left_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From target to map")
-                    selection_screen.dssp_id.produce_selected_data_set()
-                    sm.transition.direction = 'right'
-                    sm.current = 'screen3'
-                    maps_screen.ddm_id.refresh()
-                    maps_screen.otm_id.refresh()
-                    maps_screen.menu_id.refresh()
-                    maps_screen.plot_id.replot()
-                    print("<-- From target to map")
-                    
+        logo_size: 0.5*max(root.height,root.width)
+        logo_offset: (0.5*root.width,0.5*root.height)
+    
+    MDToolbar:
+        id: toolbar
+        pos_hint: {"top": 1}
+        # elevation: 10
+        title: "ngEHT @home"
+        md_bg_color: 0.14,0.14,0.14,1
+        specific_text_color: app.theme_cls.primary_color        
+        left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+    BoxLayout:
+        size_hint: 1,1
+        canvas:
+            Color:
+                rgba: 1,1,1,1
+            Line:
+                points: [(0,self.pos[1]+self.height-toolbar.height-dp(1)),(self.width,self.pos[1]+self.height-toolbar.height-dp(1))]
+                width: dp(1)
             
-        AnchorLayout:
-            anchor_x: "right"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '>'
-                icon: "./images/right_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From target to data")
-                    sm.transition.direction = 'left'
-                    sm.current = 'screen0'
-                    print("<-- From target to data")
-                    
-                    
-    Screen:
-        name: 'screen0'
-
-        LogoBackground:
-            logo_size: 0.5*max(root.height,root.width)
-            logo_offset: (0.75*self.logo_size+0.25*root.width,0.45*root.height)
-            size: root.size
-
         
-        DataSetSelectionScreen:
-            id: selection_screen
+    MDNavigationLayout:
+        x: toolbar.height
 
-        AnchorLayout:
-            anchor_x: "left"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '<'
-                icon: "./images/left_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    # print("--> From data to map")
-                    # selection_screen.dssp_id.produce_selected_data_set()
-                    # sm.transition.direction = 'right'
-                    # sm.current = 'screen3'
-                    # maps_screen.ddm_id.refresh()
-                    # maps_screen.otm_id.refresh()
-                    # maps_screen.menu_id.refresh()
-                    # maps_screen.plot_id.replot()
-                    # print("<-- From data to map")
-                    print("--> From data to target")
-                    # selection_screen.dssp_id.produce_selected_data_set()
-                    if selection_screen.dssp_id.selection_check() : sm.transition.direction = 'right'; sm.current = 'targets';
-                    print("<-- From data to target")
-                    
+        ScreenManager:
+            id: screen_manager
+
+            Screen:
+                name: "quickstart_source"
+                Abbrv_DataSetSelectionPage:
+                    id: qs_data
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(15)
+                
+            Screen:
+                name: "quickstart_array"
+                Abbrv_InteractiveMapsPlot:
+                    id: qs_map
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+            Screen:
+                name: "quickstart_image"
+                Abbrv_InteractiveReconstructionPlot:
+                    id: qs_img
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
             
-        AnchorLayout:
-            anchor_x: "right"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '>'
-                icon: "./images/right_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From data to reconstruction")
-                    if selection_screen.dssp_id.selection_check() : selection_screen.dssp_id.produce_selected_data_set(); sm.transition.direction = 'left'; sm.current = 'screen1'; reconstruction_screen.ddm_id.refresh(); reconstruction_screen.otm_id.refresh(); reconstruction_screen.menu_id.refresh(); reconstruction_screen.plot_id.replot()
-                    print("<-- From data to reconstruction")
+            Screen:
+                name: "expert_target"
+                InteractiveTargetMap:
+                    id: ex_sky
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+            Screen:
+                name: "expert_source"
+                DataSetSelectionPage:
+                    id: ex_data
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(15)
+                
+            Screen:
+                name: "expert_array"
+                InteractiveMapsPlot:
+                    id: ex_map
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+            Screen:
+                name: "expert_baselines"
+                InteractiveBaselinesPlot:
+                    id: ex_uv
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+            Screen:
+                name: "expert_image"
+                InteractiveReconstructionPlot:
+                    id: ex_img
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+            Screen:
+                name: "expert_specs"
+                SpecificationsPage:
+                    id: ex_specs
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+                    
+                # MDLabel:
+                #     text: "Expert Specs"
+                #     halign: "center"
                     
 
-    Screen:
-        name: 'screen1'
+        MDNavigationDrawer:
+            id: nav_drawer
+
+            ContentNavigationDrawer:
+                screen_manager: screen_manager
+                nav_drawer: nav_drawer
+                id: content_drawer
+
+
+# Switch box that changes colors if desired
+<ActiveSwitchMDLabel>:
+    orientation: "horizontal"
+
+    MDLabel:
+        id: label
+        text: root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text))
+        markup: True
+    MDSwitch:
+        id: switch
+        widget_style: "ios"    
+        pos_hint: {'center_x':0.5}
+        active: root.active
+        on_active:
+            label.text=(root.deactive_text(str(root.deactivated_text))+"/"+root.active_text(str(root.activated_text)) if self.active else root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text)))
+            root.active = self.active
+
+    BoxLayout:
+        id: buffer
+        size_hint: None,1
+        width: root.right_buffer
+
+<ItemDrawer>:
+    id: item
+    theme_text_color: "Custom"
+    on_release: self.parent.set_color_item(self)
+    text_color: self.theme_cls.text_color
+    
+    IconLeftWidget:
+        id: icon
+        icon: root.icon
+        theme_text_color: "Custom"
+        text_color: root.text_color
         
-        ReconstructionScreen:
-            id: reconstruction_screen
-            
-
-        AnchorLayout:
-            anchor_x: "left"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '<'
-                icon: "./images/left_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From reconstruction to data")
-                    sm.transition.direction = 'right'
-                    sm.current = 'screen0'
-                    print("<-- From reconstruction to data")
-
-        AnchorLayout:
-            anchor_x: "right"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '>'
-                icon: "./images/right_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From reconstruction to baselines")
-                    sm.transition.direction = 'left'
-                    sm.current = 'screen2'
-                    baselines_screen.ddm_id.refresh()
-                    baselines_screen.otm_id.refresh()
-                    baselines_screen.menu_id.refresh()
-                    baselines_screen.plot_id.replot()
-                    print("<-- From reconstruction to baselines")
-                    
-                    
-    Screen:
-        name: 'screen2'
-
-        BaselinesScreen:
-            id: baselines_screen
-
-        AnchorLayout:
-            anchor_x: "left"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '<'
-                icon: "./images/left_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From baselines to reconstruction")
-                    sm.transition.direction = 'right'
-                    sm.current = 'screen1'
-                    reconstruction_screen.ddm_id.refresh()
-                    reconstruction_screen.otm_id.refresh()
-                    reconstruction_screen.menu_id.refresh()
-                    reconstruction_screen.plot_id.replot()
-                    print("<-- From baselines to reconstruction")
-
-        AnchorLayout:
-            anchor_x: "right"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '>'
-                icon: "./images/right_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From baselines to map")
-                    sm.transition.direction = 'left'
-                    sm.current = 'screen3'
-                    maps_screen.ddm_id.refresh()
-                    maps_screen.otm_id.refresh()                    
-                    maps_screen.menu_id.refresh()
-                    maps_screen.plot_id.replot()
-                    print("<-- From baselines to map")
-                    
-
-    Screen:
-        name: 'screen3'
-
-
-        LogoBackground:
-            logo_size: 0.5*max(root.height,root.width)
-            logo_offset: (0.1*self.logo_size,0.4*self.logo_size)
-            size: root.size
-        
-        MapsScreen:
-            id: maps_screen
-
-        AnchorLayout:
-            anchor_x: "left"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '<'
-                icon: "./images/left_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    print("--> From map to baselines")
-                    selection_screen.dssp_id.produce_selected_data_set()
-                    sm.transition.direction = 'right'
-                    sm.current = 'screen2'
-                    baselines_screen.ddm_id.refresh()
-                    baselines_screen.otm_id.refresh()
-                    baselines_screen.menu_id.refresh()
-                    baselines_screen.plot_id.replot()
-                    print("<-- From map to baselines")
-
-
-        AnchorLayout:
-            anchor_x: "right"
-            ActionButton:
-                size_hint: None, None
-                size: '16dp', '80dp'
-                text: '>'
-                icon: "./images/right_chevron.png"
-                color: 1,1,1,0.5
-                background_color: 1,1,1,0.25
-                on_release:
-                    # print("--> From map to data")
-                    # sm.transition.direction = 'left'
-                    # sm.current = 'screen0'
-                    # print("<-- From map to data")
-
-                    print("--> From map to target")
-                    sm.transition.direction = 'left'
-                    sm.current = 'targets'
-                    print("<-- From map to target")
-                    
-    Screen:
-        name: 'news'
-
-        NewsScreen:
-            id: news_screen
-
-    Screen:
-        name: 'about'
-
-        AboutScreen:
-            id: about_screen
-
-
-                    
-<MovieSplashScreen>:
-    id: mss
+<ContentNavigationDrawer>:
     orientation: "vertical"
-    TopBanner:
-    MDBoxLayout:
-        RelativeLayout:
-            canvas:
-                Color:
-                    rgba: 0,0,0,1
-                Rectangle:
-                    size: self.width,self.height
+    padding: "15dp"
+    spacing: "8dp"
+    
+    AnchorLayout:
+        anchor_x: "left"
+        anchor_y: "top"
+        size_hint: 1,None
+        height: avatar.height
 
-            # Video:
-            #     source: "./movies/ngEHT.mp4"
-            #     state: "play"
-            #     volume: 0
-            #     size_hint: 1,1
-            #     pos_hint: {"center": (0.5,0.5)}
+        BoxLayout:
             Image:
-                id: bkgnd
-                source: "./images/ngEHT_screen_cap3.png"
-                allow_stretch: True
-                size_hint: 1,1
-                pos_hint: {"center": (0.5,0.5)}
+                id: avatar
+                size_hint: None,None
+                size: dp(56),dp(56)
+                source: "./images/ngeht_medallion_gold_on_white.png"
+            MDLabel:
+                size_hint: 1,None
+                height: avatar.height
+                text: "Next Generation\nEvent Horizon Telescope"
+                font_style: "H6"
+
+    # ActiveSwitchMDLabel:
+    #     size_hint: 1,None
+    #     height: dp(40)
+    #     deactivated_text: "Light"
+    #     activated_text: "Dark"
+    #     active: True
+    #     on_active:
+    #         app.set_theme(self.active)
+
+    ActiveSwitchMDLabel:
+        size_hint: 1,None
+        height: dp(50)
+        deactivated_text: "Quickstart"
+        activated_text: "Expert"
+        on_active:
+            root.set_nav_drawer_list(self.active)
+            # root.children[0].switch_to_active_screen()
+            
+    QuickstartNavigationDrawer:
+        id: nav_drawer_list
+        
+
+<QuickstartNavigationDrawer>:
+    DrawerList:
+        id: md_list
+
+        ItemDrawer:
+            text: "Source"
+            icon: "creation"
+            text_color: app.theme_cls.primary_color
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                root.parent.screen_manager.current = "quickstart_source"
+                root.active_screen = "quickstart_source"
+                
+        ItemDrawer:
+            text: "Array"
+            icon: "earth"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_quickstart_array(root),app.transition_delay)
+
+        ItemDrawer:
+            text: "Image"
+            icon: "image"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_quickstart_image(root),app.transition_delay)
+
+<ExpertNavigationDrawer>:
+    DrawerList:
+        id: md_list
+
+        ItemDrawer:
+            text: "Target"
+            icon: "target"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_expert_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_expert_target(root),app.transition_delay)
+                
+        ItemDrawer:
+            text: "Source"
+            icon: "creation"
+            text_color: app.theme_cls.primary_color
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                root.parent.screen_manager.current = "expert_source"
+                root.active_screen = "expert_source"
+
+        ItemDrawer:
+            text: "Array"
+            icon: "earth"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_expert_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_expert_array(root),app.transition_delay)
+
+        ItemDrawer:
+            text: "Baselines"
+            icon: "vector-polyline"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_expert_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_expert_baselines(root),app.transition_delay)
+
+        ItemDrawer:
+            text: "Image"
+            icon: "image"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_expert_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_expert_image(root),app.transition_delay)
+
+        ItemDrawer:
+            text: "Specifications"
+            icon: "clipboard-text"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay)
+                app.root.ids.ex_specs.generate_specs()
+                
+
+
+
+
+
+
 
 
 <InteractiveTargetMap@FloatLayout>:
@@ -337,135 +315,52 @@ ScreenManager:
 
 <TargetSelectionScreen>:
     orientation: "vertical"
-    TopBanner:
     InteractiveTargetMap:
 
-
-        
-# <TargetSelectionScreen>:
-#     orientation: "vertical"
-#     TopBanner:
-#     RelativeLayout:
-#         SimpleTargetSelection:
-#             id: ts
-#             size_hint_x: 0.75
-#             size_hint_y: None
-#             pos_hint: {'center': (.5, .7)}
-#             height: "30dp"
-#             sync_height: True
-#             text_autoupdate: True
-#             color: 1,1,1,1
-#             background_color: 0.14,0.14,0.14,0.25
-#         Label:
-#             size_hint_x: 0.75
-#             size_hint_y: None
-#             pos_hint: {'center': (0.5,0.5)}
-#             height: "30dp"
-#             color: 1,1,1,1
-#             text: "RA: "+ts.RA_label
-#         Label:
-#             size_hint_x: 0.75
-#             size_hint_y: None
-#             pos_hint: {'center': (0.5,0.4)}
-#             height: "30dp"
-#             color: 1,1,1,1
-#             text: "Dec: "+ts.Dec_label
-                
-<DataSetSelectionScreen>:
-    dssp_id: dssp
+<Abbrv_InteractiveReconstructionPlot>:
     orientation: "vertical"
-    TopBanner:
-    BoxLayout:
-        size_hint: 1,0.05    
-    DataSetSelectionPage:
-        id: dssp
-    # Label:
-    #     text: dssp.path_info    
-    # RelativeLayout:
-    #     canvas.before:
-    #         Color:
-    #             #rgba: 1,1,1,1
-    #             rgba: 0.77,0.55,0.17,1
-    #         Rectangle:
-    #             size: self.width,self.height
-    #     Label:
-    #         size_hint_y: None
-    #         pos_hint: {'center': (.5, .8)}
-    #         text: "Select Data Set"
-    #         color: 0.14,0.14,0.14,1
-    #         font_size: "24sp"
-    #     SimpleDataSetSelection:
-    #         size_hint_x: 0.75
-    #         size_hint_y: None
-    #         pos_hint: {'center': (.5, .7)}
-    #         height: "30dp"
-    #         sync_height: True
-    #         text_autoupdate: True
-    #         color: 1,1,1,1
-    #         background_color: 0.14,0.14,0.14,0.25
-    #         on_text:
-    #             self.select_dataset()
-    #     Image:
-    #         source: "./images/ngeht_white_on_gold2.png"
-    #         allow_stretch: True
-    #         size_hint: 1,0.5
-    #         pos_hint: {'top': 0.6 }
-        
-<ReconstructionScreen>:
-    orientation: "vertical"
-    ddm_id: irplot.ddm_id
-    otm_id: irplot.otm_id
-    menu_id: irplot.menu_id
-    plot_id: irplot.plot_id
-    TopBanner:
-    RelativeLayout:
-        InteractiveReconstructionPlot:
-            id: irplot
-                
-<BaselinesScreen>:
-    orientation: "vertical"
-    ddm_id: ibplot.ddm_id
-    otm_id: ibplot.otm_id
-    menu_id: ibplot.menu_id
-    plot_id: ibplot.plot_id
-    TopBanner:
-    RelativeLayout:
-        InteractiveBaselinesPlot:
-            id: ibplot
-
-<MapsScreen>:
-    orientation: "vertical"
-    ddm_id: implot.ddm_id
-    otm_id: implot.otm_id
-    menu_id: implot.menu_id
-    plot_id: implot.plot_id
-    TopBanner:
-    RelativeLayout:
-        InteractiveMapsPlot:
-            id: implot
-
-<TopBanner>:
-    orientation: "vertical"
-    size_hint: 1, None
-
-    MDToolbar:
-        title: "ngEHT @home"
-        size_hint: 1,1
-        md_bg_color: 0.14,0.14,0.14,1
-        specific_text_color: 0.77,0.55,0.17,1
-        # left_action_items: [["./images/ngeht_medallion_gold_on_white.png", lambda x: app.null_func ]]
-        left_action_items: [["./images/ngeht_medallion_white_on_white_small_512x512.png", lambda x: app.null_func ]]
-        right_action_items: [["menu", lambda x: root.callback(x)]]
-    BoxLayout:
-        size_hint: 1,None
-        height: dp(0.5)
+    menu_id: sme
+    plot_id: plot
+    FloatLayout:
         canvas:
             Color:
-                rgba: 1,1,1,1
-            Line:
-                points: [(0,self.pos[1]+0.5*self.height),(self.width,self.pos[1]+0.5*self.height)]
-                width: self.height
-    
+                rgb: 0,0,0
+            Rectangle:
+                size: root.width,root.height
+        size_hint: 1.0,1.0
+        Abbrv_MenuedReconstructionPlot:
+            id: plot
+            size: root.width,root.height
+            show_contours: False
+    BoxLayout:
+        orientation: "vertical"
+        size_hint: None,None
+        size: dp(50),dp(100)
+        pos: root.width-dp(50),root.height-dp(100)
+        Button:
+            text: "\u002B"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
+            on_press: plot.irp.zoom_in()
+        Button:
+            text: "\u2212"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
+            on_press: plot.irp.zoom_out()
+
+    Abbrv_StationMenu:
+        id: sme
+        rpp: plot
+        size_hint: 1.0,None
+        height: dp(50)+dp(25)
+        closed_height: dp(50)+dp(25)
+        
 
 <InteractiveReconstructionPlot>:
     orientation: "vertical"
@@ -531,8 +426,7 @@ ScreenManager:
         height: dp(50)+dp(25)
         closed_height: dp(50)+dp(25)
         
-
-
+        
 <InteractiveBaselinesPlot>:
     orientation: "vertical"
     ddm_id: ddm
@@ -599,6 +493,56 @@ ScreenManager:
 
 
         
+<Abbrv_InteractiveMapsPlot>:
+    id: top_plot
+    orientation: "vertical"
+    menu_id: sme
+    plot_id: plot
+    FloatLayout :
+        size_hint: 1.0,1.0
+        MenuedBaselineMapPlot_kivygraph:
+            id: plot
+            size: root.width,root.height
+            ad_stn_box: ad_stn_box
+            menu_id: sme
+        
+    BoxLayout:
+        orientation: "vertical"
+        size_hint: None,None
+        size: dp(50),dp(100)
+        pos: root.width-dp(50),root.height-dp(100)
+        Button:
+            text: "\u002B"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
+            on_press: plot.zoom_in()
+        Button:
+            text: "\u2212"
+            font_size: "36sp"
+            size_hint: None,None
+            size: "50dp","50dp"
+            color: 1,1,1,0.75
+            background_color: 0,0,0,0.25
+            on_press: plot.zoom_out()
+
+    BoxLayout:
+        id: ad_stn_box
+        orientation: "vertical"
+        size_hint: None,None
+        size: dp(60),dp(120)
+        pos: 0,root.height-dp(120)
+
+    Abbrv_StationMenu:
+        id: sme
+        rpp: plot
+        size_hint: 1.0,None
+        height: dp(50)+dp(25)
+        closed_height: dp(50)+dp(25)
+        
+
 <InteractiveMapsPlot>:
     id: top_plot
     orientation: "vertical"
@@ -607,12 +551,6 @@ ScreenManager:
     menu_id: sme
     plot_id: plot
     FloatLayout :
-        # canvas:
-        #     Color:
-        #         rgb: 0,0,0
-        #     Rectangle:
-        #         size: root.width,root.height
-                
         size_hint: 1.0,1.0
         MenuedBaselineMapPlot_kivygraph:
             id: plot
@@ -648,19 +586,6 @@ ScreenManager:
         size_hint: None,None
         size: dp(60),dp(120)
         pos: 0,root.height-dp(120)
-        # Button:
-        #     text: "Add"
-        #     font_size: "14sp"
-        #     color: 0.77,0.55,0.17,1
-        #     background_color: 1,1,1,0.2
-        #     on_press: print("Adding a station!")
-        # Button:
-        #     text: "Sub"
-        #     font_size: "14sp"
-        #     color: 0.77,0.55,0.17,1
-        #     background_color: 1,1,1,0.2
-        #     on_press: print("Removing a station!")
-
             
     DiameterMenu:
         id: ddm
@@ -690,6 +615,8 @@ ScreenManager:
         closed_height: dp(50)+dp(25)
         
 
+
+        
 <DiameterMenu>:
     id: ddm
     ddm_id: dds
@@ -790,13 +717,91 @@ ScreenManager:
         height: root.closed_height
             
     
+<Abbrv_StationMenu>:
+    id: sme
+    submenu_id: menu
+    expand_time: 0.5
+    fps: 60
+    opened_height: dp(50)+menu.minimum_height+dp(25)
+    tab_width: self.width
+    canvas:
+        Color:
+            rgba: 0.77,0.55,0.17,0.125
+        Rectangle:
+            size: root.width, root.height-dp(25)
+    orientation: "vertical"
+    Button:
+        canvas.after:
+            Color:
+                rgba: 0.77,0.55,0.17,0.75
+            RoundedRectangle:
+                radius: [(40,),(40,),(0,),(0,)]
+                size: root.tab_width,self.size[1]
+                pos: self.pos
+            Color:
+                rgba: 0.14,0.14,0.14,0.75
+            Triangle:
+                points: (0.5*root.tab_width-dp(10),self.pos[1]+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width+dp(10),self.pos[1]+0.2*self.height+0.6*self.height*root.is_open, 0.5*root.tab_width,self.pos[1]+0.8*self.height-0.6*self.height*root.is_open)
+        size_hint: None,None
+        width: root.tab_width
+        pos_x: root.tab_pos_x
+        height: dp(25)
+        pos_y: self.height
+        background_color: 0,0,0,0
+        background_normal: ''
+        color: 0.14,0.14,0.14,1
+        on_press:
+            root.toggle_state()
+            
+    BoxLayout:
+        id: menu_topbox
+        size_hint: 1,None
+        height: min(dp(50),root.height)
+        Button:
+            text: "All"
+            font_size: sp(16)
+            color: 1,0.75,0.25,1
+            background_color: 0,0,0,0
+            size_hint: 0.5,None
+            size: 1,dp(50)
+            on_press:
+                menu.turn_all_stations_on()
+        Abbrv_SMESpinner:
+            sme_id: sme
+            text: sme.array_name
+            font_size: sp(18)
+            color: 1,1,1,1
+            background_color: 0,0,0,0
+            size_hint: 1,None
+            size: 1,dp(50)
+            height: dp(50)
+            pos: self.pos[0],menu_topbox.pos[1]+dp(0)
+            on_text:
+                self.on_selection(self.text)
+        Button:
+            text: "None"
+            font_size: sp(16)
+            color: 1,0.75,0.25,1
+            background_color: 0,0,0,0
+            size_hint: 0.5,None
+            size: 1,dp(50)
+            on_press:
+                menu.turn_all_stations_off()
+    ScrollView:
+        VariableToggleList:
+            id: menu
+            size_hint: 1, None
+            height: self.minimum_height
+            padding: 0.5*(root.width-min(self.nstations,int(root.width/self.button_size[0]))*self.button_size[0]),0
+            rpp: root.rpp
+
+
 <StationMenu>:
     id: sme
     submenu_id: menu
     expand_time: 0.5
     fps: 60
     opened_height: dp(50)+menu.minimum_height+dp(25)
-    # opened_height: dp(50)+menu.minimum_height+dp(50)
     tab_width: 0.333333*self.width
     canvas:
         Color:
@@ -871,108 +876,185 @@ ScreenManager:
             padding: 0.5*(root.width-min(self.nstations,int(root.width/self.button_size[0]))*self.button_size[0]),0
             rpp: root.rpp
 
+
+<SpecificationCategory>:
+    orientation: "vertical"
+    size_hint: 1,None
+    height: sp(20) + root.padding[1]+root.padding[3] + self.content_height
+    canvas:
+        Color:
+            # rgba: (app.theme_cls.primary_color[0],app.theme_cls.primary_color[1],app.theme_cls.primary_color[2],0.25)
+            rgba: (0,0,0,0.5)
+        RoundedRectangle:
+            size: root.size[0]-0.5*root.padding[0]-0.5*root.padding[2],root.size[1]-0.5*root.padding[1]-0.5*root.padding[3]
+            pos: root.pos[0]+0.5*root.padding[0],root.pos[1]+0.5*root.padding[3]
+            radius: [(0,0),(40,40),(0,0),(40,40)]
+    MDLabel:
+        text: root.title
+        font_style: "Button"
+        color: app.theme_cls.primary_color
     
+<SpecificationItem>:
+    orientation: "horizontal"
+    size_hint: 1, None
+    height: sp(20)
+    MDLabel:
+        size_hint: 1,1
+        text: "  "+root.name
+    MDLabel:
+        size_hint: 0.8,1
+        text: "  "+root.value 
+            
+<SpecificationsPage>:
+    # canvas:
+    #     Color:
+    #         rgba: 0,0,0,0.5
+    #     Rectangle:
+    #         size: root.width-dp(30),root.height-dp(30)
+    #         pos: dp(15),dp(15)
+
+    BoxLayout:
+        orientation: "vertical"
+
+        padding: [dp(30),dp(30),dp(30),dp(30)]
         
-<AboutScreen@BoxLayout>:
-    orientation: "vertical"
-    TopBanner:
-    MDBoxLayout:
-        orientation: "vertical"    
-        BoxLayout:
-            size_hint: 1,1
-            orientation: "vertical"
-            Label:
-                text: "About ngEHT"
-                color: 0.14,0.14,0.14,1
-                size_hint: 1,None
-                height: "18sp"
-            Image:
-                source: "./images/ngeht_medallion_grey_on_white.png"
-                stretch: True
-                size_hint: 1,None
-                height: "80dp"
+        # size_hint: None,None
+        # size: (root.width-dp(60), root.height-dp(60))
+        # pos_hint: (dp(30),dp(30))
+
+
 
         BoxLayout:
+            orientation: "horizontal"
             size_hint: 1,None
-            height: "36sp"
-                
-        BoxLayout:
-            size_hint: 1,1
-            orientation: "vertical"
-            padding: 50
-            spacing: 20
-            Label:
-                text: "About ngEHT @home"
-                color: 0.14,0.14,0.14,1
-                size_hint: 1,None
-                height: "18sp"
-            Label:
-                text: "(c) 2021 Avery E. Broderick"
-                color: 0.14,0.14,0.14,1
-                size_hint: 1,None
-                height: "14sp"
+            height: sp(26)+sp(48)+dp(20)
+            padding: [dp(20),dp(0),dp(20),dp(20)]
+            canvas:
+                Color:
+                    # rgba: (0,0,0,0.5)
+                    rgba: (app.theme_cls.primary_color[0],app.theme_cls.primary_color[1],app.theme_cls.primary_color[2],0.5)
+                RoundedRectangle:
+                    size: self.size[0]-0.5*self.padding[0]-0.5*self.padding[2],self.size[1]-0.5*self.padding[1]-0.5*self.padding[3]
+                    pos: self.pos[0]+0.5*self.padding[0],self.pos[1]+0.5*self.padding[3]
+                    radius: [(0,0),(40,40),(0,0),(40,40)]
+
+            Image:
+                id: avatar        
+                size_hint: None,None
+                size: dp(56),dp(56)
+                source: "./images/ngeht_medallion_white_on_white.png"
+                background_color: (1,0,0,1)
+
             BoxLayout:
-                Image:
-                    source: "./logos/perimeter_stacked_black.png"
-                    stretch: True 
-                    size_hint: 1,1
-                Image:
-                    source: "./logos/UniversityOfWaterloo_logo_horiz_rgb.png"
-                    stretch: True
-                    size_hint: 1,1
-            Widget:
+                orientation: "vertical"
+                MDLabel:
+                    id: cost_name
+                    text: "Estimated Cost:"
+                    font_style: "H6"
+                    halign: "center"                
+                    # color: app.theme_cls.primary_color
+                    color: (1,1,1,1)
+                MDLabel:
+                    id: cost_value
+                    text: root.est_cost
+                    font_style: "H3"
+                    halign: "center"                
+                    # color: app.theme_cls.primary_color
+                    color: (1,1,1,1)
 
 
-    MDBoxLayout:
-        md_bg_color: 0.14,0.14,0.14,1
-        size_hint: 1,None
-        height: "30dp"
-        MDToolbar:
-            type: "bottom"
-            remove_notch: True
-            
-            left_action_items: [["twitter",lambda x: app.twitter_follow()],["facebook",lambda x: app.facebook_follow()],["instagram",lambda x: app.instagram_follow()],["youtube",lambda x: app.youtube_follow()]]
-            right_action_items: [["web",lambda x: app.website_link()]]
-            
-                
-<NewsScreen@BoxLayout>:
-    orientation: "vertical"
-    TopBanner:
-    MDBoxLayout:
-        orientation: "vertical"    
+        
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            smooth_scroll_end: 10
 
-        Label:
-            text: "Latest ngEHT News"
-            color: 0.14,0.14,0.14,1
-            size_hint: 1,None
-            height: "18sp"
+            # on_touch_down:
+            #     print("Foo")
+            # on_touch_move:
+            #     print("Bar")
+            # on_touch_up:
+            #     print("Baz")    
             
-        BoxLayout:
-            size_hint: 1,1
-            orientation: "vertical"
-            Label:
-                text: "Some web-pull of news stream."
-                color: 0.14,0.14,0.14,1
+            # GridLayout:
+            #     cols: 1
+            BoxLayout:
                 size_hint: 1,None
-                height: "18sp"
-            
-            Image:
-                source: "./images/ngeht_medallion_grey_on_white.png"
-                stretch: True
-                size_hint: 1,None
-                height: "80dp"
+                height: specs_ap.height+specs_stn.height+specs_dv.height+specs_uv.height+specs_vis.height
+                orientation: "vertical"
 
-        Widget:
 
-    MDBoxLayout:
-        md_bg_color: 0.14,0.14,0.14,1
-        size_hint: 1,None
-        height: "30dp"
-        MDToolbar:
-            type: "bottom"
-            remove_notch: True
-            
-            left_action_items: [["twitter",lambda x: app.twitter_follow()],["facebook",lambda x: app.facebook_follow()],["instagram",lambda x: app.instagram_follow()],["youtube",lambda x: app.youtube_follow()]]
-            right_action_items: [["web",lambda x: app.website_link()]]
+                SpecificationCategory:
+                    id: specs_ap
+                    title: "Array parameters"
+                    content_height: sp(20)*6
+                    SpecificationItem:
+                        name: "Antenna diameter:"
+                        value: str(root.ngeht_diameter)+" m"
+                    SpecificationItem:
+                        name: "Obs. start:"
+                        value: str(root.time_range[0])+" GST"
+                    SpecificationItem:
+                        name: "Obs. end:"
+                        value: str(root.time_range[1])+" GST"
+                    SpecificationItem:
+                        name: "S/N limit:"
+                        value: "%g"%(int(10*root.snr_cut+0.5)/10)
+                    SpecificationItem:
+                        name: "Source RA:"
+                        value: root.source_RA
+                    SpecificationItem:
+                        name: "Source Dec:"
+                        value: root.source_Dec
+
+                SpecificationCategory:
+                    id: specs_stn
+                    title: "Stations"
+                    content_height: sp(20)*2
+                    SpecificationItem:
+                        name: "Active:"
+                        value: str(root.stations)
+                    SpecificationItem:
+                        name: "New:"
+                        value: str(root.new_stations)
+                        
+                SpecificationCategory:
+                    id: specs_dv
+                    title: "Data Volume"
+                    content_height: sp(20)*4
+                    SpecificationItem:
+                        name: "Polarization:"
+                        value: "Dual"
+                    SpecificationItem:
+                        name: "Sampling:"
+                        value: "2 bit"
+                    SpecificationItem:
+                        name: "Bandwidth:"
+                        value: str(root.bandwidth)+" GHz"
+                    SpecificationItem:
+                        name: "Data rate:"
+                        value: "%.1g Tbps"%(root.data_rate)
+
+                SpecificationCategory:
+                    id: specs_uv
+                    title: "Baselines"
+                    content_height: sp(20)*2
+                    SpecificationItem:
+                        name: "Total:"
+                        value: str(root.number_of_baselines_total)
+                    SpecificationItem:
+                        name: "Constrained:"
+                        value: str(root.number_of_baselines_above_snrcut)
+                        
+                SpecificationCategory:
+                    id: specs_vis
+                    title: "Visibilities (10 min scans)"
+                    content_height: sp(20)*2
+                    SpecificationItem:
+                        name: "Total:"
+                        value: str(root.number_of_visibilities_total)
+                    SpecificationItem:
+                        name: "Constrained:"
+                        value: str(root.number_of_visibilities_above_snrcut)
 
 
