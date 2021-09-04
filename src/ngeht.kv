@@ -4,28 +4,30 @@
 #:import Clock kivy.clock.Clock
 
 
-ScreenManager:
-    id: sm_master
+# ScreenManager:
+#     id: sm_master
 
-    Screen:
-        name: "splash_screen"
-        LogoProgressWheel:
-            id: lpw
-        # LoadingScreen:
-        #     id: 
+#     Screen:
+#         name: "splash_screen"
+#         LogoProgressWheel:
+#             id: lpw
+            
+#         # LoadingScreen:
+#         #     id: 
         
-    Screen:
-        name: "main_app_screen"
-        MainAppScreen:
-            id: main_app
+#     Screen:
+#         name: "main_app_screen"
+#         MainAppScreen:
+#             id: main_app
         
 
 # <LoadingScreen>:
 #     LogoProgressWheel:
 #         id: lpw
         
-<MainAppScreen@Screen>:
-
+# <MainAppScreen@Screen>:
+Screen :
+    
     LogoBackground:
         background_color: app.theme_cls.colors[app.theme_cls.theme_style]["Background"]
         logo_color: app.theme_cls.accent_dark
