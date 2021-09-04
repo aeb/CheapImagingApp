@@ -39,6 +39,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 
 from kivy.uix.screenmanager import Screen
+from kivy.loader import Loader
 
 if (__main_perf__) :
     print("--- %15.8g --- imported kivy"%(time.perf_counter()))
@@ -2510,6 +2511,9 @@ class MainApp(MDApp):
         self.theme_cls.primary_palette = "Orange"
         self.theme_cls.accent_palette = "Gray"
         Window.bind(on_keyboard=self.key_input)
+
+        Loader.loading_image = "images/load_image.png"
+        
         app = Builder.load_file("ngeht.kv")
 
         # Clock.schedule_once(lambda x: self.on_start_finish(), 0.5)

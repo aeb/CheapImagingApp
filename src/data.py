@@ -467,6 +467,7 @@ class ImageCarousel(Carousel) :
         box = BoxLayout()
         box.orientation = "vertical"
         image = AsyncImage(source=img_file, allow_stretch=True)
+        # image = Image(source=img_file, allow_stretch=True)
         lbl = Label(text=caption,color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
         box.add_widget(image)
         box.add_widget(lbl)
