@@ -148,7 +148,7 @@ class InteractiveSkyMapWidget(Widget):
 
     def check_boundaries(self,tex_coords) :
         new_tex_coords = copy.copy(tex_coords)
-        max_y_shift = max((self.rect.size[1]-self.height)/self.rect.size[1],0)
+        max_y_shift = max((self.rect.size[1]-self.height)/max(1,self.rect.size[1]),0)
         new_tex_coords[1] = max(min(tex_coords[1],1+max_y_shift),1)
         new_tex_coords[3] = max(min(tex_coords[3],1+max_y_shift),1)
         new_tex_coords[5] = max(min(tex_coords[5],max_y_shift),0)
@@ -316,8 +316,8 @@ class InteractiveSkyMapPlot(InteractiveSkyMapWidget):
         return size
 
     def set_coord_center(self,RA,Dec) :
-        x_shift = (RA+12)/(-24.) - self.tex_coords[0] - 0.5*Window.width/self.rect.size[0]
-        y_shift = (Dec-90)/(-180.) - self.tex_coords[5] - 0.5*Window.height/self.rect.size[1]
+        x_shift = (RA+12)/(-24.) - self.tex_coords[0] - 0.5*Window.width/max(1,self.rect.size[0])
+        y_shift = (Dec-90)/(-180.) - self.tex_coords[5] - 0.5*Window.height/max(1,self.rect.size[1])
         # if (__skymap_debug__) :
         #     print("InteractiveSkyMapPlot_kivygraph.set_coord_center",(RA+12)/(-24.0),(Dec-90)/(-180.),x_shift,y_shift,RA,Dec)
         #     print("        ",self.tex_coords)

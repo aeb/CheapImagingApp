@@ -1,7 +1,7 @@
 __version__ = "0.14"
 
 __main_debug__ = False
-__main_perf__ = False
+__main_perf__ = True
 __generate_fast_start_data__ = False
 
 # Fix the icon imports
@@ -37,6 +37,8 @@ from kivy.graphics import Color, Line, Rectangle
 from kivy.utils import get_hex_from_color
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
+
+from kivy.uix.screenmanager import Screen
 
 if (__main_perf__) :
     print("--- %15.8g --- imported kivy"%(time.perf_counter()))
@@ -95,6 +97,7 @@ import baseline_plot
 import cheap_image
 import map_plot
 import skymap_plot
+import progress_wheel
 
 if (__main_perf__) :
     print("--- %15.8g --- imported project sources"%(time.perf_counter()))
@@ -2465,15 +2468,43 @@ class InteractiveMapsPlot(FloatLayout) :
 class Abbrv_InteractiveMapsPlot(FloatLayout) :
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
+
+
+# class LoadingScreen(Screen):
+#     def __init__(self,**kwargs) :
+#         super().__init__(**kwargs)
+
+
+class LoadingStartUp(object):
+
+    app = None
+    def __init__(self, app):
+        self.app = app
+        return
+
+    def loadButtonImages(self):
+        print("Loading screen stuff ...")
+        self.app.root.ids.lpw.clock_run(5)
+
+    def finish(self) :
+        self.app.root.ids.lpw.complete()
+        Clock.schedule_once( lambda x : self.switch(), 2 )
+        return
+    
+    def switch(self) :
+        self.app.root.current = "main_app_screen"
+    
     
 class MainApp(MDApp):
 
     transition_delay = NumericProperty(0.0)
 
+    LoadingStartUp = None
+            
     def build(self):
         if (__main_perf__) :
             print("--- %15.8g --- MainApp.build start"%(time.perf_counter()))
-
+            
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.colors["Dark"]["Background"] = "404040"
         self.theme_cls.primary_palette = "Orange"
@@ -2481,11 +2512,27 @@ class MainApp(MDApp):
         Window.bind(on_keyboard=self.key_input)
         app = Builder.load_file("ngeht.kv")
 
+        # Clock.schedule_once(lambda x: self.on_start_finish(), 0.5)
+        
         if (__main_perf__) :
             print("--- %15.8g --- MainApp.build done"%(time.perf_counter()))
         
         return app
 
+    def on_start(self) :
+        print("Starting!!!")
+        #self.sm_master.lpw.clock_run(5)
+        # MainApp.get_running_app().root.ids.lpw.clock_run(10)
+        self.LoadingStartUp = LoadingStartUp(self)
+        Clock.schedule_once(lambda x : self.LoadingStartUp.loadButtonImages(),5)
+        Clock.schedule_once(lambda x : self.LoadingStartUp.finish(),12.5)
+            
+    def on_start_finish(self) :
+        self.root.ids.sm_master.splash.lpw.complete()
+        self.root.ids.sm_master.current = "main_app_screen"
+        
+        
+    
     def set_theme(self,dark) :
         if (dark) :
             self.theme_cls.theme_style="Dark"
