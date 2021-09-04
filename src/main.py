@@ -1,13 +1,19 @@
 __version__ = "0.14"
 
-__main_debug__ = True
-
+__main_debug__ = False
+__main_perf__ = False
 __generate_fast_start_data__ = False
 
 # Fix the icon imports
 import os
 os.environ["KIVY_TEXT"] = "pil"
 ####
+
+
+
+if (__main_perf__) :
+    import time
+    print("--- %15.8g --- main.py start"%(time.perf_counter()))
 
 
 from kivy.app import App
@@ -32,6 +38,10 @@ from kivy.utils import get_hex_from_color
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 
+if (__main_perf__) :
+    print("--- %15.8g --- imported kivy"%(time.perf_counter()))
+
+
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.behaviors import CircularRippleBehavior
@@ -41,13 +51,25 @@ from kivymd.uix.navigationdrawer import MDNavigationLayout
 from kivymd.uix.list import MDList, OneLineIconListItem
 from kivymd.uix.label import MDLabel
 
+if (__main_perf__) :
+    print("--- %15.8g --- imported kivymd"%(time.perf_counter()))
+
+
 from fancy_mdslider import FancyMDSlider
+
+
+if (__main_perf__) :
+    print("--- %15.8g --- imported fancy_mdslider"%(time.perf_counter()))
+
 
 import numpy as np
 from os import path
 from pathlib import Path as plP
+import copy
 import hashlib
-import time
+
+if (__main_perf__) :
+    print("--- %15.8g --- imported python libraries"%(time.perf_counter()))
 
 ####################
 # TESTING
@@ -63,8 +85,9 @@ try :
 except:
     print("Could not load android permissions stuff, pobably not on android?")
 
+if (__main_perf__) :
+    print("--- %15.8g --- tried android permissions"%(time.perf_counter()))
 
-import copy
 
 import ngeht_array
 import data
@@ -73,6 +96,8 @@ import cheap_image
 import map_plot
 import skymap_plot
 
+if (__main_perf__) :
+    print("--- %15.8g --- imported project sources"%(time.perf_counter()))
 
 
 _on_color = (1,0.75,0.25,1)
@@ -106,6 +131,11 @@ _datadict=data.read_themis_data_file(path.abspath(path.join(path.dirname(__file_
 _source_RA = 17.7611225
 _source_Dec = -29.007810
 
+
+if (__main_perf__) :
+    print("--- %15.8g --- Defined/specified globals"%(time.perf_counter()))
+
+
 ##############################################################################################
 class ItemDrawer(OneLineIconListItem):
     icon = StringProperty()
@@ -134,11 +164,17 @@ class ContentNavigationDrawer(BoxLayout):
     nav_drawer = ObjectProperty()
 
     def __init__(self,**kwargs):
-        super().__init__(**kwargs)
+        if (__main_perf__) :
+            print("--- %15.8g --- ContentNavigationDrawer.__init__ start"%(time.perf_counter()))
 
+        super().__init__(**kwargs)
+        
         self.exp_nd = ExpertNavigationDrawer()
         self.exp_qs = QuickstartNavigationDrawer()
 
+        if (__main_perf__) :
+            print("--- %15.8g --- ContentNavigationDrawer.__init__ done"%(time.perf_counter()))
+        
         
     def set_nav_drawer_list(self,expert) :
         self.remove_widget(self.children[0])
@@ -167,9 +203,15 @@ class ActiveSwitchMDLabel(ThemableBehavior,BoxLayout):
 class DrawerList(ThemableBehavior, MDList):
 
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- DrawerList.__init__ start"%(time.perf_counter()))
+        
         super().__init__(**kwargs)
         self.text_color = self.theme_cls.text_color
-    
+
+        if (__main_perf__) :
+            print("--- %15.8g --- DrawerList.__init__ done"%(time.perf_counter()))
+        
     def set_color_item(self, instance_item):
         '''Called when tap on a menu item.'''
 
@@ -196,6 +238,9 @@ class Abbrv_MenuedReconstructionPlot(BoxLayout) :
     show_contours = BooleanProperty(True)
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- Abbrv_MenuedReconstructionPlot.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
 
         self.irp = cheap_image.InteractiveImageReconstructionPlot()
@@ -237,7 +282,11 @@ class Abbrv_MenuedReconstructionPlot(BoxLayout) :
         
         if __main_debug__ :
             print("mrp.__init__: finished")
-        
+
+        if (__main_perf__) :
+            print("--- %15.8g --- Abbrv_MenuedReconstructionPlot.__init__ done"%(time.perf_counter()))
+
+            
 
     def update(self,datadict,statdict,**kwargs) :
         kwargs['time_range']=self.time_range
@@ -312,6 +361,9 @@ class MenuedReconstructionPlot(BoxLayout) :
     show_contours = BooleanProperty(True)
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- MenuedReconstructionPlot.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
 
         self.irp = cheap_image.InteractiveImageReconstructionPlot()
@@ -351,6 +403,8 @@ class MenuedReconstructionPlot(BoxLayout) :
         if __main_debug__ :
             print("mrp.__init__: finished")
         
+        if (__main_perf__) :
+            print("--- %15.8g --- MenuedReconstructionPlot.__init__ done"%(time.perf_counter()))
 
     def update(self,datadict,statdict,**kwargs) :
         kwargs['time_range']=self.time_range
@@ -445,6 +499,9 @@ class MenuedBaselinePlot(BoxLayout) :
     menu_id = ObjectProperty(None)
 
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- MenuedBaselinePlot.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
 
         self.time_range = _time_range
@@ -464,7 +521,10 @@ class MenuedBaselinePlot(BoxLayout) :
         
         if __main_debug__ :
             print("mp.__init__: finished")
-        
+
+        if (__main_perf__) :
+            print("--- %15.8g --- MenuedBaselinePlot.__init__ done"%(time.perf_counter()))
+            
 
     def update(self,datadict,statdict,**kwargs) :
 
@@ -556,6 +616,8 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
     ad_stn_box = ObjectProperty(None)
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- MenuedBaselineMapPlot_kivygrap.__init__ start"%(time.perf_counter()))
 
         self.bmc = map_plot.BaselineMapCanvas()
         self.mp = map_plot.InteractiveBaselineMapPlot_kivygraph()
@@ -604,6 +666,9 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
         if __main_debug__ :
             print("mp.__init__: finished")
 
+        if (__main_perf__) :
+            print("--- %15.8g --- MenuedBaselineMapPlot_kivygrap.__init__ done"%(time.perf_counter()))
+            
         
     def add_stn_buttons(self) :
         if (__main_debug__) :
@@ -825,11 +890,16 @@ class DynamicBoxLayout(BoxLayout):
     tab_pos_x = NumericProperty(0)
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- DynamicBoxLayout.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
         self.is_open = False
         self.animation = 'cubic'
         self.current_opened_height = self.opened_height
 
+        if (__main_perf__) :
+            print("--- %15.8g --- DynamicBoxLayout.__init__ done"%(time.perf_counter()))
         
     def expand_model(self, x) :
         if (self.animation=='cubic') :
@@ -881,6 +951,9 @@ class VariableToggleList(StackLayout) :
     bkgnd_color = [0,0,0,0]
     
     def __init__(self,**kwargs):
+        if (__main_perf__) :
+            print("--- %15.8g --- VariableToggleList.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
 
         self.sdict = _stationdicts[_array]
@@ -896,6 +969,10 @@ class VariableToggleList(StackLayout) :
             self.bs.append(b)
             self.sdict[s]['on']=True
 
+        if (__main_perf__) :
+            print("--- %15.8g --- VariableToggleList.__init__ done"%(time.perf_counter()))
+            
+            
     def remake(self,sdict) :
         self.sdict = sdict
         self.nstations = len(self.sdict.keys())
@@ -1087,6 +1164,8 @@ class StationMenu(DynamicBoxLayout) :
 class SMESpinnerOption(SpinnerOption):
 
     def __init__(self, **kwargs):
+        if (__main_perf__) :
+            print("--- %15.8g --- SMESpinnerOption.__init__ start"%(time.perf_counter()))
         super(SMESpinnerOption,self).__init__(**kwargs)
         self.background_normal = ''
         #self.background_down = ''
@@ -1094,12 +1173,17 @@ class SMESpinnerOption(SpinnerOption):
         self.background_color = [0.77,0.55,0.17,0.7]    # blue colour        
         self.color = [1, 1, 1, 1]
         self.height = dp(50)
+        if (__main_perf__) :
+            print("--- %15.8g --- SMESpinnerOption.__init__ done"%(time.perf_counter()))
 
 class Abbrv_SMESpinner(Spinner):
 
     sme_id = ObjectProperty(None)
     
     def __init__(self, **kwargs):
+        if (__main_perf__) :
+            print("--- %15.8g --- Abbrv_SMESpinner.__init__ start"%(time.perf_counter()))
+
         super(Abbrv_SMESpinner,self).__init__(**kwargs)
 
         self.option_cls = SMESpinnerOption
@@ -1112,6 +1196,9 @@ class Abbrv_SMESpinner(Spinner):
 
         self.text = self.values[0]
 
+        if (__main_perf__) :
+            print("--- %15.8g --- Abbrv_SMESpinner.__init__ done"%(time.perf_counter()))
+        
             
     def on_selection(self,text) :
         
@@ -1128,6 +1215,8 @@ class SMESpinner(Spinner):
     ddm_id = ObjectProperty(None)
     
     def __init__(self, **kwargs):
+        if (__main_perf__) :
+            print("--- %15.8g --- SMESpinner.__init__ start"%(time.perf_counter()))
         super(SMESpinner,self).__init__(**kwargs)
 
         self.option_cls = SMESpinnerOption
@@ -1139,6 +1228,9 @@ class SMESpinner(Spinner):
         self.values = list(_stationdicts.keys())
 
         self.text = self.values[0]
+
+        if (__main_perf__) :
+            print("--- %15.8g --- SMESpinner.__init__ done"%(time.perf_counter()))
 
             
     def on_selection(self,text) :
@@ -1176,6 +1268,9 @@ class ObsTimeSliders(BoxLayout) :
     top_menu = ObjectProperty(None)
     is_open = BooleanProperty(False)
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- ObsTimeSliders.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
         self.orientation = 'vertical'
 
@@ -1216,6 +1311,9 @@ class ObsTimeSliders(BoxLayout) :
         self.ots_label2 = Label(text="%5.1f h"%(self.ots.value),color=(1,1,1,0.75),size_hint=(0.5,1))
         self.ots_box.add_widget(self.ots_label2)
 
+        if (__main_perf__) :
+            print("--- %15.8g --- ObsTimeSliders.__init__ done"%(time.perf_counter()))
+        
     
     def toggle_state(self) :
         if (self.is_open) :
@@ -1300,6 +1398,9 @@ class DiameterSliders(BoxLayout) :
     top_menu = ObjectProperty(None)
     is_open = BooleanProperty(False)
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- DiameterSliders.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
         self.orientation = 'vertical'
 
@@ -1339,6 +1440,8 @@ class DiameterSliders(BoxLayout) :
         self.sns_label2 = Label(text="%5.1f"%(10**self.sns.value),color=(1,1,1,0.75),size_hint=(0.5,1))
         self.sns_box.add_widget(self.sns_label2)
 
+        if (__main_perf__) :
+            print("--- %15.8g --- DiameterSliders.__init__ done"%(time.perf_counter()))
     
     def toggle_state(self) :
         if (self.is_open) :
@@ -1423,6 +1526,9 @@ class TargetSelectionMap(BoxLayout) :
     fps = NumericProperty(30)
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- TargetSelectionMap.__init__ start"%(time.perf_counter()))
+
         global _source_RA, source_Dec
         
         super().__init__(**kwargs)
@@ -1487,7 +1593,10 @@ class TargetSelectionMap(BoxLayout) :
         if __main_debug__ :
             print("mp.__init__: finished")
 
+        if (__main_perf__) :
+            print("--- %15.8g --- TargetSelectionMap.__init__ done"%(time.perf_counter()))
 
+            
     def select_target(self,widget,value) :
         if (__main_debug__) :
             print("Selecting target:",widget,value,self.tss.text)
@@ -1663,6 +1772,9 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
     # path_info = StringProperty("")
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- Abbrv_DataSetSelectionPage.__init__ start"%(time.perf_counter()))
+
         super().__init__(**kwargs)
         
         self.orientation = "vertical"
@@ -1805,6 +1917,9 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
         self.ofs.bind(value=self.ic.set_frequency)
         self.observation_frequency = self.ofs.observation_frequency()
 
+        if (__main_perf__) :
+            print("--- %15.8g --- Abbrv_DataSetSelectionPage.__init__ done"%(time.perf_counter()))
+        
         
     def adjust_observation_frequency(self,widget,val) :
         self.observation_frequency = self.ofs.observation_frequency()
@@ -1896,6 +2011,8 @@ class DataSetSelectionPage(BoxLayout) :
     # path_info = StringProperty("")
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- DataSetSelectionPage.__init__ start"%(time.perf_counter()))
         super().__init__(**kwargs)
         
         self.orientation = "vertical"
@@ -2015,6 +2132,9 @@ class DataSetSelectionPage(BoxLayout) :
 
         self.dss.ofs.bind(value=self.ic.set_frequency)
 
+        if (__main_perf__) :
+            print("--- %15.8g --- DataSetSelectionPage.__init__ done"%(time.perf_counter()))
+
         
     def select_path(self,path) :
         self.ic.add_image(path,path,path,True)
@@ -2098,6 +2218,8 @@ class LogoBackground(FloatLayout) :
     highlight_offset = ListProperty(None,size=2)
     
     def __init__(self,**kwargs) :
+        if (__main_perf__) :
+            print("--- %15.8g --- LogoBackground.__init__ start"%(time.perf_counter()))
         super().__init__(**kwargs)
         self.bind(height=self.resize)
         self.bind(width=self.resize)
@@ -2122,6 +2244,9 @@ class LogoBackground(FloatLayout) :
         self.logo_size = 75
         self.logo_thickness = dp(6)
         self.highlight_offset = (-0.2*dp(6),0.2*dp(6))
+
+        if (__main_perf__) :
+            print("--- %15.8g --- LogoBackground.__init__ done"%(time.perf_counter()))
         
     
     def redraw_background(self) :
@@ -2346,12 +2471,20 @@ class MainApp(MDApp):
     transition_delay = NumericProperty(0.0)
 
     def build(self):
+        if (__main_perf__) :
+            print("--- %15.8g --- MainApp.build start"%(time.perf_counter()))
+
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.colors["Dark"]["Background"] = "404040"
         self.theme_cls.primary_palette = "Orange"
         self.theme_cls.accent_palette = "Gray"
         Window.bind(on_keyboard=self.key_input)
-        return Builder.load_file("ngeht.kv")
+        app = Builder.load_file("ngeht.kv")
+
+        if (__main_perf__) :
+            print("--- %15.8g --- MainApp.build done"%(time.perf_counter()))
+        
+        return app
 
     def set_theme(self,dark) :
         if (dark) :

@@ -1,9 +1,18 @@
+__cheap_image_perf__ = False
+
+if (__cheap_image_perf__) :
+    import time
+    print("--- %15.8g --- cheap_image.py start"%(time.perf_counter()))
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mi
 import matplotlib.tri as tri
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+
+if (__cheap_image_perf__) :
+    print("--- %15.8g --- imported matplotlib"%(time.perf_counter()))
 
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
@@ -12,9 +21,14 @@ from kivy.graphics import RenderContext, Color, Rectangle, BindTexture
 from kivy.graphics.texture import Texture
 from kivy.properties import ListProperty, NumericProperty
 
-import copy
+if (__cheap_image_perf__) :
+    print("--- %15.8g --- imported kivy"%(time.perf_counter()))
+
 from array import array
-import hashlib
+
+if (__cheap_image_perf__) :
+    print("--- %15.8g --- imported array"%(time.perf_counter()))
+
 
 # import threading
 # import time
@@ -23,7 +37,7 @@ import hashlib
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
 
-__cheap_image_debug__ = True
+__cheap_image_debug__ = False
 
 
 class InteractivePlotWidget(Widget):
@@ -33,6 +47,9 @@ class InteractivePlotWidget(Widget):
     default_zoom_factor = NumericProperty(1.0)
     
     def __init__(self, **kwargs):
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.__init__ start"%(time.perf_counter()))
+        
         self.canvas = RenderContext()
 
         self.nx = 1024
@@ -45,7 +62,7 @@ class InteractivePlotWidget(Widget):
             self.texture = Texture.create(size=(self.nx,self.ny))
             self.buf = [0,0,0,255]*(self.nx*self.ny)
             self.arr = array('B',self.buf)
-            self.update_mpl()
+            # self.update_mpl()
             self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
             BindTexture(texture=self.texture, index=0)
             self.texture.wrap = 'clamp_to_edge'
@@ -54,8 +71,10 @@ class InteractivePlotWidget(Widget):
             Color(1,1,1)
             self.rect = Rectangle(size=(self.default_zoom_factor*self.nx,self.default_zoom_factor*self.ny),texture=self.texture)
             self.rect.tex_coords = self.tex_coords
-            
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.__init__ made canvas"%(time.perf_counter()))
+            
         self.plot_frozen = False
         
         # call the constructor of parent
@@ -71,6 +90,10 @@ class InteractivePlotWidget(Widget):
         self.bind(height=self.resize)
         self.bind(width=self.resize)
         
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.__init__ done"%(time.perf_counter()))
+            
+
         
     def update_glsl(self, *largs):
         # This is needed for the default vertex shader.
@@ -231,6 +254,8 @@ class InteractivePlotWidget(Widget):
 class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
     
     def __init__(self,**kwargs) :
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.__init__ start"%(time.perf_counter()))
 
         self.xarr = 0
         self.yarr = 0
@@ -243,6 +268,8 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         
         super().__init__(**kwargs)
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.__init__ done"%(time.perf_counter()))
         
     ##########
     # Low-level image reconstruction function
