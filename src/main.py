@@ -2643,10 +2643,14 @@ class MainApp(MDApp):
         else :
             self.transition_delay = 1.5
 
-    def quickstart_snackbar_checks(self):
+    def quickstart_snackbar_checks(self,procs="all"):
         root = MainApp.get_running_app().root
-        making_data = root.ids.qs_data.check_data_hash()
-        making_image = root.ids.qs_img.plot_id.check_image_hash()
+        making_data = False
+        making_image = False
+        if (procs in ["data","all"]) :
+            making_data = root.ids.qs_data.check_data_hash()
+        if (procs in ["image","all"]) :
+            making_image = root.ids.qs_img.plot_id.check_image_hash() or making_data
         msg = ""
         if (making_data and making_image) :
             msg = "Observing & imaging ..."
@@ -2656,6 +2660,7 @@ class MainApp(MDApp):
             msg = "Imaging ..."
 
         if (msg!="") :
+            self.transition_delay = max(0.65,self.transition_delay)
             # self.snackbar.text="[color="+get_hex_from_color(self.theme_cls.primary_color)+"]"+msg+"[/color]"
             self.snackbar.text=msg
             self.snackbar.size_hint_x=(Window.width-(dp(10)*2))/Window.width

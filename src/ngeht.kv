@@ -227,7 +227,8 @@ Screen :
             text_color: app.theme_cls.primary_color
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                app.transition_to_quickstart_source(root)
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_quickstart_source(root),app.transition_delay+0.25)
                 
         ItemDrawer:
             text: "Array"
@@ -254,8 +255,8 @@ Screen :
             text: "Target"
             icon: "target"
             on_release:
-                root.parent.nav_drawer.set_state("close")
                 app.set_expert_transition_delay()
+                root.parent.nav_drawer.set_state("close")
                 Clock.schedule_once(lambda x: app.transition_to_expert_target(root),app.transition_delay)
                 
         ItemDrawer:
@@ -263,8 +264,9 @@ Screen :
             icon: "creation"
             text_color: app.theme_cls.primary_color
             on_release:
+                app.set_expert_transition_delay()
                 root.parent.nav_drawer.set_state("close")
-                app.transition_to_expert_source(root)
+                Clock.schedule_once(lambda x: app.transition_to_expert_source(root),app.transition_delay)
 
         ItemDrawer:
             text: "Array"
