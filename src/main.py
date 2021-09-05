@@ -54,6 +54,7 @@ from kivymd.uix.navigationdrawer import MDNavigationLayout
 from kivymd.uix.list import MDList, OneLineIconListItem
 from kivymd.uix.label import MDLabel
 from kivymd.uix.snackbar import Snackbar 
+from kivymd.uix.snackbar import BaseSnackbar
 
 if (__main_perf__) :
     print("--- %15.8g --- imported kivymd"%(time.perf_counter()))
@@ -2536,7 +2537,12 @@ class Abbrv_InteractiveMapsPlot(FloatLayout) :
     
 #     def switch(self) :
 #         self.app.root.current = "main_app_screen"
-    
+
+class CustomSnackbar(BaseSnackbar):
+    text = StringProperty(None)
+    icon = StringProperty(None)
+    text_color = ListProperty(None)
+    font_size = NumericProperty("15sp")
     
 class MainApp(MDApp):
 
@@ -2563,8 +2569,14 @@ class MainApp(MDApp):
         if (__main_perf__) :
             print("--- %15.8g --- MainApp.build done"%(time.perf_counter()))
 
-        self.snackbar = Snackbar(snackbar_x="10dp",snackbar_y="10dp",size_hint_x=(Window.width-(dp(10)*2))/Window.width)
-    
+        # Set some defaults for the snackbar
+        self.snackbar = CustomSnackbar(icon="./images/ngeht_medallion_gold_on_white.png",
+                                       text="",
+                                       text_color=self.theme_cls.primary_color,
+                                       snackbar_x="10dp",snackbar_y="10dp",
+                                       size_hint_x=(Window.width-(dp(10)*2))/Window.width,
+                                       font_size="20sp",
+                                       bg_color=(0,0,0,0.75))
             
         return app
 
@@ -2642,9 +2654,8 @@ class MainApp(MDApp):
             msg = "Imaging ..."
 
         if (msg!="") :
+            # self.snackbar.text="[color="+get_hex_from_color(self.theme_cls.primary_color)+"]"+msg+"[/color]"
             self.snackbar.text=msg
-            self.snackbar.snackbar_x="10dp"
-            self.snackbar.snackbar_y="10dp"
             self.snackbar.size_hint_x=(Window.width-(dp(10)*2))/Window.width
             self.snackbar.open()
 
@@ -2695,9 +2706,8 @@ class MainApp(MDApp):
             msg = "Imaging ..."
 
         if (msg!="") :
+            # self.snackbar.text="[color="+get_hex_from_color(self.theme_cls.primary_color)+"]"+msg+"[/color]"
             self.snackbar.text=msg
-            self.snackbar.snackbar_x="10dp"
-            self.snackbar.snackbar_y="10dp"
             self.snackbar.size_hint_x=(Window.width-(dp(10)*2))/Window.width
             self.snackbar.open()
         
