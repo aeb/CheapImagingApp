@@ -227,23 +227,45 @@ class InteractivePlotWidget(Widget):
     
     def update_mpl(self,**kwargs) :
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.update_mpl start"%(time.perf_counter()))
         # print("Started update_mpl in thread")
         
         fig = Figure(figsize=(self.nx/64,self.ny/64),dpi=64)
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(111,position=[0,0,1,1])
         self.generate_mpl_plot(fig,ax,**kwargs)
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.update_mpl generated mpl"%(time.perf_counter()))
+
         # print("Made mpl plot in update_mpl in thread")
         canvas.draw()
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.update_mpl drew canvas"%(time.perf_counter()))
+
         # print("Drew canvas in update_mpl in thread")
-        self.buf = np.asarray(canvas.buffer_rgba()).ravel()
+        # self.buf = np.asarray(canvas.buffer_rgba()).ravel()
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.update_mpl cast to buf"%(time.perf_counter()))
+
         # print("Assigned buf in update_mpl in thread")
-        self.arr = array('B', self.buf)
+        # self.arr = array('B', self.buf)
+        # self.arr = bytearray(self.buf)
+        self.arr = bytearray(np.asarray(canvas.buffer_rgba()).ravel())
+        
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.update_mpl cast to byte array"%(time.perf_counter()))
+
         # print("Assigned arr in update_mpl in thread")
         self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
 
         # print("Finished update_mpl in thread")
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractivePlotWidget.update_mpl done"%(time.perf_counter()))
         
     def generate_mpl_plot(self,fig,ax,**kwargs) :
         # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
@@ -276,6 +298,8 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
     def reconstruct_image(self,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,f=2,method='cubic',make_hermitian=False) :
 
         # print("Started image reconstruction in thread")
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image start"%(time.perf_counter()))
         
         # Useful constant
         uas2rad = np.pi/180.0/3600e6
@@ -332,7 +356,10 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
 
         if (len(ddnew['u'])<=2) :
             return None,None,None
-            
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image station selection done"%(time.perf_counter()))
+        
         # Get the region on which to compute gridded visibilities
         umax = np.max(ddnew['u'])
         vmax = np.max(ddnew['v'])
@@ -345,17 +372,27 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
 
         # Maptlotlib
         triang = tri.Triangulation(ddnew['u'], ddnew['v'])
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image triangulation done"%(time.perf_counter()))
+        
         if (method=='linear') :
             V2r = np.array(np.ma.fix_invalid(tri.LinearTriInterpolator(triang, np.real(ddnew['V']))(u2,v2),fill_value=0.0))
             V2i = np.array(np.ma.fix_invalid(tri.LinearTriInterpolator(triang, np.imag(ddnew['V']))(u2,v2),fill_value=0.0))
         elif (method=='cubic') :
-            V2r = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, np.real(ddnew['V']),kind='geom')(u2,v2),fill_value=0.0))
-            V2i = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, np.imag(ddnew['V']),kind='geom')(u2,v2),fill_value=0.0))
+            # V2r = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, np.real(ddnew['V']),kind='geom')(u2,v2),fill_value=0.0))
+            # V2i = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, np.imag(ddnew['V']),kind='geom')(u2,v2),fill_value=0.0))
+            V2r = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, ddnew['V'].real,kind='geom')(u2,v2),fill_value=0.0))
+            V2i = np.array(np.ma.fix_invalid(tri.CubicTriInterpolator(triang, ddnew['V'].imag,kind='geom')(u2,v2),fill_value=0.0))
+
         else :
             print("ERROR: method %s not implemented"%(method))
         
         V2 = V2r + 1.0j*V2i
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image interpolation done"%(time.perf_counter()))
+
+        
         # Filter to smooth at edges
         V2 = V2 * np.cos(u2/umax*0.5*np.pi) * np.cos(v2/vmax*0.5*np.pi)
 
@@ -373,6 +410,9 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         # Compute image estimate via FFT
         Iarr = np.fft.fftshift(np.real(np.fft.ifft2(np.fft.ifftshift(V2))))
         # Iarr = np.fft.fftshift(np.abs(np.fft.ifft2(np.fft.ifftshift(V2))))
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image iFFT done"%(time.perf_counter()))
         
 
         # print("Finished image reconstruction in thread")
@@ -443,6 +483,9 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
     ############
     # High-level plot generation
     def plot_image_reconstruction(self,axs,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,limits=None,show_map=True,show_contours=True) :
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.plot_image_reconstruction start"%(time.perf_counter()))
         
         if (len(statdict.keys())==0) :
             return
@@ -450,12 +493,25 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         # Reconstruct image
         self.xarr,self.yarr,self.Iarr=self.reconstruct_image(datadict,statdict,time_range=time_range,snr_cut=snr_cut,ngeht_diameter=ngeht_diameter)
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.plot_image_reconstruction reconstruction done"%(time.perf_counter()))
+
+        
         self.replot_image_reconstruction(axs,time_range=time_range,limits=limits,show_map=show_map,show_contours=show_contours)
         
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.plot_image_reconstruction done"%(time.perf_counter()))
+
 
     ############
     # High-level plot generation
     def replot_image_reconstruction(self,axs,time_range=None,limits=None,show_map=True,show_contours=True) :
+
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.replot_image_reconstruction start"%(time.perf_counter()))
+        
 
         if (self.Iarr is None) :
             axs.text(0.5,0.5,"Insufficient Data!",color='w',fontsize=24,ha='center',va='center')
@@ -465,6 +521,10 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         # Plot linear image
         if (show_map) :
             axs.imshow(self.Iarr,origin='lower',extent=[self.xarr[0,0],self.xarr[0,-1],self.yarr[0,0],self.yarr[-1,0]],cmap='afmhot',vmin=0,interpolation='spline16')
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.replot_image_reconstruction image plotted"%(time.perf_counter()))
+
             
         # Plot the log contours
         if (show_contours) :
@@ -482,6 +542,9 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
             axs.contour(self.xarr,self.yarr,-lI,levels=lev1,colors='cornflowerblue',alpha=0.5,linewidths=0.5)
             axs.contour(self.xarr,self.yarr,-lmI,levels=lev1[-10:],colors='green',alpha=0.5,linewidths=0.5)
 
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.replot_image_reconstruction contours plotted"%(time.perf_counter()))
+
         # Fix the limits
         if (not limits is None) :
             axs.set_xlim((limits[0],limits[1]))
@@ -491,3 +554,7 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
             xmax = max(np.max(self.xarr[lI>-2]),np.max(self.yarr[lI>-2]))
             axs.set_xlim((xmax,xmin))
             axs.set_ylim((xmin,xmax))
+
+        if (__cheap_image_perf__) :
+            print("--- %15.8g --- InteractiveImageReconstructionPlot.replot_image_reconstruction done"%(time.perf_counter()))
+            
