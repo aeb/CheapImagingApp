@@ -303,7 +303,7 @@ Screen :
                 root.parent.nav_drawer.set_state("close")
                 app.expert_snackbar_checks(procs="data")
                 app.set_expert_transition_delay()
-                Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay+0.5)
+                Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay+0.25)
 
 
 
