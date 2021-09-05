@@ -2625,7 +2625,7 @@ class MainApp(MDApp):
 
     def set_quickstart_transition_delay(self):
         if (MainApp.get_running_app().root.ids.qs_data.selection_check()) :
-            self.transition_delay = 0.25 # Close the tray and raise snackbars
+            self.transition_delay = 0.5 # Close the tray and raise snackbars
         else :
             self.transition_delay = 1.5
 
@@ -2674,7 +2674,7 @@ class MainApp(MDApp):
         
     def set_expert_transition_delay(self):
         if (MainApp.get_running_app().root.ids.ex_data.selection_check()) :
-            self.transition_delay = 0.25 # Close the tray and raise snackbars
+            self.transition_delay = 0.5 # Close the tray and raise snackbars
         else :
             self.transition_delay = 1.5
 
