@@ -2687,7 +2687,7 @@ class MainApp(MDApp):
         
     def set_expert_transition_delay(self):
         if (MainApp.get_running_app().root.ids.ex_data.selection_check()) :
-            self.transition_delay = 0.5 # Close the tray and raise snackbars
+            self.transition_delay = 0.25 # Close the tray and raise snackbars
         else :
             self.transition_delay = 1.5
 
@@ -2708,6 +2708,7 @@ class MainApp(MDApp):
             msg = "Imaging ..."
 
         if (msg!="") :
+            self.transition_delay = max(0.5,self.transition_delay)
             # self.snackbar.text="[color="+get_hex_from_color(self.theme_cls.primary_color)+"]"+msg+"[/color]"
             self.snackbar.text=msg
             self.snackbar.size_hint_x=(Window.width-(dp(10)*2))/Window.width
