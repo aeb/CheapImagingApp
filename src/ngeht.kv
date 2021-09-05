@@ -2,7 +2,7 @@
 #:import RiseInTransition kivy.uix.screenmanager.RiseInTransition
 #:import images_path kivymd.images_path
 #:import Clock kivy.clock.Clock
-
+#:import Snackbar kivymd.uix.snackbar.Snackbar
 
 # ScreenManager:
 #     id: sm_master
@@ -227,8 +227,9 @@ Screen :
             text_color: app.theme_cls.primary_color
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                root.parent.screen_manager.current = "quickstart_source"
-                root.active_screen = "quickstart_source"
+                # root.parent.screen_manager.current = "quickstart_source"
+                # root.active_screen = "quickstart_source"
+                app.transition_to_quickstart_source(root)
                 
         ItemDrawer:
             text: "Array"
@@ -236,13 +237,14 @@ Screen :
             on_release:
                 root.parent.nav_drawer.set_state("close")
                 app.set_quickstart_transition_delay()
-                Clock.schedule_once(lambda x: app.transition_to_quickstart_array(root),app.transition_delay)
+                Clock.schedule_once(lambda x: app.transition_to_quickstart_array(root),app.transition_delay+0.25)
 
         ItemDrawer:
             text: "Image"
             icon: "image"
             on_release:
                 root.parent.nav_drawer.set_state("close")
+                app.quickstart_snackbar_checks()
                 app.set_quickstart_transition_delay()
                 Clock.schedule_once(lambda x: app.transition_to_quickstart_image(root),app.transition_delay)
 
@@ -264,8 +266,9 @@ Screen :
             text_color: app.theme_cls.primary_color
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                root.parent.screen_manager.current = "expert_source"
-                root.active_screen = "expert_source"
+                # root.parent.screen_manager.current = "expert_source"
+                # root.active_screen = "expert_source"
+                app.transition_to_expert_source(root)
 
         ItemDrawer:
             text: "Array"
@@ -280,6 +283,7 @@ Screen :
             icon: "vector-polyline"
             on_release:
                 root.parent.nav_drawer.set_state("close")
+                app.expert_snackbar_checks(procs="data")
                 app.set_expert_transition_delay()
                 Clock.schedule_once(lambda x: app.transition_to_expert_baselines(root),app.transition_delay)
 
@@ -288,6 +292,7 @@ Screen :
             icon: "image"
             on_release:
                 root.parent.nav_drawer.set_state("close")
+                app.expert_snackbar_checks(procs="all")
                 app.set_expert_transition_delay()
                 Clock.schedule_once(lambda x: app.transition_to_expert_image(root),app.transition_delay)
 
@@ -296,8 +301,10 @@ Screen :
             icon: "clipboard-text"
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay)
+                app.expert_snackbar_checks(procs="data")
+                app.set_expert_transition_delay()
                 app.root.ids.ex_specs.generate_specs()
+                Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay)
                 
 
 

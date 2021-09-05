@@ -1,7 +1,7 @@
 __version__ = "0.15"
 
 __main_debug__ = False
-__main_perf__ = True
+__main_perf__ = False
 __generate_fast_start_data__ = False
 
 # Fix the icon imports
@@ -53,6 +53,7 @@ from kivymd.theming import ThemableBehavior
 from kivymd.uix.navigationdrawer import MDNavigationLayout
 from kivymd.uix.list import MDList, OneLineIconListItem
 from kivymd.uix.label import MDLabel
+from kivymd.uix.snackbar import Snackbar 
 
 if (__main_perf__) :
     print("--- %15.8g --- imported kivymd"%(time.perf_counter()))
@@ -292,6 +293,19 @@ class Abbrv_MenuedReconstructionPlot(BoxLayout) :
 
             
 
+    def check_image_hash(self) :
+        kwargs = {}
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        kwargs['show_contours']=self.show_contours
+        new_argument_hash = hashlib.md5(bytes(str(_datadict)+str(_statdict)+str(kwargs),'utf-8')).hexdigest()
+        if ( new_argument_hash == self.argument_hash ) :
+            return False
+        return True
+        
+            
     def update(self,datadict,statdict,**kwargs) :
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
@@ -410,6 +424,19 @@ class MenuedReconstructionPlot(BoxLayout) :
         if (__main_perf__) :
             print("--- %15.8g --- MenuedReconstructionPlot.__init__ done"%(time.perf_counter()))
 
+    def check_image_hash(self) :
+        kwargs = {}
+        kwargs['time_range']=self.time_range
+        kwargs['limits']=self.limits
+        kwargs['snr_cut']=self.snr_cut
+        kwargs['ngeht_diameter']=self.ngeht_diameter
+        kwargs['show_contours']=self.show_contours
+        new_argument_hash = hashlib.md5(bytes(str(_datadict)+str(_statdict)+str(kwargs),'utf-8')).hexdigest()
+        if ( new_argument_hash == self.argument_hash ) :
+            return False
+        return True
+        
+            
     def update(self,datadict,statdict,**kwargs) :
         kwargs['time_range']=self.time_range
         kwargs['limits']=self.limits
@@ -1985,7 +2012,16 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
 
             return False
         return True
-            
+
+    def check_data_hash(self) :
+        _source_RA = self.targets[self.ic.index]['RA']
+        _source_Dec = self.targets[self.ic.index]['Dec']
+        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.source_size) + str(self.source_flux) + str(self.ic.taperable_list[self.ic.index]),'utf-8')).hexdigest()
+        if ( new_argument_hash == self.argument_hash ) :
+            return False
+        return True
+
+
     def produce_selected_data_set(self) :
         _source_RA = self.targets[self.ic.index]['RA']
         _source_Dec = self.targets[self.ic.index]['Dec']
@@ -2189,7 +2225,13 @@ class DataSetSelectionPage(BoxLayout) :
 
             return False
         return True
-            
+
+    def check_data_hash(self) :
+        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux) + str(self.dss.its.active and not self.dss.its.disabled),'utf-8')).hexdigest()
+        if ( new_argument_hash == self.argument_hash ) :
+            return False
+        return True
+    
     def produce_selected_data_set(self) :
         if (__main_debug__) :
             print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
@@ -2201,7 +2243,7 @@ class DataSetSelectionPage(BoxLayout) :
         if ( new_argument_hash == self.argument_hash ) :
             return
         self.argument_hash = new_argument_hash
-            
+        
         global _datadict
         _datadict = data.generate_data_from_file( self.ic.selected_data_file(), \
                                                   _statdict_maximum, \
@@ -2520,7 +2562,10 @@ class MainApp(MDApp):
         
         if (__main_perf__) :
             print("--- %15.8g --- MainApp.build done"%(time.perf_counter()))
-        
+
+        self.snackbar = Snackbar(snackbar_x="10dp",snackbar_y="10dp",size_hint_x=(Window.width-(dp(10)*2))/Window.width)
+    
+            
         return app
 
     # def on_start(self) :
@@ -2580,10 +2625,35 @@ class MainApp(MDApp):
 
     def set_quickstart_transition_delay(self):
         if (MainApp.get_running_app().root.ids.qs_data.selection_check()) :
-            self.transition_delay = 0.0
+            self.transition_delay = 0.25 # Close the tray and raise snackbars
         else :
             self.transition_delay = 1.5
 
+    def quickstart_snackbar_checks(self):
+        root = MainApp.get_running_app().root
+        making_data = root.ids.qs_data.check_data_hash()
+        making_image = root.ids.qs_img.plot_id.check_image_hash()
+        msg = ""
+        if (making_data and making_image) :
+            msg = "Observing & imaging ..."
+        elif (making_data) :
+            msg = "Observing ..."
+        elif (making_image) :
+            msg = "Imaging ..."
+
+        if (msg!="") :
+            self.snackbar.text=msg
+            self.snackbar.snackbar_x="10dp"
+            self.snackbar.snackbar_y="10dp"
+            self.snackbar.size_hint_x=(Window.width-(dp(10)*2))/Window.width
+            self.snackbar.open()
+
+    def transition_to_quickstart_source(self,qs_nav_drawer):
+        root = MainApp.get_running_app().root
+        root.ids.screen_manager.current = "quickstart_source"
+        qs_nav_drawer.active_screen = "quickstart_source"
+        self.snackbar.dismiss()
+            
     def transition_to_quickstart_array(self,qs_nav_drawer):
         root = MainApp.get_running_app().root
         root.ids.screen_manager.current = "quickstart_array"
@@ -2591,25 +2661,57 @@ class MainApp(MDApp):
         # root.ids.qs_data.produce_selected_data_set()
         root.ids.qs_map.menu_id.refresh()
         root.ids.qs_map.plot_id.replot()
+        self.snackbar.dismiss()
         
     def transition_to_quickstart_image(self,qs_nav_drawer):
         root = MainApp.get_running_app().root
+        root.ids.qs_data.produce_selected_data_set()
         root.ids.screen_manager.current = "quickstart_image"
         qs_nav_drawer.active_screen = "quickstart_image"
-        root.ids.qs_data.produce_selected_data_set()
         root.ids.qs_img.menu_id.refresh()
         root.ids.qs_img.plot_id.replot()
+        self.snackbar.dismiss()
         
     def set_expert_transition_delay(self):
         if (MainApp.get_running_app().root.ids.ex_data.selection_check()) :
-            self.transition_delay = 0.0
+            self.transition_delay = 0.25 # Close the tray and raise snackbars
         else :
             self.transition_delay = 1.5
+
+    def expert_snackbar_checks(self,procs="all"):
+        root = MainApp.get_running_app().root
+        making_data = False
+        making_image = False
+        if (procs in ["data","all"]) :
+            making_data = root.ids.ex_data.check_data_hash()
+        if (procs in ["image","all"]) :
+            making_image = root.ids.ex_img.plot_id.check_image_hash() or making_data
+        msg = ""
+        if (making_data and making_image) :
+            msg = "Observing & imaging ..."
+        elif (making_data) :
+            msg = "Observing ..."
+        elif (making_image) :
+            msg = "Imaging ..."
+
+        if (msg!="") :
+            self.snackbar.text=msg
+            self.snackbar.snackbar_x="10dp"
+            self.snackbar.snackbar_y="10dp"
+            self.snackbar.size_hint_x=(Window.width-(dp(10)*2))/Window.width
+            self.snackbar.open()
         
     def transition_to_expert_target(self,qs_nav_drawer):
         root = MainApp.get_running_app().root
         root.ids.screen_manager.current = "expert_target"
         qs_nav_drawer.active_screen = "expert_target"
+        self.snackbar.dismiss()
+
+    def transition_to_expert_source(self,qs_nav_drawer):
+        root = MainApp.get_running_app().root
+        root.ids.screen_manager.current = "expert_source"
+        qs_nav_drawer.active_screen = "expert_source"
+        self.snackbar.dismiss()
 
     def transition_to_expert_array(self,ex_nav_drawer):
         root = MainApp.get_running_app().root
@@ -2619,32 +2721,36 @@ class MainApp(MDApp):
         root.ids.ex_map.otm_id.refresh()
         root.ids.ex_map.menu_id.refresh()
         root.ids.ex_map.plot_id.replot()
+        self.snackbar.dismiss()
         
     def transition_to_expert_baselines(self,ex_nav_drawer):
         root = MainApp.get_running_app().root
+        root.ids.ex_data.produce_selected_data_set()
         root.ids.screen_manager.current = "expert_baselines"
         ex_nav_drawer.active_screen = "expert_baselines"
-        root.ids.ex_data.produce_selected_data_set()
         root.ids.ex_uv.ddm_id.refresh()
         root.ids.ex_uv.otm_id.refresh()
         root.ids.ex_uv.menu_id.refresh()
         root.ids.ex_uv.plot_id.replot()
-
+        self.snackbar.dismiss()
+        
     def transition_to_expert_image(self,ex_nav_drawer):
         root = MainApp.get_running_app().root
+        root.ids.ex_data.produce_selected_data_set()
         root.ids.screen_manager.current = "expert_image"
         ex_nav_drawer.active_screen = "expert_image"
-        root.ids.ex_data.produce_selected_data_set()
         root.ids.ex_img.ddm_id.refresh()
         root.ids.ex_img.otm_id.refresh()
         root.ids.ex_img.menu_id.refresh()
         root.ids.ex_img.plot_id.replot()
+        self.snackbar.dismiss()
 
     def transition_to_expert_specs(self,ex_nav_drawer):
         root = MainApp.get_running_app().root
+        root.ids.ex_data.produce_selected_data_set()
         root.ids.screen_manager.current = "expert_specs"
         ex_nav_drawer.active_screen = "expert_specs"
-        root.ids.ex_data.produce_selected_data_set()
+        self.snackbar.dismiss()
         
             
 
