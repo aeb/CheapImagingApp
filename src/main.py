@@ -2576,7 +2576,9 @@ class MainApp(MDApp):
                                        snackbar_x="10dp",snackbar_y="10dp",
                                        size_hint_x=(Window.width-(dp(10)*2))/Window.width,
                                        font_size="20sp",
-                                       bg_color=(0,0,0,0.75))
+                                       # bg_color=(0,0,0,0.75),
+                                       bg_color=(0.14,0.14,0.14,0.5),
+                                       radius=[0,20,0,20])
             
         return app
 
@@ -2758,6 +2760,7 @@ class MainApp(MDApp):
     def transition_to_expert_specs(self,ex_nav_drawer):
         root = MainApp.get_running_app().root
         root.ids.ex_data.produce_selected_data_set()
+        root.ids.ex_specs.generate_specs()
         root.ids.screen_manager.current = "expert_specs"
         ex_nav_drawer.active_screen = "expert_specs"
         self.snackbar.dismiss()
