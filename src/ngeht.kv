@@ -227,8 +227,6 @@ Screen :
             text_color: app.theme_cls.primary_color
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                # root.parent.screen_manager.current = "quickstart_source"
-                # root.active_screen = "quickstart_source"
                 app.transition_to_quickstart_source(root)
                 
         ItemDrawer:
@@ -244,8 +242,8 @@ Screen :
             icon: "image"
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                app.quickstart_snackbar_checks()
                 app.set_quickstart_transition_delay()
+                app.quickstart_snackbar_checks()
                 Clock.schedule_once(lambda x: app.transition_to_quickstart_image(root),app.transition_delay)
 
 <ExpertNavigationDrawer>:
@@ -266,16 +264,14 @@ Screen :
             text_color: app.theme_cls.primary_color
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                # root.parent.screen_manager.current = "expert_source"
-                # root.active_screen = "expert_source"
                 app.transition_to_expert_source(root)
 
         ItemDrawer:
             text: "Array"
             icon: "earth"
             on_release:
-                root.parent.nav_drawer.set_state("close")
                 app.set_expert_transition_delay()
+                root.parent.nav_drawer.set_state("close")
                 Clock.schedule_once(lambda x: app.transition_to_expert_array(root),app.transition_delay)
 
         ItemDrawer:
@@ -283,8 +279,8 @@ Screen :
             icon: "vector-polyline"
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                app.expert_snackbar_checks(procs="data")
                 app.set_expert_transition_delay()
+                app.expert_snackbar_checks(procs="data")
                 Clock.schedule_once(lambda x: app.transition_to_expert_baselines(root),app.transition_delay)
 
         ItemDrawer:
@@ -292,8 +288,8 @@ Screen :
             icon: "image"
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                app.expert_snackbar_checks(procs="all")
                 app.set_expert_transition_delay()
+                app.expert_snackbar_checks(procs="all")
                 Clock.schedule_once(lambda x: app.transition_to_expert_image(root),app.transition_delay)
 
         ItemDrawer:
@@ -301,8 +297,8 @@ Screen :
             icon: "clipboard-text"
             on_release:
                 root.parent.nav_drawer.set_state("close")
-                app.expert_snackbar_checks(procs="data")
                 app.set_expert_transition_delay()
+                app.expert_snackbar_checks(procs="data")
                 Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay)
 
 
