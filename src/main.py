@@ -2009,10 +2009,7 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
         if (self.ic.index==0) :
             if (__main_debug__) :
                 print("Bad selection!  Setting to index 1.")
-            # 
             self.ic.load_slide(self.ic.slides[1])
-            #self.ic.index = 1
-
             return False
         return True
 
@@ -2222,10 +2219,7 @@ class DataSetSelectionPage(BoxLayout) :
         if (self.ic.index==0) :
             if (__main_debug__) :
                 print("Bad selection!  Setting to index 1.")
-            # 
             self.ic.load_slide(self.ic.slides[1])
-            #self.ic.index = 1
-
             return False
         return True
 
