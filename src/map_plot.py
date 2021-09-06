@@ -10,6 +10,8 @@ from kivy.graphics import RenderContext, Color, Rectangle
 from kivy.properties import ListProperty, StringProperty
 from kivy.core.image import Image
 
+from kivymd.theming import ThemableBehavior
+
 from os import path
 import copy
 
@@ -18,7 +20,7 @@ import copy
 __map_plot_debug__ = False
 
 
-class InteractiveWorldMapWidget(Widget):
+class InteractiveWorldMapWidget(ThemableBehavior,Widget):
 
     tex_coords = ListProperty([0, 1, 1, 1, 1, 0, 0, 0])
     texture_wrap = StringProperty('repeat')
@@ -34,7 +36,9 @@ class InteractiveWorldMapWidget(Widget):
         
         with self.canvas:
             # Background texture
-            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical.jpg'))).texture
+            # self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical.jpg'))).texture
+            # self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical_grey.jpg'))).texture
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical_grey2.jpg'))).texture
             self.texture.wrap = self.texture_wrap
             self.rect = Rectangle(size=(self.nx,self.ny),texture=self.texture)
             self.rect.tex_coords = self.tex_coords
@@ -57,7 +61,43 @@ class InteractiveWorldMapWidget(Widget):
         # Generate some default resizing behaviors
         self.bind(height=self.resize)
         self.bind(width=self.resize)
+
+        self.theme_cls.bind(theme_style=self.set_theme)
+
+        self.map_type_light = 'grey_light'
+        self.map_type_dark = 'grey_dark'
         
+        
+    def set_map_true_color(self,true_color) :
+        if (true_color) :
+            self.map_type_light = 'color'
+            self.map_type_dark = 'color'
+        else :
+            self.map_type_light = 'grey_light'
+            self.map_type_dark = 'grey_dark'
+        self.set_theme(None,self.theme_cls.theme_style)
+            
+        
+    def choose_map(self,map_type='color') :
+        if (map_type=='color') :
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical.jpg'))).texture
+        elif (map_type=='grey_light') :
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical_grey.jpg'))).texture
+        elif (map_type=='grey_dark') :
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/world_spherical_grey2.jpg'))).texture
+        else :
+            print("ERROR: Unrecognized option %s."%(map_type))
+        self.texture.wrap = self.texture_wrap
+        self.rect.texture = self.texture
+        self.rect.tex_coords = self.tex_coords
+
+        
+    def set_theme(self,widget,value) :
+        if (value=='Dark') :
+            self.choose_map(map_type=self.map_type_dark)
+        elif (value=='Light') :
+            self.choose_map(map_type=self.map_type_light)
+
     def update_glsl(self, *largs):
         # This is needed for the default vertex shader.
         self.canvas['projection_mat'] = Window.render_context['projection_mat']
@@ -177,13 +217,17 @@ class InteractiveBaselineMapPlot_kivygraph(InteractiveWorldMapWidget):
         self.gcdict = {}
         self.lldict = {}
 
+        
+
+        
     # def generate_mpl_plot(self,fig,ax,**kwargs) :
     #     # This is where we insert a Matplotlib figure.  Must use ax. and fig. child commands.
     #     # You probably want, but do not require, the following in your over-lay
     #     self.plot_map(ax,self.statdict)
     #     ax.set_facecolor((0,0,0,0))
     #     fig.set_facecolor((0,0,0,0))
-        
+
+    
     def update(self,datadict,statdict,**kwargs) :
 
         self.statdict = statdict
@@ -355,6 +399,7 @@ class BaselineMapCanvas(FloatLayout) :
 
         self.plot_cursor = False
         self.limits = [-180,180,-90,90]
+
         
     def plot_stations(self,statdict,lldict,gcdict,rect) :
         if (__map_plot_debug__):

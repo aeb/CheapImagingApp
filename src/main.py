@@ -695,12 +695,19 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
 
         # Snap to source source name
         self.snap_source = None
+
+
+        # self.theme_cls.bind(theme_style=self.set_theme)
         
         if __main_debug__ :
             print("mp.__init__: finished")
 
         if (__main_perf__) :
             print("--- %15.8g --- MenuedBaselineMapPlot_kivygrap.__init__ done"%(time.perf_counter()))
+
+
+    # def set_theme(self,widget,value) :
+    #     self.replot()
             
         
     def add_stn_buttons(self) :

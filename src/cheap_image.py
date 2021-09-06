@@ -60,8 +60,9 @@ class InteractivePlotWidget(Widget):
         with self.canvas:
             Color(1, 1, 1)
             self.texture = Texture.create(size=(self.nx,self.ny))
-            self.buf = [0,0,0,255]*(self.nx*self.ny)
-            self.arr = array('B',self.buf)
+            # self.buf = [0,0,0,255]*(self.nx*self.ny)
+            # self.arr = array('B',self.buf)
+            self.arr = bytearray([0,0,0,255]*(self.nx*self.ny))
             # self.update_mpl()
             self.texture.blit_buffer(self.arr, colorfmt='rgba', bufferfmt='ubyte')
             BindTexture(texture=self.texture, index=0)
