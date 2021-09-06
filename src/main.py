@@ -527,7 +527,8 @@ class MenuedReconstructionPlot(BoxLayout) :
         
 class MenuedBaselinePlot(BoxLayout) :
 
-    ibp = baseline_plot.InteractiveBaselinePlot_kivygraph()
+    # ibp = baseline_plot.InteractiveBaselinePlot_kivygraph()
+    ibp = ObjectProperty(None)
     menu_id = ObjectProperty(None)
 
     def __init__(self,**kwargs) :
@@ -547,9 +548,9 @@ class MenuedBaselinePlot(BoxLayout) :
 
         self.limits = [-20,20,20,-20]
 
-        self.update(self.ddict,self.sdict,limits=self.limits)
+        # self.update(self.ddict,self.sdict,limits=self.limits)
 
-        self.add_widget(self.ibp)
+        # self.add_widget(self.ibp)
         
         if __main_debug__ :
             print("mp.__init__: finished")

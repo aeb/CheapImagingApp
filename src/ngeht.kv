@@ -466,13 +466,18 @@ Screen :
     FloatLayout:
         canvas:
             Color:
-                rgb: 0,0,0
+                # rgb: 0,0,0
+                rgb: get_color_from_hex(app.theme_cls.colors[app.theme_cls.theme_style]["Background"])
             Rectangle:
                 size: root.width,root.height
         size_hint: 1.0,1.0
         MenuedBaselinePlot:
             id: plot
             size: root.width,root.height
+            ibp: ibp
+            InteractiveBaselinePlot_kivygraph:
+                id: ibp
+                spline_color: app.theme_cls.text_color
     BoxLayout:
         orientation: "vertical"
         size_hint: None,None
