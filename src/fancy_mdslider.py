@@ -207,6 +207,8 @@ class FancyMDSlider(ThemableBehavior, Slider):
     and defaults to `None`.
     """
 
+    set_color = BooleanProperty(True)
+    
     _track_color_active = ColorProperty([0, 0, 0, 0])
     _track_color_normal = ColorProperty([0, 0, 0, 0])
     _track_color_disabled = ColorProperty([0, 0, 0, 0])
@@ -276,10 +278,11 @@ class FancyMDSlider(ThemableBehavior, Slider):
             self._track_color_normal[3] = 0.3
             self._track_color_active = self._track_color_normal
             self._track_color_disabled = self._track_color_normal
-            if self.color == [0, 0, 0, 0]:
-                self.color = get_color_from_hex(
-                    colors[self.theme_cls.primary_palette]["200"]
-                )
+            # if self.color == [0, 0, 0, 0]:
+            #     self.color = get_color_from_hex(colors[self.theme_cls.primary_palette]["200"])
+            if (self.color==[0,0,0,0] or not self.set_color) :
+                # self.color = get_color_from_hex(colors[self.theme_cls.primary_palette]["500"])
+                self.color = self.theme_cls.text_color
             self.thumb_color_disabled = get_color_from_hex(
                 colors["Gray"]["800"]
             )
@@ -290,8 +293,11 @@ class FancyMDSlider(ThemableBehavior, Slider):
             self._track_color_active[3] = 0.38
             self._track_color_disabled = get_color_from_hex("000000")
             self._track_color_disabled[3] = 0.26
-            if self.color == [0, 0, 0, 0]:
-                self.color = self.theme_cls.primary_color
+            # if self.color == [0, 0, 0, 0]:
+            #     # self.color = self.theme_cls.primary_color
+            if (self.color==[0,0,0,0] or not self.set_color) :
+                # self.color = get_color_from_hex(colors[self.theme_cls.primary_palette]["500"])
+                self.color = self.theme_cls.text_color
 
     def hint_box_text(self,value):
         return str(int(slider.value))

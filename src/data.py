@@ -13,6 +13,9 @@ from fancy_mdswitch import FancyMDSwitch
 from kivy.uix.behaviors.touchripple import TouchRippleButtonBehavior
 from kivy.uix.behaviors.button import ButtonBehavior
 
+from kivymd.uix.label import MDLabel
+from kivymd.app import MDApp
+
 import os
 import numpy as np
 import matplotlib.image as mi
@@ -443,7 +446,7 @@ class ImageCarousel(Carousel) :
         box = BoxLayout()
         box.orientation = "vertical"
         self.add_btn = FileImageButton()
-        lbl = Label(text="Add custom image!",color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
+        lbl = MDLabel(text="Add custom image!",halign='center',size_hint=(1,None),height=sp(24),font_size=sp(12))
         box.add_widget(self.add_btn)
         box.add_widget(lbl)
         self.add_widget(box)
@@ -468,7 +471,7 @@ class ImageCarousel(Carousel) :
         box.orientation = "vertical"
         image = AsyncImage(source=img_file, allow_stretch=True)
         # image = Image(source=img_file, allow_stretch=True)
-        lbl = Label(text=caption,color=(1,1,1,1),size_hint=(1,None),height=sp(24),font_size=sp(12))
+        lbl = MDLabel(text=caption,halign='center',size_hint=(1,None),height=sp(24),font_size=sp(12))
         box.add_widget(image)
         box.add_widget(lbl)
         self.add_widget(box)
@@ -478,7 +481,7 @@ class ImageCarousel(Carousel) :
         self.taperable_list.append(taperable)
         
     def selected_data_file(self) :
-        return self.data_file_list[self.index][self.frequency_index]
+        return self.data_file_list[max(1,self.index)][self.frequency_index]
 
     def set_frequency(self,widget,val) :
         self.frequency_index = int(val)
@@ -502,7 +505,7 @@ class DataSelectionSliders(BoxLayout) :
         # Add the taper switch
         self.its_box = BoxLayout()
         self.its_box.orientation='horizontal'
-        self.its_label = Label(text='Taper image',color=(1,1,1,0.75))
+        self.its_label = MDLabel(text='Taper image',halign='center')
         self.its_box.add_widget(self.its_label)
         self.its_box_box = BoxLayout()
         self.its = FancyMDSwitch(pos_hint={'center_x':0.5,'center_y':0.5})
@@ -516,18 +519,19 @@ class DataSelectionSliders(BoxLayout) :
         # Add the source size slider
         self.sss_box = BoxLayout()
         self.sss_box.orientation='horizontal'
-        self.sss_label = Label(text='Size:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sss_label = MDLabel(text='Size:',halign='center',size_hint=(0.5,1))
         self.sss_box.add_widget(self.sss_label)
         
         self.sss = SourceSizeMDSlider()
         self.sss.background_color=(0,0,0,0)
-        self.sss.color=(1,1,1,0.75)
+        # self.sss.color=(1,1,1,0.75)
+        self.sss.set_color=False
         self.sss.orientation='horizontal'
         self.sss.size_hint=(0.8,1)
         self.sss.bind(value=self.adjust_source_size)
         self.sss_box.add_widget(self.sss)
         
-        self.sss_label2 = Label(text=("%3g \u03BCas")%(self.sss.source_size()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sss_label2 = MDLabel(text=("%3g \u03BCas")%(self.sss.source_size()),halign='center',size_hint=(0.5,1))
         self.sss_box.add_widget(self.sss_label2)
 
         self.add_widget(self.sss_box)
@@ -535,18 +539,18 @@ class DataSelectionSliders(BoxLayout) :
         # Add the source flux slider
         self.sfs_box = BoxLayout()
         self.sfs_box.orientation='horizontal'
-        self.sfs_label = Label(text='Total Flux:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sfs_label = MDLabel(text='Total Flux:',halign='center',size_hint=(0.5,1))
         self.sfs_box.add_widget(self.sfs_label)
         
         self.sfs = FluxMDSlider()
         self.sfs.background_color=(0,0,0,0)
-        self.sfs.color=(1,1,1,0.75)
+        # self.sfs.color=(1,1,1,0.75)
+        self.sfs.set_color=False        
         self.sfs.orientation='horizontal'
         self.sfs.size_hint=(0.8,1)
         self.sfs.bind(value=self.adjust_source_flux) #
         self.sfs_box.add_widget(self.sfs)
-        
-        self.sfs_label2 = Label(text="%5.1f Jy"%(self.sfs.flux()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sfs_label2 = MDLabel(text="%5.1f Jy"%(self.sfs.flux()),halign='center',size_hint=(0.5,1))
         self.sfs_box.add_widget(self.sfs_label2)
 
         self.add_widget(self.sfs_box)
@@ -554,18 +558,17 @@ class DataSelectionSliders(BoxLayout) :
         # Add the observation frequency slider
         self.ofs_box = BoxLayout()
         self.ofs_box.orientation='horizontal'
-        self.ofs_label = Label(text='Obs. Freq.:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.ofs_label = MDLabel(text='Obs. Freq.:',halign='center',size_hint=(0.5,1))
         self.ofs_box.add_widget(self.ofs_label)
         
         self.ofs = ObsFrequencyMDSlider()
         self.ofs.background_color=(0,0,0,0)
-        self.ofs.color=(1,1,1,0.75)
+        self.ofs.set_color=False
         self.ofs.orientation='horizontal'
         self.ofs.size_hint=(0.8,1)
         self.ofs.bind(value=self.adjust_observation_frequency) #
         self.ofs_box.add_widget(self.ofs)
-        
-        self.ofs_label2 = Label(text="%3g GHz"%(self.ofs.observation_frequency()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.ofs_label2 = MDLabel(text="%3g GHz"%(self.ofs.observation_frequency()),halign='center',size_hint=(0.5,1))
         self.ofs_box.add_widget(self.ofs_label2)
 
         self.add_widget(self.ofs_box)
@@ -658,4 +661,4 @@ class FluxMDSlider(FancyMDSlider):
             return "%5.2f kJy"%(1e-3*f)
 
     def hint_box_size(self) :
-        return (dp(50),dp(28))
+        return (dp(60),dp(28))

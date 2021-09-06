@@ -1929,19 +1929,21 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
         # Add the observation frequency slider
         self.ofs_box = BoxLayout()
         self.ofs_box.orientation='horizontal'
-        self.ofs_label = Label(text='Obs. Freq.:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        # self.ofs_label = Label(text='Obs. Freq.:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.ofs_label = MDLabel(text='Obs. Freq.:',halign='center',size_hint=(0.5,1))
         self.ofs_box.add_widget(self.ofs_label)        
         self.ofs = data.ObsFrequencyMDSlider()
         self.ofs.observation_frequency_list = [86, 230, 345]
         self.ofs.max = 2
         self.ofs.value = 1
         self.ofs.background_color=(0,0,0,0)
-        self.ofs.color=(1,1,1,0.75)
+        # self.ofs.color=(1,1,1,0.75)
+        self.ofs.set_color=False
         self.ofs.orientation='horizontal'
         self.ofs.size_hint=(0.8,1)
         self.ofs.bind(value=self.adjust_observation_frequency) #
         self.ofs_box.add_widget(self.ofs)
-        self.ofs_label2 = Label(text="%3g GHz"%(self.ofs.observation_frequency()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.ofs_label2 = MDLabel(text="%3g GHz"%(self.ofs.observation_frequency()),halign='center',size_hint=(0.5,1))
         self.ofs_box.add_widget(self.ofs_label2)
 
         self.box.add_widget(self.ofs_box)
@@ -2556,10 +2558,11 @@ class MainApp(MDApp):
             
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.colors["Dark"]["Background"] = "404040"
+        self.theme_cls.colors["Light"]["Background"] = "d0d0d0"
         self.theme_cls.primary_palette = "Orange"
         self.theme_cls.accent_palette = "Gray"
         Window.bind(on_keyboard=self.key_input)
-
+        
         Loader.loading_image = "images/load_image.png"
         
         app = Builder.load_file("ngeht.kv")
@@ -2599,8 +2602,16 @@ class MainApp(MDApp):
     def set_theme(self,dark) :
         if (dark) :
             self.theme_cls.theme_style="Dark"
+            self.theme_cls.accent_light_hue = '200'
+            self.theme_cls.accent_dark_hue = '700'
         else :
             self.theme_cls.theme_style="Light"
+            self.theme_cls.accent_light_hue = '200'
+            self.theme_cls.accent_dark_hue = '400'
+
+        root = MainApp.get_running_app().root.ids.logo_background.redraw_background()
+            
+        
     
     def twitter_follow(self) :
         import webbrowser

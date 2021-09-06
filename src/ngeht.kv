@@ -3,6 +3,7 @@
 #:import images_path kivymd.images_path
 #:import Clock kivy.clock.Clock
 #:import Snackbar kivymd.uix.snackbar.Snackbar
+# import get_color_from_hex kivy.utils
 
 # ScreenManager:
 #     id: sm_master
@@ -29,8 +30,11 @@
 Screen :
     
     LogoBackground:
-        background_color: app.theme_cls.colors[app.theme_cls.theme_style]["Background"]
-        logo_color: app.theme_cls.accent_dark
+        id: logo_background
+        background_color: get_color_from_hex(app.theme_cls.colors[app.theme_cls.theme_style]["Background"])
+        logo_color: app.theme_cls.accent_dark #if (app.theme_cls.theme_style=="Dark") else app.theme_cls.accent_light
+        highlight_color: app.theme_cls.accent_light #if (app.theme_cls.theme_style=="Dark") else app.theme_cls.accent_dark
+        # logo_color: app.theme_cls.accent_dark if (app.theme_cls.theme_style=="Dark") else (1,0.77,0.17,1)
         highlight_color: app.theme_cls.accent_light
         
         logo_size: 0.5*max(root.height,root.width)
@@ -195,14 +199,14 @@ Screen :
                 text: "Next Generation\nEvent Horizon Telescope"
                 font_style: "H6"
 
-    # ActiveSwitchMDLabel:
-    #     size_hint: 1,None
-    #     height: dp(40)
-    #     deactivated_text: "Light"
-    #     activated_text: "Dark"
-    #     active: True
-    #     on_active:
-    #         app.set_theme(self.active)
+    ActiveSwitchMDLabel:
+        size_hint: 1,None
+        height: dp(40)
+        deactivated_text: "Light"
+        activated_text: "Dark"
+        active: True
+        on_active:
+            app.set_theme(self.active)
 
     ActiveSwitchMDLabel:
         size_hint: 1,None
