@@ -11,6 +11,8 @@ from kivy.properties import ListProperty, StringProperty
 from kivy.core.image import Image
 from kivy.uix.spinner import Spinner, SpinnerOption
 
+from kivymd.theming import ThemableBehavior
+
 from os import path
 import copy
 
@@ -19,7 +21,7 @@ import copy
 __skymap_debug__ = False
 
 
-class InteractiveSkyMapWidget(Widget):
+class InteractiveSkyMapWidget(ThemableBehavior,Widget):
 
     tex_coords = ListProperty([0, 1, 1, 1, 1, 0, 0, 0])
     texture_wrap = StringProperty('repeat')
@@ -58,6 +60,26 @@ class InteractiveSkyMapWidget(Widget):
         # Generate some default resizing behaviors
         self.bind(height=self.resize)
         self.bind(width=self.resize)
+
+        self.theme_cls.bind(theme_style=self.set_theme)
+
+
+        
+    def choose_map(self,map_type='Dark') :
+        if (map_type=='Dark') :
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/starmap_2020_4k.jpg'))).texture
+        elif (map_type=='Light') :
+            self.texture = Image(path.abspath(path.join(path.dirname(__file__),'images/starmap_2020_4k_negative.jpg'))).texture
+        else :
+            print("ERROR: Unrecognized option %s."%(map_type))
+        self.texture.wrap = self.texture_wrap
+        self.rect.texture = self.texture
+        self.rect.tex_coords = self.tex_coords
+
+        
+    def set_theme(self,widget,value) :
+        self.choose_map(map_type=value)
+
         
     def update_glsl(self, *largs):
         # This is needed for the default vertex shader.

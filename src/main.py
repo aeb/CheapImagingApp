@@ -1562,8 +1562,8 @@ class SNRMDSlider(FancyMDSlider):
 class TargetSelectionMap(BoxLayout) :
 
 
-    smc = skymap_plot.StarMapCanvas()
-    ismp = skymap_plot.InteractiveSkyMapPlot()
+    # smc = skymap_plot.StarMapCanvas()
+    # ismp = skymap_plot.InteractiveSkyMapPlot()
     # tss = ObjectProperty(None)
 
     fps = NumericProperty(30)
@@ -1572,6 +1572,9 @@ class TargetSelectionMap(BoxLayout) :
         if (__main_perf__) :
             print("--- %15.8g --- TargetSelectionMap.__init__ start"%(time.perf_counter()))
 
+        self.smc = skymap_plot.StarMapCanvas()
+        self.ismp = skymap_plot.InteractiveSkyMapPlot()
+            
         global _source_RA, source_Dec
         
         super().__init__(**kwargs)
@@ -1583,7 +1586,7 @@ class TargetSelectionMap(BoxLayout) :
         self.tbox = BoxLayout(orientation='vertical',size_hint=(None,None),width=dp(150),height=sp(100)) #,dp(200))) #,pos=(dp(100),dp(100)))
         # self.tbox = BoxLayout(orientation='vertical',size_hint=(None,None),size=(dp(50),dp(90)))
         
-        self.targets = {}
+        self.targets = {}        
         self.targets['Sgr A*']={'RA':self.RA_hr(17,45,40.049),'Dec':self.Dec_deg(-29,0,28.118)}
         self.targets['M87']={'RA':self.RA_hr(12,30,49.42338),'Dec':self.Dec_deg(12,23,28.0439)}
         self.targets['M31']={'RA':self.RA_hr(0,42,44.3),'Dec':self.Dec_deg(41,16,9)}
@@ -1597,6 +1600,7 @@ class TargetSelectionMap(BoxLayout) :
         # self.targets['SMC']={'RA':self.RA_hr(0,52,44.8),'Dec':self.Dec_deg(-72,49,43)}
 
         self.targets['--- Select ---']={'RA':None,'Dec':None}
+
         
         if (__main_debug__) :
             for s in self.targets.keys() :
@@ -1609,8 +1613,8 @@ class TargetSelectionMap(BoxLayout) :
         self.tss.color = (1,0.75,0.25,1)
         self.tss.bind(text=self.select_target)
         self.tbox.add_widget(self.tss)
-        self.ra_label = Label(text=" RA: ",size_hint=(1,1),color=(1,1,1))
-        self.dec_label = Label(text="Dec: ",size_hint=(1,1),color=(1,1,1))
+        self.ra_label = MDLabel(text=" RA: ",size_hint=(1,1))#,color=(1,1,1))
+        self.dec_label = MDLabel(text="Dec: ",size_hint=(1,1))#,color=(1,1,1))
         self.tbox.add_widget(self.ra_label)
         self.tbox.add_widget(self.dec_label)
 
