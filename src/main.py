@@ -2656,6 +2656,11 @@ class MainApp(MDApp):
         root.ids.qs_map.plot_id.mp.set_map_true_color(natural)
         root.ids.ex_map.plot_id.mp.set_map_true_color(natural)
 
+    def set_show_contours(self,show) :
+        root = MainApp.get_running_app().root
+        root.ids.ex_img.plot_id.show_contours = show
+        
+        
         
     # def callback(self,button) :
     #     self.menu.caller = button

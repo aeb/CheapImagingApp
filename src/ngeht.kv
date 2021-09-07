@@ -1002,6 +1002,9 @@ Screen :
         font_style: "Button"
         theme_text_color: "Custom"
         text_color: app.theme_cls.primary_color
+        valign: "top"
+        size_hint: 1,None
+        height: sp(20)
 
         
 <SpecificationItem>:
@@ -1222,6 +1225,31 @@ Screen :
             on_active:
                 app.set_map_color(self.active)
 
+    SpecificationCategory:
+        title: "Image log-scale contours (expert mode): "
+        content_height: dp(50)
+        ActiveSwitchMDLabel:
+            size_hint: 1,None
+            height: dp(50)
+            deactivated_text: "off"
+            activated_text: "on"
+            active: True
+            on_active:
+                app.set_show_contours(self.active)
+
+    # SpecificationCategory:
+    #     title: "Negative image contours (expert mode): "
+    #     content_height: dp(50)
+    #     ActiveSwitchMDLabel:
+    #         size_hint: 1,None
+    #         height: dp(50)
+    #         deactivated_text: "off"
+    #         activated_text: "on"
+    #         active: True
+    #         on_active:
+    #             print("FOO")
+    #             #app.set_map_color(self.active)
+                
     # Buffer to push switches toward top
     BoxLayout:
 
@@ -1278,6 +1306,7 @@ Screen :
                 MDLabel:
                     id: ngeht_about_text
                     font_style: "Caption"
+                    valign: "top"
                     text: "The ngEHT is a proposed array of tens of individual stations placed about the globe that combined promise to produce the highest resolution view of universe in history."
 
                 BoxLayout:
@@ -1303,8 +1332,6 @@ Screen :
                         on_release:
                             app.website_link(page="technology")
 
-
-
             SpecificationCategory:
                 id: imaging_about
                 title: "Quick Imaging Algorithm"
@@ -1312,8 +1339,8 @@ Screen :
                 MDLabel:
                     id: imaging_about_text
                     font_style: "Caption"
-                    text: "Image reconstruction is a process that attempts to fill in gaps in the observations with well-motivated assumptions about missing data.  In ngEHT @home we do this with a cubic interpolation.  In practice, more powerful, but much more computationally intensive, methods exist and are used by mm-VLBI.  Hence, these images are in many ways pessimistic forcasts of the imaging power of the ngEHT!"
-
+                    valign: "top"
+                    text: "Image reconstruction is a process that attempts to fill in gaps in the observations with well-motivated assumptions about missing data.  In ngEHT @home we do this via cubic interpolation of the complex visibilities.  In practice, more powerful, but much more computationally intensive, methods exist.  Hence, these images are in many ways pessimistic forcasts of the imaging power of the ngEHT!"
 
             SpecificationCategory:
                 id: credits_about
@@ -1322,8 +1349,7 @@ Screen :
                 MDLabel:
                     id: credits_about_text
                     font_style: "Caption"
-                    text: "Many people have contributed to producing ngEHT @home.  The primary app developers are Avery Broderick, Ariel Broderick and Andrew Broderick, who took this on as a family project.  Data inputs were provided by NASA, Andrew Chael, Christian Fromm, Paul Tiede.  Early testing was performed by and useful feedback obtained from Michael Johnson, Dominic Pesce, Roman Gold, and Paul Tiede.  The development of ngEHT @home is supported in part by the Perimeter Institute for Theoretical Physics and the University of Waterloo."
-            
-    
+                    valign: "top"
+                    text: "Many people have contributed to ngEHT @home!  The app was developed using the Kivy and Kivymd python packages, and uses the NumPy and Matplotlib libraries.  ngEHT @home was written by Avery Broderick, Ariel Broderick, and Andrew Broderick.  Input data were provided by NASA, Andrew Chael, Christian Fromm, Paul Tiede.  Early testing was performed by and useful feedback obtained from Michael Johnson, Dominic Pesce, Roman Gold, and Paul Tiede.  The development of ngEHT @home is supported in part by the Perimeter Institute for Theoretical Physics and the University of Waterloo."
 
             BoxLayout:
