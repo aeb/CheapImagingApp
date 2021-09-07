@@ -48,6 +48,12 @@ Screen :
         md_bg_color: 0.14,0.14,0.14,1
         specific_text_color: app.theme_cls.primary_color        
         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+        # right_action_items: [["dots-vertical", lambda x: app.callback(x) ]]
+
+    
+    # SpecialOptionsMenu:
+    #     id: options_menu    
+        
     BoxLayout:
         size_hint: 1,1
         canvas:
@@ -131,8 +137,22 @@ Screen :
                 # MDLabel:
                 #     text: "Expert Specs"
                 #     halign: "center"
-                    
 
+            Screen:
+                name: "settings"
+                SettingsPage:
+                    id: settings
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+            Screen:
+                name: "about"
+                About:
+                    id: about
+                    size_hint: 1,None
+                    height: root.height-toolbar.height - dp(1)
+
+                    
         MDNavigationDrawer:
             id: nav_drawer
 
@@ -141,14 +161,18 @@ Screen :
                 nav_drawer: nav_drawer
                 id: content_drawer
 
-
 # Switch box that changes colors if desired
 <ActiveSwitchMDLabel>:
     orientation: "horizontal"
 
+    BoxLayout:
+        id: left_buffer
+        size_hint: None,1
+        width: root.left_buffer
+    
     MDLabel:
         id: label
-        text: root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text))
+        text: root.prefix_text+root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text))+root.postfix_text
         markup: True
     MDSwitch:
         id: switch
@@ -156,7 +180,7 @@ Screen :
         pos_hint: {'center_x':0.5}
         active: root.active
         on_active:
-            label.text=(root.deactive_text(str(root.deactivated_text))+"/"+root.active_text(str(root.activated_text)) if self.active else root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text)))
+            label.text=root.prefix_text+( (root.deactive_text(str(root.deactivated_text))+"/"+root.active_text(str(root.activated_text)) if self.active else root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text))) )+root.postfix_text
             root.active = self.active
 
     BoxLayout:
@@ -175,7 +199,16 @@ Screen :
         icon: root.icon
         theme_text_color: "Custom"
         text_color: root.text_color
-        
+
+# <MenuItem>:
+#     id: item
+#     # color: self.theme_cls.text_color
+    
+#     IconLeftWidget:
+#         id: icon
+#         icon: root.icon
+#         # text_color: root.text_color
+    
 <ContentNavigationDrawer>:
     orientation: "vertical"
     padding: "15dp"
@@ -199,14 +232,14 @@ Screen :
                 text: "Next Generation\nEvent Horizon Telescope"
                 font_style: "H6"
 
-    ActiveSwitchMDLabel:
-        size_hint: 1,None
-        height: dp(40)
-        deactivated_text: "Light"
-        activated_text: "Dark"
-        active: True
-        on_active:
-            app.set_theme(self.active)
+    # ActiveSwitchMDLabel:
+    #     size_hint: 1,None
+    #     height: dp(40)
+    #     deactivated_text: "Light"
+    #     activated_text: "Dark"
+    #     active: True
+    #     on_active:
+    #         app.set_theme(self.active)
 
     ActiveSwitchMDLabel:
         size_hint: 1,None
@@ -251,6 +284,23 @@ Screen :
                 app.quickstart_snackbar_checks()
                 Clock.schedule_once(lambda x: app.transition_to_quickstart_image(root),app.transition_delay)
 
+        ItemDrawer:
+            text: "Settings"
+            icon: "cog"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_settings(root),app.transition_delay)
+
+        ItemDrawer:
+            text: "About"
+            icon: "information"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_about(root),app.transition_delay)
+
+                
 <ExpertNavigationDrawer>:
     DrawerList:
         id: md_list
@@ -307,12 +357,37 @@ Screen :
                 app.expert_snackbar_checks(procs="data")
                 Clock.schedule_once(lambda x: app.transition_to_expert_specs(root),app.transition_delay)
 
+        ItemDrawer:
+            text: "Settings"
+            icon: "cog"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_settings(root),app.transition_delay)
 
+        ItemDrawer:
+            text: "About"
+            icon: "information"
+            on_release:
+                root.parent.nav_drawer.set_state("close")
+                app.set_quickstart_transition_delay()
+                Clock.schedule_once(lambda x: app.transition_to_about(root),app.transition_delay)
 
+# <SpecialOptionsMenu@MDDropdownMenu> :
+#     ItemDrawer:
+#         text: "Settings"
+#         icon: "cog"
+#         on_release: print("Settings screen")
+        
+#     ItemDrawer:
+#         text: "About"
+#         icon: "information"
+#         on_release: print("About screen")
 
-
-
-
+#     ItemDrawer:
+#         text: "ngEHT"
+#         icon: "./images/ngeht_medallion_gold_on_white.png"
+#         on_release: print("Website!")
 
 <InteractiveTargetMap@FloatLayout>:
     orientation: "vertical"
@@ -466,7 +541,6 @@ Screen :
     FloatLayout:
         canvas:
             Color:
-                # rgb: 0,0,0
                 rgb: get_color_from_hex(app.theme_cls.colors[app.theme_cls.theme_style]["Background"])
             Rectangle:
                 size: root.width,root.height
@@ -918,8 +992,7 @@ Screen :
     height: sp(20) + root.padding[1]+root.padding[3] + self.content_height
     canvas:
         Color:
-            # rgba: (app.theme_cls.primary_color[0],app.theme_cls.primary_color[1],app.theme_cls.primary_color[2],0.25)
-            rgba: (0,0,0,0.5)
+            rgba: (0,0,0,0.75) if (app.theme_cls.theme_style=='Dark') else (1,1,1,0.75)
         RoundedRectangle:
             size: root.size[0]-0.5*root.padding[0]-0.5*root.padding[2],root.size[1]-0.5*root.padding[1]-0.5*root.padding[3]
             pos: root.pos[0]+0.5*root.padding[0],root.pos[1]+0.5*root.padding[3]
@@ -927,8 +1000,10 @@ Screen :
     MDLabel:
         text: root.title
         font_style: "Button"
-        color: app.theme_cls.primary_color
-    
+        theme_text_color: "Custom"
+        text_color: app.theme_cls.primary_color
+
+        
 <SpecificationItem>:
     orientation: "horizontal"
     size_hint: 1, None
@@ -1114,3 +1189,141 @@ Screen :
         pos_hint: {'center_y': .5}
 
 
+
+
+<SettingsPage@BoxLayout>:
+    orientation: "vertical"
+
+    BoxLayout:
+        size_hint: 1,None
+        height: dp(15)
+
+    SpecificationCategory:
+        title: "Theme"
+        content_height: dp(50)
+        ActiveSwitchMDLabel:
+            size_hint: 1,None
+            height: dp(50)
+            deactivated_text: "Light mode"
+            activated_text: "Dark mode"
+            active: True
+            on_active:
+                app.set_theme(self.active)
+
+    SpecificationCategory:
+        title: "World map background: "
+        content_height: dp(50)
+        ActiveSwitchMDLabel:
+            size_hint: 1,None
+            height: dp(50)
+            deactivated_text: "gray scale"
+            activated_text: "natural"
+            active: False
+            on_active:
+                app.set_map_color(self.active)
+
+    # Buffer to push switches toward top
+    BoxLayout:
+
+<About@BoxLayout>:
+    orientation: "vertical"
+
+    padding: [dp(30),dp(30),dp(30),dp(30)]
+
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint: 1,None
+        height: sp(26)+sp(48)+dp(20)
+        padding: [dp(20),dp(0),dp(20),dp(20)]
+        canvas:
+            Color:
+                # rgba: (0,0,0,0.5)
+                rgba: (app.theme_cls.primary_color[0],app.theme_cls.primary_color[1],app.theme_cls.primary_color[2],0.5)
+            RoundedRectangle:
+                size: self.size[0]-0.5*self.padding[0]-0.5*self.padding[2],self.size[1]-0.5*self.padding[1]-0.5*self.padding[3]
+                pos: self.pos[0]+0.5*self.padding[0],self.pos[1]+0.5*self.padding[3]
+                radius: [(0,0),(40,40),(0,0),(40,40)]
+
+        # Image:
+        #     id: avatar        
+        #     size_hint: None,None
+        #     size: dp(56),dp(56)
+        #     source: "./images/ngeht_medallion_white_on_white.png"
+        #     background_color: (1,0,0,1)
+
+        BoxLayout:
+            orientation: "vertical"
+            MDLabel:
+                text: "ngEHT @home\nVersion "+app.version()
+                font_style: "H6"
+                halign: "center"                
+                color: (1,1,1,1)
+
+    
+    BoxLayout:
+        size_hint: 1,None
+        height: dp(15)
+
+    ScrollView:
+        BoxLayout:
+            size_hint: 1,None
+            height: ngeht_about.height+imaging_about.height+credits_about.height
+
+            orientation: "vertical"
+            
+            SpecificationCategory:
+                id: ngeht_about
+                title: "Next Generation EHT"
+                content_height: ngeht_about_text.texture_size[1]+ngeht_btn_array.height
+                MDLabel:
+                    id: ngeht_about_text
+                    font_style: "Caption"
+                    text: "The ngEHT is a proposed array of tens of individual stations placed about the globe that combined promise to produce the highest resolution view of universe in history."
+
+                BoxLayout:
+                    id: ngeht_btn_array
+                    size_hint: 1,None
+                    height: dp(100)
+
+                    ImageButton:
+                        id: ngeht_btn
+                        source: "./images/ngeht_project_white.png" if (app.theme_cls.theme_style=='Dark') else "./images/ngeht_project_black.png"
+                        on_release:
+                            app.website_link()
+
+                    ImageButton:
+                        id: ngeht_sci_btn
+                        source: "./images/ngeht_science.png"
+                        on_release:
+                            app.website_link("science")
+
+                    ImageButton:
+                        id: ngeht_tech_btn
+                        source: "./images/ngeht_tech.png"
+                        on_release:
+                            app.website_link(page="technology")
+
+
+
+            SpecificationCategory:
+                id: imaging_about
+                title: "Quick Imaging Algorithm"
+                content_height: imaging_about_text.texture_size[1]+dp(10)
+                MDLabel:
+                    id: imaging_about_text
+                    font_style: "Caption"
+                    text: "Image reconstruction is a process that attempts to fill in gaps in the observations with well-motivated assumptions about missing data.  In ngEHT @home we do this with a cubic interpolation.  In practice, more powerful, but much more computationally intensive, methods exist and are used by mm-VLBI.  Hence, these images are in many ways pessimistic forcasts of the imaging power of the ngEHT!"
+
+
+            SpecificationCategory:
+                id: credits_about
+                title: "Credits"
+                content_height: credits_about_text.texture_size[1]+dp(10)
+                MDLabel:
+                    id: credits_about_text
+                    font_style: "Caption"
+                    text: "Many people have contributed to producing ngEHT @home.  The primary app developers are Avery Broderick, Ariel Broderick and Andrew Broderick, who took this on as a family project.  Data inputs were provided by NASA, Andrew Chael, Christian Fromm, Paul Tiede.  Early testing was performed by and useful feedback obtained from Michael Johnson, Dominic Pesce, Roman Gold, and Paul Tiede.  The development of ngEHT @home is supported in part by the Perimeter Institute for Theoretical Physics and the University of Waterloo."
+            
+    
+
+            BoxLayout:

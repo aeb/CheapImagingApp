@@ -193,9 +193,12 @@ class ContentNavigationDrawer(BoxLayout):
             
 
 class ActiveSwitchMDLabel(ThemableBehavior,BoxLayout):
+    left_buffer = NumericProperty(dp(15))
     right_buffer = NumericProperty(dp(15))
+    prefix_text = StringProperty("")
     deactivated_text = StringProperty(None)
     activated_text = StringProperty(None)
+    postfix_text = StringProperty("")
     active = BooleanProperty(False)
     
     def active_text(self,text) :
@@ -2517,6 +2520,23 @@ class Abbrv_InteractiveMapsPlot(FloatLayout) :
     menu_id = ObjectProperty(None)
     plot_id = ObjectProperty(None)
 
+    
+class ImageButton(CircularRippleBehavior, ButtonBehavior, Image):
+    def __init__(self, **kwargs):
+        self.ripple_scale = 0.85
+        super().__init__(**kwargs)
+
+    def delayed_switch_to_imaging(self,delay=0) :
+        Clock.schedule_once(self.switch_to_imaging, delay)
+        
+    def switch_to_imaging(self,val):
+        sm = ngEHTApp.get_running_app().root
+        sm.transition = FadeTransition()
+        # sm.current = "screen0"
+        sm.current = "targets"
+        sm.transition = SlideTransition()
+
+    
 
 # class LoadingScreen(Screen):
 #     def __init__(self,**kwargs) :
@@ -2547,6 +2567,11 @@ class CustomSnackbar(BaseSnackbar):
     icon = StringProperty(None)
     text_color = ListProperty(None)
     font_size = NumericProperty("15sp")
+
+
+# class MenuItem(OneLineIconListItem):
+#     icon = StringProperty("cog")
+
     
 class MainApp(MDApp):
 
@@ -2584,7 +2609,19 @@ class MainApp(MDApp):
                                        # bg_color=(0,0,0,0.75),
                                        bg_color=(0.14,0.14,0.14,0.5),
                                        radius=[0,20,0,20])
-            
+
+
+
+        # ####
+        # # Create the options menu
+        # menu_items = []
+        # #menu_items.append({'viewclass':'ItemDrawer','text':"Settings",'icon':"cog",'height':dp(50),text_color:(1,0,0,1),"on_release": lambda x=f"Settings": self.menu_callback(x)})
+        # menu_list = ["Splash Screen","Reconstructions","News","ngEHT","About"]
+        # # menu_items = [{ 'viewclass':'MenuItem', 'icon':'cog', 'text':f"{menu_list[i]}", "height": dp(40), "on_release": lambda x=f"{menu_list[i]}": self.menu_callback(x), 'text_color':(1,1,1,1), 'theme_text_color':"Custom",} for i in range(len(menu_list)) ]
+        # menu_items = [{ 'viewclass':'MenuItem', 'icon':'cog', 'text':f"{menu_list[i]}", "height": dp(50), "on_release": lambda x=f"{menu_list[i]}": self.menu_callback(x),} for i in range(len(menu_list)) ]
+        # # menu_items = [{ 'viewclass':'OneLineIconListItem', 'icon':'cog', 'text':f"{menu_list[i]}", "height": dp(40), "on_release": lambda x=f"{menu_list[i]}": self.menu_callback(x), 'text_color':(1,1,1,1), 'theme_text_color':"Custom",} for i in range(len(menu_list)) ]
+        # self.menu = MDDropdownMenu(items=menu_items,width_mult=4) #,background_color=(0.7,0.7,0.7,0.5))
+        
         return app
 
     # def on_start(self) :
@@ -2612,8 +2649,35 @@ class MainApp(MDApp):
             self.theme_cls.accent_dark_hue = '400'
 
         root = MainApp.get_running_app().root.ids.logo_background.redraw_background()
-            
+
+
+    def set_map_color(self,natural) :
+        root = MainApp.get_running_app().root
+        root.ids.qs_map.plot_id.mp.set_map_true_color(natural)
+        root.ids.ex_map.plot_id.mp.set_map_true_color(natural)
+
         
+    # def callback(self,button) :
+    #     self.menu.caller = button
+    #     self.menu.open()
+
+    # def menu_callback(self,text) :
+    #     self.menu.dismiss()
+    #     print("Menu text:",text)
+        
+    #     # if (text=="Splash Screen") :
+    #     #     self.set_splash_screen()
+    #     # elif (text=="Reconstructions") :
+    #     #     self.set_target_screen()
+    #     # elif (text=="News") :
+    #     #     self.set_news_screen()
+    #     # elif (text=="ngEHT") :
+    #     #     import webbrowser
+    #     #     webbrowser.open("http://www.ngeht.org/science")
+    #     # elif (text=="About") :
+    #     #     self.set_about_screen()
+    #     # else :
+    #     #     print("WTF BBQ!?!?!")        
     
     def twitter_follow(self) :
         import webbrowser
@@ -2635,10 +2699,9 @@ class MainApp(MDApp):
         webbrowser.open("https://www.youtube.com/channel/UCJeDtgEqIM6DCS-4lDpMnLw/featured")
         print("Insert YouTube follow link")
 
-    def website_link(self) :
+    def website_link(self,page="") :
         import webbrowser
-        webbrowser.open("http://www.ngeht.org/science")
-        print("Insert twitter follow link")
+        webbrowser.open("http://www.ngeht.org/"+page)
 
     def null_func(self) :
         pass
@@ -2702,6 +2765,7 @@ class MainApp(MDApp):
         root.ids.qs_img.menu_id.refresh()
         root.ids.qs_img.plot_id.replot()
         self.snackbar.dismiss()
+
         
     def set_expert_transition_delay(self):
         if (MainApp.get_running_app().root.ids.ex_data.selection_check()) :
@@ -2783,9 +2847,38 @@ class MainApp(MDApp):
         root.ids.screen_manager.current = "expert_specs"
         ex_nav_drawer.active_screen = "expert_specs"
         self.snackbar.dismiss()
-        
-            
 
+
+
+    def transition_to_settings(self,nav_drawer):
+        root = MainApp.get_running_app().root
+        root.ids.screen_manager.current = "settings"
+        nav_drawer.active_screen = "settings"
+        self.snackbar.dismiss()
+
+    def transition_to_about(self,nav_drawer):
+        root = MainApp.get_running_app().root
+        root.ids.screen_manager.current = "about"
+        nav_drawer.active_screen = "about"
+        self.snackbar.dismiss()
+
+    def version(self) :
+        return __version__
+        
+    # def transition_to_expert_settings(self,ex_nav_drawer):
+    #     root = MainApp.get_running_app().root
+    #     root.ids.ex_data.produce_selected_data_set()
+    #     root.ids.screen_manager.current = "settings"
+    #     ex_nav_drawer.active_screen = "settings"
+    #     self.snackbar.dismiss()
+
+    # def transition_to_expert_about(self,ex_nav_drawer):
+    #     root = MainApp.get_running_app().root
+    #     root.ids.ex_data.produce_selected_data_set()
+    #     root.ids.screen_manager.current = "about"
+    #     ex_nav_drawer.active_screen = "about"
+    #     self.snackbar.dismiss()
+        
         
 if __name__ == '__main__' :
     MainApp().run()
