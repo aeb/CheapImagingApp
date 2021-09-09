@@ -10,6 +10,8 @@ from kivy.properties import StringProperty, NumericProperty, ObjectProperty, Boo
 # from kivymd.theming import ThemableBehavior
 from kivymd.theming import ThemableBehavior
 
+from kivy.utils import get_color_from_hex
+
 # Data dictionary: datadict has form {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':err}
 # Station dictionary: statdict has form {<station code>:{'on':<True/False>,'name':<name>,'loc':(x,y,z)}}
 
@@ -49,7 +51,12 @@ class InteractiveBaselinePlot_kivygraph(ThemableBehavior,FloatLayout) :
         self.bind(width=self.resize)
         self.bind(height=self.resize)
 
-        self.theme_cls.bind(theme_style=self.redraw)
+        self.background_color = (0,0,0,1)
+        self.axis_color = (1,1,1,1)
+        self.label_color = (1,1,1,1)
+
+        
+        self.theme_cls.bind(theme_style=self.set_theme)
         
 
     def update(self,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,make_hermitian=False,limits=None) :
@@ -135,9 +142,14 @@ class InteractiveBaselinePlot_kivygraph(ThemableBehavior,FloatLayout) :
         
     def screen_to_y(self,ypx) :
         return self.plot_location[1] + self.plot_location[3]*(ypx-self.offset[1])/(self.width*self.rescale)
+
+    def set_theme(self,widget=None,value=None) :
+        self.background_color = get_color_from_hex(self.theme_cls.colors[self.theme_cls.theme_style]["Background"])
+        self.axis_color = self.theme_cls.text_color
+        self.label_color = self.theme_cls.text_color
+        self.redraw()
         
-        
-    def redraw(self,widget=None,value=None) :
+    def redraw(self) :
         self.redraw_points()
         self.redraw_axes()
         
@@ -184,7 +196,8 @@ class InteractiveBaselinePlot_kivygraph(ThemableBehavior,FloatLayout) :
 
             # Axis splines
             # Color(1,1,1)
-            Color(self.theme_cls.text_color[0],self.theme_cls.text_color[1],self.theme_cls.text_color[2])
+            # Color(self.theme_cls.text_color[0],self.theme_cls.text_color[1],self.theme_cls.text_color[2])
+            Color(self.axis_color[0],self.axis_color[1],self.axis_color[2])
             xpx = self.x_to_screen(0.0)
             points = [xpx,0,xpx,self.height]
             if (xpx>0 and xpx<self.width) :
@@ -210,24 +223,28 @@ class InteractiveBaselinePlot_kivygraph(ThemableBehavior,FloatLayout) :
         if (ypx>-0.5*self.height and ypx<0.5*self.height) :
             for xgrid in np.arange(np.sign(self.plot_location[2])*x_label_spacing,self.screen_to_x(self.width),np.sign(self.plot_location[2])*x_label_spacing) :
                 xpx = int(self.x_to_screen(xgrid) - 0.5*self.width+0.5)
-                lbl = MDLabel(text='%4.2f'%(xgrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                # lbl = MDLabel(text='%4.2f'%(xgrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                lbl = Label(text='%4.2f'%(xgrid*unit_factor),pos=(xpx,ypx),font_size=sp(15),color=self.label_color)
                 self.labels.append(lbl)
                 self.add_widget(lbl)
             for xgrid in np.arange(-np.sign(self.plot_location[2])*x_label_spacing,self.screen_to_x(0),-np.sign(self.plot_location[2])*x_label_spacing) :
                 xpx = int(self.x_to_screen(xgrid) - 0.5*self.width+0.5)
-                lbl = MDLabel(text='%4.2f'%(xgrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                # lbl = MDLabel(text='%4.2f'%(xgrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                lbl = Label(text='%4.2f'%(xgrid*unit_factor),pos=(xpx,ypx),font_size=sp(15),color=self.label_color)
                 self.labels.append(lbl)
                 self.add_widget(lbl)
         xpx = int(self.x_to_screen(0) - 0.5*self.width+0.5) - 1.75*sp(15)
         if (xpx>-0.5*self.width and xpx<0.5*self.width) :
             for ygrid in np.arange(np.sign(self.plot_location[3])*x_label_spacing,self.screen_to_y(self.height),np.sign(self.plot_location[3])*x_label_spacing) :
                 ypx = int(self.y_to_screen(ygrid) - 0.5*self.height+0.5)
-                lbl = MDLabel(text='%4.2f'%(ygrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                # lbl = MDLabel(text='%4.2f'%(ygrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                lbl = Label(text='%4.2f'%(ygrid*unit_factor),pos=(xpx,ypx),font_size=sp(15),color=self.label_color)
                 self.labels.append(lbl)
                 self.add_widget(lbl)
             for ygrid in np.arange(-np.sign(self.plot_location[3])*x_label_spacing,self.screen_to_y(0),-np.sign(self.plot_location[3])*x_label_spacing) :
                 ypx = int(self.y_to_screen(ygrid) - 0.5*self.height+0.5)
-                lbl = MDLabel(text='%4.2f'%(ygrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                # lbl = MDLabel(text='%4.2f'%(ygrid*unit_factor),pos=(xpx,ypx),font_style='Caption',halign='center')
+                lbl = Label(text='%4.2f'%(ygrid*unit_factor),pos=(xpx,ypx),font_size=sp(15),color=self.label_color)
                 self.labels.append(lbl)
                 self.add_widget(lbl)
         
@@ -236,14 +253,16 @@ class InteractiveBaselinePlot_kivygraph(ThemableBehavior,FloatLayout) :
         if (ypx>-0.5*self.height and ypx<0.5*self.height) :
             xpx = int( 0.375*self.width + 0.5)
             points = [xpx,0,xpx,self.height]
-            xlbl = MDLabel(text='[i]u[/i]'+unit_lbl,pos=(xpx,ypx),font_style='H6',halign='center', markup=True)
+            # xlbl = MDLabel(text='[i]u[/i]'+unit_lbl,pos=(xpx,ypx),font_style='H6',halign='center', markup=True)
+            xlbl = Label(text='[i]u[/i]'+unit_lbl,pos=(xpx,ypx),font_size=sp(20),color=self.label_color,halign='right', markup=True)
             self.labels.append(xlbl)
             self.add_widget(xlbl)
         xpx = int(self.x_to_screen(0.0) - 0.5*self.width + 0.5) + 1.5*sp(20)
         if (xpx>-0.5*self.width and xpx<0.5*self.width) :
             ypx = int( 0.375*self.height + 0.5)
             points = [xpx,0,xpx,self.height]
-            ylbl = MDLabel(text='[i]v[/i]'+unit_lbl,pos=(xpx,ypx),font_style='H6',halign='center', markup=True)
+            # ylbl = MDLabel(text='[i]v[/i]'+unit_lbl,pos=(xpx,ypx),font_style='H6',halign='center', markup=True)
+            ylbl = Label(text='[i]v[/i]'+unit_lbl,pos=(xpx,ypx),font_size=sp(20),color=self.label_color,halign='right', markup=True)
             self.labels.append(ylbl)
             self.add_widget(ylbl)
 
