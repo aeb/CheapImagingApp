@@ -187,9 +187,12 @@ class ContentNavigationDrawer(BoxLayout):
         if (expert) :
             self.add_widget(self.exp_nd)
             MainApp.get_running_app().root.ids.screen_manager.current = self.exp_nd.active_screen
+            MainApp.get_running_app().app_mode = 'expert'
         else :
             self.add_widget(self.exp_qs)
             MainApp.get_running_app().root.ids.screen_manager.current = self.exp_qs.active_screen
+            MainApp.get_running_app().app_mode = 'quickstart'
+        MainApp.get_running_app().save_setting('app_mode')
             
 
 class ActiveSwitchMDLabel(ThemableBehavior,BoxLayout):
@@ -200,6 +203,7 @@ class ActiveSwitchMDLabel(ThemableBehavior,BoxLayout):
     activated_text = StringProperty(None)
     postfix_text = StringProperty("")
     active = BooleanProperty(False)
+    disabled = BooleanProperty(False) 
     
     def active_text(self,text) :
         modtext = '[color='+str(get_hex_from_color(self.theme_cls.primary_color))+']'+text+'[/color]'
@@ -1983,22 +1987,14 @@ class Abbrv_DataSetSelectionPage(BoxLayout) :
         return (np.sign(deg)*(np.abs(deg)+arcmin/60.0+arcsec/3600.))
         
     def select_path(self,path) :
+        MainApp.get_running_app().save_path(plP(path).parent)
         self.ic.add_image(path,path,path,True)
         self.targets.append({'RA':self.RA_hr(17,45,40.049),'Dec':self.Dec_deg(-29,0,28.118)})
-        # self.dss.its.disabled = False
         self.exit_manager(0)
         
     def open_file_manager(self,widget) :
-
-        home = str(plP.home())
-
-        if (home!='/data') :
-            topdir = home
-        else :
-            topdir = '/'
-            
+        topdir = MainApp.get_running_app().read_path()
         self.file_manager_obj.show(topdir)
-        
 
     def exit_manager(self,value) :
         if (value==1) : # a valid file wasn't selected, return to screen
@@ -2192,23 +2188,14 @@ class DataSetSelectionPage(BoxLayout) :
 
         
     def select_path(self,path) :
+        MainApp.get_running_app().save_path(plP(path).parent)
         self.ic.add_image(path,path,path,True)
         self.dss.its.disabled = False
         self.exit_manager(0)
         
     def open_file_manager(self,widget) :
-
-        home = str(plP.home())
-
-        # self.path_info = home
-        
-        if (home!='/data') :
-            topdir = home
-        else :
-            topdir = '/'
-            
+        topdir = MainApp.get_running_app().read_path()
         self.file_manager_obj.show(topdir)
-        
 
     def exit_manager(self,value) :
         if (value==1) : # a valid file wasn't selected, return to screen
@@ -2581,6 +2568,11 @@ class MainApp(MDApp):
 
     transition_delay = NumericProperty(0.0)
 
+    app_mode = StringProperty('quickstart')
+    theme_style = StringProperty("Dark")
+    map_color = BooleanProperty(False)
+    show_contours = BooleanProperty(True)
+
     # LoadingStartUp = None
             
     def build(self):
@@ -2604,7 +2596,7 @@ class MainApp(MDApp):
             print("--- %15.8g --- MainApp.build done"%(time.perf_counter()))
 
         # Set some defaults for the snackbar
-        self.snackbar = CustomSnackbar(icon="./images/ngeht_medallion_gold_on_white.png",
+        self.snackbar = CustomSnackbar(icon=path.abspath(path.join(path.dirname(__file__),"images/ngeht_medallion_gold_on_white.png")),
                                        text="",
                                        text_color=self.theme_cls.primary_color,
                                        snackbar_x="10dp",snackbar_y="10dp",
@@ -2615,6 +2607,11 @@ class MainApp(MDApp):
                                        radius=[0,20,0,20])
 
 
+        Clock.schedule_once(lambda x : self.read_setting('app_mode'),0.1)
+        Clock.schedule_once(lambda x : self.read_setting('app_theme'),0.1)
+        Clock.schedule_once(lambda x : self.read_setting('map_color'),0.1)
+        Clock.schedule_once(lambda x : self.read_setting('contours'),0.1)
+        
 
         # ####
         # # Create the options menu
@@ -2653,17 +2650,22 @@ class MainApp(MDApp):
             self.theme_cls.accent_dark_hue = '400'
 
         root = MainApp.get_running_app().root.ids.logo_background.redraw_background()
+        self.theme_style = self.theme_cls.theme_style
+        self.save_setting('app_theme')
 
 
     def set_map_color(self,natural) :
         root = MainApp.get_running_app().root
         root.ids.qs_map.plot_id.mp.set_map_true_color(natural)
         root.ids.ex_map.plot_id.mp.set_map_true_color(natural)
-
+        self.map_color = natural
+        self.save_setting('map_color')
+        
     def set_show_contours(self,show) :
         root = MainApp.get_running_app().root
         root.ids.ex_img.plot_id.show_contours = show
-        
+        self.show_contours = show
+        self.save_setting('contours')
         
         
     # def callback(self,button) :
@@ -2873,7 +2875,102 @@ class MainApp(MDApp):
 
     def version(self) :
         return __version__
-        
+
+    def save_path(self,file_path) :
+        try :
+            with open(path.abspath(path.join(path.dirname(__file__),"settings/last_path.txt")),'w') as f :
+                f.write(str(file_path))
+        except:
+            print("ERROR: Could not save path")
+
+    def read_path(self) :
+        try :
+            with open(path.abspath(path.join(path.dirname(__file__),"settings/last_path.txt")),'r') as f :
+                topdir = f.readline()
+        except :
+            topdir=""
+
+        if (topdir=="") :
+            home = str(plP.home())
+            if (home!='/data') :
+                topdir = home
+            else :
+                topdir = '/'
+
+        if (__main_debug__) :
+            print("Set",topdir)
+
+        return topdir
+
+    def save_setting_to_file(self,setting_file_name,setting_value) :
+        try:
+            with open(path.abspath(path.join(path.dirname(__file__),"settings/"+setting_file_name)),'w') as f :
+                f.write(str(setting_value))
+            if (__main_debug__) :
+                print("Saved setting",setting_file_name,"as",setting_value)
+        except:
+            print("ERROR: Unable to save setting ...")
+
+    def save_setting(self,setting_name) :
+        if (setting_name=='app_mode') :
+            self.save_setting_to_file("app_mode.txt",self.app_mode)
+        elif (setting_name=='app_theme') : 
+            self.save_setting_to_file("app_theme.txt",self.theme_cls.theme_style)
+        elif (setting_name=='map_color') : 
+            self.save_setting_to_file("map_color.txt",self.map_color)
+        elif (setting_name=='contours') : 
+            self.save_setting_to_file("contours.txt",self.show_contours)
+        else :
+            print("ERROR: Unrecognized setting",setting_name)
+
+    def read_string_setting_from_file(self,setting_file_name,acceptable_values) :
+            try: 
+                with open(path.abspath(path.join(path.dirname(__file__),"settings/"+setting_file_name)),'r') as f :
+                    value = str(f.readline())
+            except :
+                value = None
+            if (__main_debug__) :
+                print("Read string setting",setting_file_name,acceptable_values,value)
+            if (not value in acceptable_values) :
+                value = acceptable_values[0]
+            return value
+
+    def read_boolean_setting_from_file(self,setting_file_name,default_value) :
+            try: 
+                with open(path.abspath(path.join(path.dirname(__file__),"settings/"+setting_file_name)),'r') as f :
+                    value = (f.readline()=="True")
+            except :
+                value = None
+            if (__main_debug__) :
+                print("Read bool setting %s [%s] %s"%(setting_file_name,str(default_value),str(value)))
+            if (not value in [True,False]) :
+                value = default_value
+            return value
+
+    def read_setting(self,setting_name) :
+        if (setting_name=='app_mode') :
+            app_mode = self.read_string_setting_from_file("app_mode.txt",["quickstart","expert"])
+            self.get_running_app().root.ids.content_drawer.set_nav_drawer_list(app_mode=='expert')
+        elif (setting_name=='app_theme') :
+            theme = self.read_string_setting_from_file("app_theme.txt",["Dark","Light"])
+            self.set_theme(theme=="Dark")
+        elif (setting_name=='map_color') :
+            map_color = self.read_boolean_setting_from_file("map_color.txt",False)
+            self.set_map_color(map_color)
+        elif (setting_name=='contours') :
+            show_contours = self.read_boolean_setting_from_file("contours.txt",True)
+            self.set_show_contours(show_contours)
+        else :
+            print("ERROR: Unrecognized setting",setting_name)
+        if (__main_debug__) :
+            print("Read setting",setting_name,":",self.app_mode,self.theme_style,self.map_color,self.show_contours)
+
+    def restore_default_settings(self):
+        self.get_running_app().root.ids.content_drawer.set_nav_drawer_list(False)
+        self.set_theme(True)
+        self.set_map_color(False)
+        self.set_show_contours(True)
+        self.save_path("")
     # def transition_to_expert_settings(self,ex_nav_drawer):
     #     root = MainApp.get_running_app().root
     #     root.ids.ex_data.produce_selected_data_set()

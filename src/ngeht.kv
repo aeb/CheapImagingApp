@@ -182,7 +182,8 @@ Screen :
         on_active:
             label.text=root.prefix_text+( (root.deactive_text(str(root.deactivated_text))+"/"+root.active_text(str(root.activated_text)) if self.active else root.active_text(str(root.deactivated_text))+"/"+root.deactive_text(str(root.activated_text))) )+root.postfix_text
             root.active = self.active
-
+        disabled: root.disabled
+        
     BoxLayout:
         id: buffer
         size_hint: None,1
@@ -246,6 +247,7 @@ Screen :
         height: dp(50)
         deactivated_text: "Quickstart"
         activated_text: "Expert"
+        active: (app.app_mode=='expert')
         on_active:
             root.set_nav_drawer_list(self.active)
             # root.children[0].switch_to_active_screen()
@@ -1213,7 +1215,7 @@ Screen :
             height: dp(50)
             deactivated_text: "Light mode"
             activated_text: "Dark mode"
-            active: True
+            active: (app.theme_cls.theme_style=='Dark')
             on_active:
                 app.set_theme(self.active)
 
@@ -1225,7 +1227,7 @@ Screen :
             height: dp(50)
             deactivated_text: "gray scale"
             activated_text: "natural"
-            active: False
+            active: app.map_color
             on_active:
                 app.set_map_color(self.active)
 
@@ -1237,10 +1239,26 @@ Screen :
             height: dp(50)
             deactivated_text: "off"
             activated_text: "on"
-            active: True
+            active: app.show_contours
             on_active:
                 app.set_show_contours(self.active)
+            disabled: (app.app_mode=='quickstart')
 
+
+    BoxLayout:
+        size_hint: None,None
+        width: root.width-2*dp(10)
+        height: dp(50)
+        padding: [dp(10),dp(0),dp(10),dp(0)]
+        
+        MDRaisedButton:
+            text: "Restore defaults"
+            size_hint: None,None
+            width: root.width-2*dp(10)
+            height: dp(50)
+            on_release:
+                app.restore_default_settings()
+            
     # SpecificationCategory:
     #     title: "Negative image contours (expert mode): "
     #     content_height: dp(50)
