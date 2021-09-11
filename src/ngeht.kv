@@ -1046,7 +1046,7 @@ Screen :
         BoxLayout:
             orientation: "horizontal"
             size_hint: 1,None
-            height: sp(26)+sp(48)+dp(20)
+            height: sp(26)+sp(48)+dp(20)+sp(26)
             padding: [dp(20),dp(0),dp(20),dp(20)]
             canvas:
                 Color:
@@ -1060,7 +1060,8 @@ Screen :
             Image:
                 id: avatar        
                 size_hint: None,None
-                size: dp(56),dp(56)
+                # size: dp(56),dp(56)
+                size: dp(75),dp(75)
                 source: "./images/ngeht_medallion_white_on_white.png"
                 background_color: (1,0,0,1)
 
@@ -1068,17 +1069,21 @@ Screen :
                 orientation: "vertical"
                 MDLabel:
                     id: cost_name
-                    text: "Estimated Cost:"
+                    text: "Estimated capital cost:"
                     font_style: "H6"
                     halign: "center"                
-                    # color: app.theme_cls.primary_color
                     color: (1,1,1,1)
                 MDLabel:
                     id: cost_value
                     text: root.est_cost
                     font_style: "H3"
                     halign: "center"                
-                    # color: app.theme_cls.primary_color
+                    color: (1,1,1,1)
+                MDLabel:
+                    id: cost_name
+                    text: "Op. exp.: "+root.est_op
+                    font_style: "H6"
+                    halign: "center"                
                     color: (1,1,1,1)
 
 

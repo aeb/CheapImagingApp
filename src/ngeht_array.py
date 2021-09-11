@@ -9,7 +9,7 @@ def read_array(array_file_name,existing_station_list=None) :
     stations = np.loadtxt(array_file_name,usecols=[0],dtype=str)
     locs = np.loadtxt(array_file_name,usecols=[1,2,3])
     sefd = np.loadtxt(array_file_name,usecols=[4,5,6,7,8])
-    cost_factors = np.loadtxt(array_file_name,usecols=[9,10])
+    cost_factors = np.loadtxt(array_file_name,usecols=[9,10,11])
     sefd_freq = np.array([86,230,345,480,690])
     
     statdict = {}
@@ -23,28 +23,24 @@ def read_array(array_file_name,existing_station_list=None) :
 
 
 
-def cost_model(statdict,ngeht_diameter) :
+def cost_model(statdict,ngeht_diameter,full_auto=True) :
 
-    # if (ngeht_diameter==3.5) :
-    #     total_new_site_NRE = 2.655e6        
-    # elif (ngeht_diameter==6) :
-    #     total_new_site_NRE = 2.655e6 * 1.5      
-    # elif (ngeht_diameter==10) :
-    #     total_new_site_NRE = 2.655e6 * 2.0  
-    # else :
-    #     total_new_site_NRE = 2.655e6 * (ngeht_diameter/3.5)**0.67  
-    total_new_site_NRE = 2.655 * (ngeht_diameter/3.5)**0.67  # Approximate diameter dependence that matches to 4%
+    # Fully autonomous
+    if (full_auto) :
+        total_new_site_NRE = 26.55 * (ngeht_diameter/3.5)**0.67  # Approximate diameter dependence that matches to 4%
+    else :
+        total_new_site_NRE = 2.655 * (ngeht_diameter/3.5)**0.67  # Approximate diameter dependence that matches to 4%
 
-    # print(total_new_site_NRE)
-    
+    opex = 0.0
     capex = total_new_site_NRE
     print("tota_new_site_NRE %10.5g"%(capex))
     for s in statdict.keys() :
         if (statdict[s]['on']) :
             capex = capex + statdict[s]['cost_factors'][0] + statdict[s]['cost_factors'][1]*ngeht_diameter**2.7
-
+            opex = opex + 0.139726 + statdict[s]['cost_factors'][2]
             # print("%2s %10.4g %10.4g"%(s,capex,statdict[s]['cost_factors'][0] + statdict[s]['cost_factors'][1]*ngeht_diameter**2.7))
-            
-    return capex
+    print("capex,opex:",capex,opex)
+
+    return capex,opex
             
 
