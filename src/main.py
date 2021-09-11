@@ -1,4 +1,4 @@
-__version__ = "0.15.1"
+__version__ = "0.16.0"
 
 __main_debug__ = False
 __main_perf__ = False
