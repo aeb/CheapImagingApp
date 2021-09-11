@@ -751,6 +751,8 @@ class MenuedBaselineMapPlot_kivygraph(BoxLayout) :
                     _stationdicts['ngEHT+'][nn]['on'] = True
                     _stationdicts['ngEHT+'][nn]['loc'] = self.mp.latlon_to_xyz(latlon,radius=6.371e6)
                     _stationdicts['ngEHT+'][nn]['name'] = nn
+                    if (np.abs(latlon[0])>=65.0) :
+                        _stationdicts['ngEHT+'][nn]['cost_factors'] = np.array([7.62, 0.1288])
                     _statdict = _stationdicts['ngEHT+']
                     self.new_station_name_list_used.append(nn)
                     self.new_station_name_list_avail.remove(nn)
@@ -1535,7 +1537,7 @@ class DiameterMDSlider(FancyMDSlider):
         super().__init__(**kwargs)
 
         self.min = 3
-        self.max = 30
+        self.max = 15
         self.value = 6
         self.show_off = False
 
@@ -2366,7 +2368,8 @@ class SpecificationsPage(BoxLayout) :
         self.estimate_cost()
         
     def estimate_cost(self) :
-        self.est_cost = "$250M"
+        capex = ngeht_array.cost_model(_statdict,_ngeht_diameter)
+        self.est_cost = "$%gM"%(int(capex*10+0.5)/10.0)
         
     def get_station_counts(self) :
         n = 0
