@@ -1069,7 +1069,7 @@ Screen :
                 orientation: "vertical"
                 MDLabel:
                     id: cost_name
-                    text: "Estimated cost:"
+                    text: "Estimated 10 yr cost:"
                     font_style: "H6"
                     halign: "center"                
                     color: (1,1,1,1)
@@ -1112,13 +1112,13 @@ Screen :
                     title: "Cost breakdown"
                     content_height: sp(20)*3
                     SpecificationItem:
-                        name: "Capital Expense:"
+                        name: "Capital:"
                         value: root.est_capex
                     SpecificationItem:
-                        name: "New Operating Expense:"
+                        name: "New Operating:"
                         value: root.est_opex
                     SpecificationItem:
-                        name: "Data Expense:"
+                        name: "Data Management:"
                         value: root.est_datex
 
                 SpecificationCategory:

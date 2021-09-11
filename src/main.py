@@ -2373,9 +2373,9 @@ class SpecificationsPage(BoxLayout) :
     def estimate_cost(self) :
         capex,opex = ngeht_array.cost_model(_statdict,_ngeht_diameter,opex_exclude=list(_stationdicts['EHT 2022'].keys()))
         tot = capex + opex*10
-        self.est_cost = "$%gM"%(int(tot*10+0.5)/10.0)
-        self.est_capex = "$%gM"%(int(capex*10+0.5)/10.0)
-        self.est_opex = "$%gM/yr"%(int(opex*10.0+0.5)/10.0)
+        self.est_cost = "$%.1fM"%(int(tot*10+0.5)/10.0)
+        self.est_capex = "$%.1fM"%(int(capex*10+0.5)/10.0)
+        self.est_opex = "$%.1fM/yr"%(int(opex*10.0+0.5)/10.0)
         self.est_datex = "TBD"
         # self.est_datex = "$1M/yr"
         

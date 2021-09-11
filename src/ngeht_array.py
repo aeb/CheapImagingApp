@@ -31,16 +31,17 @@ def cost_model(statdict,ngeht_diameter,opex_exclude=None) :
     if (opex_exclude is None) :
         opex_exclude = []
         
-    opex = 0.0
     capex = total_new_site_NRE
     print("tota_new_site_NRE %10.5g"%(capex))
+    opex = 0.0
     for s in statdict.keys() :
         if (statdict[s]['on'] and (not s in opex_exclude)) :
             capex = capex + statdict[s]['cost_factors'][0] + statdict[s]['cost_factors'][1]*ngeht_diameter**2.7
-            opex = opex + 0.139726 + statdict[s]['cost_factors'][2]
+            # opex = opex + 0.139726 + statdict[s]['cost_factors'][2]
+            opex = opex + statdict[s]['cost_factors'][2]
             # print("%2s %10.4g %10.4g"%(s,capex,statdict[s]['cost_factors'][0] + statdict[s]['cost_factors'][1]*ngeht_diameter**2.7))
     print("capex,opex:",capex,opex)
-
+    print("%5.1f"%(opex))
     return capex,opex
             
 
