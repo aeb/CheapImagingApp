@@ -2339,7 +2339,9 @@ class SpecificationItem(BoxLayout) :
 class SpecificationsPage(BoxLayout) :
 
     est_cost = StringProperty("$200M")
-    est_op = StringProperty("$20k")
+    est_capex = StringProperty("$200M")
+    est_opex = StringProperty("$0.75M/yr")
+    est_datex = StringProperty("$0.75M/yr")
     stations = NumericProperty(0)
     new_stations = NumericProperty(0)
     ngeht_stations = NumericProperty(0)
@@ -2369,9 +2371,13 @@ class SpecificationsPage(BoxLayout) :
         self.estimate_cost()
         
     def estimate_cost(self) :
-        capex,opex = ngeht_array.cost_model(_statdict,_ngeht_diameter)
-        self.est_cost = "$%gM"%(int(capex*10+0.5)/10.0)
-        self.est_op = "$%gk/night"%(int((1e3*opex/365.25)*10.0+0.5)/10.0)
+        capex,opex = ngeht_array.cost_model(_statdict,_ngeht_diameter,opex_exclude=list(_stationdicts['EHT 2022'].keys()))
+        tot = capex + opex*10
+        self.est_cost = "$%gM"%(int(tot*10+0.5)/10.0)
+        self.est_capex = "$%gM"%(int(capex*10+0.5)/10.0)
+        self.est_opex = "$%gM/yr"%(int(opex*10.0+0.5)/10.0)
+        self.est_datex = "TBD"
+        # self.est_datex = "$1M/yr"
         
     def get_station_counts(self) :
         n = 0

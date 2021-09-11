@@ -1046,7 +1046,7 @@ Screen :
         BoxLayout:
             orientation: "horizontal"
             size_hint: 1,None
-            height: sp(26)+sp(48)+dp(20)+sp(26)
+            height: sp(26)+sp(48)+dp(20) #+sp(26)
             padding: [dp(20),dp(0),dp(20),dp(20)]
             canvas:
                 Color:
@@ -1060,8 +1060,8 @@ Screen :
             Image:
                 id: avatar        
                 size_hint: None,None
-                # size: dp(56),dp(56)
-                size: dp(75),dp(75)
+                size: dp(56),dp(56)
+                # size: dp(75),dp(75)
                 source: "./images/ngeht_medallion_white_on_white.png"
                 background_color: (1,0,0,1)
 
@@ -1069,7 +1069,7 @@ Screen :
                 orientation: "vertical"
                 MDLabel:
                     id: cost_name
-                    text: "Estimated capital cost:"
+                    text: "Estimated cost:"
                     font_style: "H6"
                     halign: "center"                
                     color: (1,1,1,1)
@@ -1079,12 +1079,12 @@ Screen :
                     font_style: "H3"
                     halign: "center"                
                     color: (1,1,1,1)
-                MDLabel:
-                    id: cost_name
-                    text: "Op. exp.: "+root.est_op
-                    font_style: "H6"
-                    halign: "center"                
-                    color: (1,1,1,1)
+                # MDLabel:
+                #     id: cost_name
+                #     text: "Op. exp.: "+root.est_op
+                #     font_style: "H6"
+                #     halign: "center"                
+                #     color: (1,1,1,1)
 
 
         
@@ -1104,9 +1104,22 @@ Screen :
             #     cols: 1
             BoxLayout:
                 size_hint: 1,None
-                height: specs_ap.height+specs_stn.height+specs_dv.height+specs_uv.height+specs_vis.height
+                height: specs_cb.height+specs_ap.height+specs_stn.height+specs_dv.height+specs_uv.height+specs_vis.height
                 orientation: "vertical"
 
+                SpecificationCategory:
+                    id: specs_cb
+                    title: "Cost breakdown"
+                    content_height: sp(20)*3
+                    SpecificationItem:
+                        name: "Capital Expense:"
+                        value: root.est_capex
+                    SpecificationItem:
+                        name: "New Operating Expense:"
+                        value: root.est_opex
+                    SpecificationItem:
+                        name: "Data Expense:"
+                        value: root.est_datex
 
                 SpecificationCategory:
                     id: specs_ap

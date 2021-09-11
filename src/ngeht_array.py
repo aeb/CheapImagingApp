@@ -23,19 +23,19 @@ def read_array(array_file_name,existing_station_list=None) :
 
 
 
-def cost_model(statdict,ngeht_diameter,full_auto=True) :
+def cost_model(statdict,ngeht_diameter,opex_exclude=None) :
 
-    # Fully autonomous
-    if (full_auto) :
-        total_new_site_NRE = 26.55 * (ngeht_diameter/3.5)**0.67  # Approximate diameter dependence that matches to 4%
-    else :
-        total_new_site_NRE = 2.655 * (ngeht_diameter/3.5)**0.67  # Approximate diameter dependence that matches to 4%
+    # Semi-autonomous
+    total_new_site_NRE = 2.655 * 2 * (ngeht_diameter/3.5)**0.67  # Approximate diameter dependence that matches to 4%
 
+    if (opex_exclude is None) :
+        opex_exclude = []
+        
     opex = 0.0
     capex = total_new_site_NRE
     print("tota_new_site_NRE %10.5g"%(capex))
     for s in statdict.keys() :
-        if (statdict[s]['on']) :
+        if (statdict[s]['on'] and (not s in opex_exclude)) :
             capex = capex + statdict[s]['cost_factors'][0] + statdict[s]['cost_factors'][1]*ngeht_diameter**2.7
             opex = opex + 0.139726 + statdict[s]['cost_factors'][2]
             # print("%2s %10.4g %10.4g"%(s,capex,statdict[s]['cost_factors'][0] + statdict[s]['cost_factors'][1]*ngeht_diameter**2.7))
