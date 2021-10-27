@@ -9,6 +9,7 @@ from kivy.properties import StringProperty, NumericProperty
 from fancy_mdslider import FancyMDSlider
 # from kivymd.uix.selectioncontrol import MDSwitch
 from fancy_mdswitch import FancyMDSwitch
+# from fancy_mdslider2 import Slider2
 
 from kivy.uix.behaviors.touchripple import TouchRippleButtonBehavior
 from kivy.uix.behaviors.button import ButtonBehavior
@@ -77,11 +78,184 @@ def bilinear(x1d,y1d,f,X,Y,indexing='xy') :
 def nearest_neighbor(X,xp,yp) :
     return yp[np.argmin(np.abs(X-xp))]
     
-    
 
 #########
 # To generate data from a station dictionary and image
-def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_time=600,min_elev=15,bandwidth=8.0,day=80) :
+def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=None,scan_time=600,min_elev=15,bandwidth=8.0,day=80) :
+
+    #print("generate_data frequence is:",freq)
+    
+    if isinstance(freq,list) :
+        return generate_data_multi_frequency(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=None,scan_time=600,min_elev=15,bandwidth=8.0,day=80)
+    else :
+        return generate_data_single_frequency(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=None,scan_time=600,min_elev=15,bandwidth=8.0,day=80)
+
+
+#########
+# To generate data from a station dictionary and image
+def generate_data_multi_frequency(freq_list,ra,dec,imgx,imgy,imgI,statdict,integration_time=None,scan_time=600,min_elev=15,bandwidth=8.0,day=80) :
+    # Takes:
+    #  list of freq in GHz
+    #  ra in hr
+    #  dec in deg
+    #  x in uas
+    #  y in uas
+    #  I in Jy
+    #  statdict as specified in ngeht_array.py
+    #  integration_time in s
+    #  scan_time in s
+    #  minimum elevation in deg
+    #  bandwidth in GHz
+    #  day of year
+
+    ################################################################
+    # Generate observation map
+    #
+    uas2rad = np.pi/180.0/3600e6
+    V0 = np.fft.fftshift(np.fft.fft2(np.pad(imgI,pad_width=((0,imgI.shape[0]),(0,imgI.shape[1])))))
+    # u01d = -np.fft.fftshift(np.fft.fftfreq(2*imgx.shape[0],d=(imgx[1,1]-imgx[0,0])*uas2rad)/1e9)
+    # v01d = -np.fft.fftshift(np.fft.fftfreq(2*imgy.shape[1],d=(imgy[1,1]-imgy[0,0])*uas2rad)/1e9)
+    u01d = -np.fft.fftshift(np.fft.fftfreq(2*imgx.shape[1],d=(imgx[1,1]-imgx[0,0])*uas2rad)/1e9)
+    v01d = -np.fft.fftshift(np.fft.fftfreq(2*imgy.shape[0],d=(imgy[1,1]-imgy[0,0])*uas2rad)/1e9)
+
+    if (__data_debug__) :
+        print("Finished FFTs")
+
+    # Phase center the image
+    xc = 0.5*(imgx[-1,-1]-imgx[0,0])*uas2rad*1e9
+    yc = 0.5*(imgy[-1,-1]-imgy[0,0])*uas2rad*1e9
+    # u0,v0 = np.meshgrid(u01d,v01d,indexing='ij')
+    # u0,v0 = np.meshgrid(v01d,u01d,indexing='xy')
+    u0,v0 = np.meshgrid(u01d,v01d)
+    V0 = V0*np.exp(-2.0j*np.pi*(u0*xc+v0*yc))
+
+    # import matplotlib.pyplot as plt
+    # plt.figure()
+    # plt.imshow(imgI)
+    # plt.figure()
+    # plt.imshow(V0.real)
+    # plt.figure()
+    # plt.imshow(np.abs(V0))
+    # # plt.figure()
+    # # plt.pcolor(u0,v0,np.abs(V0))
+    # plt.show()
+
+    
+    if (__data_debug__) :
+        print("Phase centered visibilities")
+
+        
+    
+    s1 = []
+    s2 = []
+    u = []
+    v = []
+    V = []
+    err = []
+    t = []
+
+    for freq in freq_list :
+    
+        if (integration_time is None) :
+            integration_time = 30 * (86/freq)
+    
+        one_over_lambda = freq*1e9 / 2.998e8 / 1e9
+            
+        thermal_error_factor = 1.0/np.sqrt( 0.8*2*bandwidth*1e9*integration_time ) # * np.sqrt(integration_time/scan_time)
+
+    
+        min_cos_zenith = np.cos( (90-min_elev)*np.pi/180.0 )
+
+        if (__data_debug__) :
+            print("Minimum cos(zenith):",min_cos_zenith)
+
+        usub = []
+        vsub = []
+
+            
+        ################################################################
+        # Generate observation map
+        #
+        for obstime in np.arange(0,24.0,scan_time/3600.0) :
+
+            csph = -np.cos((ra-obstime-(day-80)*24/365.25)*np.pi/12.)
+            snph = -np.sin((ra-obstime-(day-80)*24/365.25)*np.pi/12.)
+            csth = np.sin(dec*np.pi/180.0)
+            snth = np.cos(dec*np.pi/180.0)
+
+            X = csph*snth
+            Y = snph*snth
+            Z = csth
+            for k,stat1 in enumerate(statdict.keys()) :
+                x,y,z = statdict[stat1]['loc']
+                csze1 = (x*X+y*Y+z*Z)/np.sqrt(x*x+y*y+z*z)
+                if (csze1>=min_cos_zenith) :
+                    x1 = csth*(csph*x+snph*y) - snth*z
+                    y1 = -snph*x + csph*y
+                    # z1 = snth*(csph*x+snph*y) + csth*z
+                    for stat2 in list(statdict.keys())[(k+1):] :
+                        x,y,z = statdict[stat2]['loc']
+                        csze2 = (x*X+y*Y+z*Z)/np.sqrt(x*x+y*y+z*z)
+                        if (csze2>=min_cos_zenith) :
+                            x2 = csth*(csph*x+snph*y) - snth*z
+                            y2 = -snph*x + csph*y
+                            # z2 = snth*(csph*x+snph*y) + csth*z
+
+                            usub.append( (y1-y2) * one_over_lambda )
+                            vsub.append( -(x1-x2) * one_over_lambda )
+                            u.append( (y1-y2) * one_over_lambda )
+                            v.append( -(x1-x2) * one_over_lambda )
+                            t.append( obstime )
+
+                            s1.append( stat1 )
+                            s2.append( stat2 )
+
+                            sefd1 = nearest_neighbor(freq,statdict[stat1]['sefd_freq'],statdict[stat1]['sefd'])
+                            sefd2 = nearest_neighbor(freq,statdict[stat1]['sefd_freq'],statdict[stat2]['sefd'])
+
+                            err.append( np.sqrt( sefd1*sefd2 ) * thermal_error_factor )
+
+
+        # Interpolate to the data points
+        # V = bilinear(u01d,v01d,V0,u,v)
+        V.extend(list(bilinear(u01d,v01d,V0,usub,vsub)))
+    
+
+        if (__data_debug__) :
+            print("Interpolated to the truth")
+
+            
+                            
+    u = np.array(u)
+    v = np.array(v)
+    t = np.array(t)
+    s1 = np.array(s1)
+    s2 = np.array(s2)
+    err = np.array(err)
+    V = np.array(V)
+
+    if (__data_debug__) :
+        print("Generated baseline map")
+
+    # Make conjugate points
+    u = np.append(u,-u)
+    v = np.append(v,-v)
+    V = np.append(V,np.conj(V))
+    err = np.append(err,err)
+    t = np.append(t,t)
+    s1d = np.append(s1,s2)
+    s2d = np.append(s2,s1)
+
+    if (__data_debug__) :
+        print("Made conjugates, all done!  Number of data points:",len(u))
+
+    
+    return {'u':u,'v':v,'V':V,'s1':s1d,'s2':s2d,'t':t,'err':(1.0+1.0j)*err}
+    
+        
+#########
+# To generate data from a station dictionary and image
+def generate_data_single_frequency(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=None,scan_time=600,min_elev=15,bandwidth=8.0,day=80) :
     # Takes:
     #  freq in GHz
     #  ra in hr
@@ -104,6 +278,9 @@ def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_t
     err = []
     t = []
 
+    if (integration_time is None) :
+        integration_time = 30 * (86/freq)
+    
     one_over_lambda = freq*1e9 / 2.998e8 / 1e9
 
     thermal_error_factor = 1.0/np.sqrt( 0.8*2*bandwidth*1e9*integration_time ) # * np.sqrt(integration_time/scan_time)
@@ -499,6 +676,7 @@ class DataSelectionSliders(BoxLayout) :
     source_size = NumericProperty(None)
     source_flux = NumericProperty(None)
     observation_frequency = NumericProperty(None)
+    minimum_observation_frequency = NumericProperty(None)
     
     def __init__(self,**kwargs) :
         super().__init__(**kwargs)
@@ -512,11 +690,17 @@ class DataSelectionSliders(BoxLayout) :
         self.its_box_box = BoxLayout()
         self.its = FancyMDSwitch(pos_hint={'center_x':0.5,'center_y':0.5})
         self.its._thumb_color_down = (1,0.75,0.25,1)
-        #self.its_box.add_widget(self.its)        
         self.its_box_box.add_widget(self.its)
         self.its_box.add_widget(self.its_box_box)
 
-        self.add_widget(self.its_box)
+        self.imws_label = MDLabel(text='Multi-freq.',halign='center')
+        self.its_box.add_widget(self.imws_label)
+        self.imws_box_box = BoxLayout()
+        self.imws = FancyMDSwitch(pos_hint={'center_x':0.5,'center_y':0.5})
+        self.imws._thumb_color_down = (1,0.75,0.25,1)
+        self.imws_box_box.add_widget(self.imws)
+        self.imws.bind(active=self.cycle_multi_wavelength)
+        self.its_box.add_widget(self.imws_box_box)
         
         # Add the source size slider
         self.sss_box = BoxLayout()
@@ -526,7 +710,6 @@ class DataSelectionSliders(BoxLayout) :
         
         self.sss = SourceSizeMDSlider()
         self.sss.background_color=(0,0,0,0)
-        # self.sss.color=(1,1,1,0.75)
         self.sss.set_color=False
         self.sss.orientation='horizontal'
         self.sss.size_hint=(0.8,1)
@@ -536,7 +719,6 @@ class DataSelectionSliders(BoxLayout) :
         self.sss_label2 = MDLabel(text=("%3g \u03BCas")%(self.sss.source_size()),halign='center',size_hint=(0.5,1))
         self.sss_box.add_widget(self.sss_label2)
 
-        self.add_widget(self.sss_box)
         
         # Add the source flux slider
         self.sfs_box = BoxLayout()
@@ -546,7 +728,6 @@ class DataSelectionSliders(BoxLayout) :
         
         self.sfs = FluxMDSlider()
         self.sfs.background_color=(0,0,0,0)
-        # self.sfs.color=(1,1,1,0.75)
         self.sfs.set_color=False        
         self.sfs.orientation='horizontal'
         self.sfs.size_hint=(0.8,1)
@@ -555,7 +736,6 @@ class DataSelectionSliders(BoxLayout) :
         self.sfs_label2 = MDLabel(text="%5.1f Jy"%(self.sfs.flux()),halign='center',size_hint=(0.5,1))
         self.sfs_box.add_widget(self.sfs_label2)
 
-        self.add_widget(self.sfs_box)
         
         # Add the observation frequency slider
         self.ofs_box = BoxLayout()
@@ -573,12 +753,52 @@ class DataSelectionSliders(BoxLayout) :
         self.ofs_label2 = MDLabel(text="%3g GHz"%(self.ofs.observation_frequency()),halign='center',size_hint=(0.5,1))
         self.ofs_box.add_widget(self.ofs_label2)
 
-        self.add_widget(self.ofs_box)
 
-
+        # Add the observation frequency slider
+        self.mofs_box = BoxLayout()
+        self.mofs_box.orientation='horizontal'
+        self.mofs_label = MDLabel(text='Min. Freq.:',halign='center',size_hint=(0.5,1))
+        self.mofs_box.add_widget(self.mofs_label)
+        
+        self.mofs = ObsFrequencyMDSlider()
+        self.mofs.background_color=(0,0,0,0)
+        self.mofs.set_color=False
+        self.mofs.orientation='horizontal'
+        self.mofs.size_hint=(0.8,1)
+        self.mofs.bind(value=self.adjust_minimum_observation_frequency) #
+        self.mofs_box.add_widget(self.mofs)
+        self.mofs_label2 = MDLabel(text="%3g GHz"%(self.mofs.observation_frequency()),halign='center',size_hint=(0.5,1))
+        self.mofs_box.add_widget(self.mofs_label2)
+        
         self.source_size = self.sss.source_size()
         self.source_flux = self.sfs.flux()
         self.observation_frequency = self.ofs.observation_frequency()
+        self.minimum_observation_frequency = self.mofs.observation_frequency()
+
+        self.add_widget(self.its_box)        
+        self.add_widget(self.sss_box)
+        self.add_widget(self.sfs_box)
+        self.add_widget(self.ofs_box)
+        #self.add_widget(self.mofs_box)
+
+    def cycle_multi_wavelength(self,widget,active) :
+        if (active) :
+            self.clear_widgets()
+            self.add_widget(self.its_box)        
+            self.add_widget(self.sss_box)
+            self.add_widget(self.sfs_box)
+            self.add_widget(self.ofs_box)
+            self.add_widget(self.mofs_box)
+            self.ofs_label.text='Max. Freq.'
+        else :
+            self.clear_widgets()
+            self.add_widget(self.its_box)        
+            self.add_widget(self.sss_box)
+            self.add_widget(self.sfs_box)
+            self.add_widget(self.ofs_box)
+            self.ofs_label.text='Obs. Freq.'
+            self.minimum_observation_frequency = self.observation_frequency
+            self.mofs.value = self.ofs.value
         
     def adjust_source_size(self,widget,val) :
         self.source_size = self.sss.source_size()
@@ -591,9 +811,28 @@ class DataSelectionSliders(BoxLayout) :
     def adjust_observation_frequency(self,widget,val) :
         self.observation_frequency = self.ofs.observation_frequency()
         self.ofs_label2.text = self.ofs.hint_box_text(0)
+        self.mofs.value = min(self.mofs.value,self.ofs.value)
+        if (self.imws.active==False) :
+            self.mofs.value = self.ofs.value
+            self.minimum_observation_frequency = self.mofs.observation_frequency()
+        #print("Freq. range:",[self.mofs.observation_frequency(),self.ofs.observation_frequency()])
         if (__data_debug__) :
             print("DataSelectionSliders.adjust_observation_frequency:",self.observation_frequency,val,self.ofs_label2.text)
 
+    def adjust_minimum_observation_frequency(self,widget,val) :
+        self.minimum_observation_frequency = min(self.ofs.observation_frequency(),self.mofs.observation_frequency())
+        self.mofs.value = min(self.mofs.value,self.ofs.value)
+        self.mofs_label2.text = self.mofs.hint_box_text(0)
+        if (__data_debug__) :
+            print("DataSelectionSliders.adjust_observation_frequency:",self.minimum_observation_frequency,val,self.mofs_label2.text)
+
+
+    def observation_frequency_list(self) :
+        freq_list = []
+        for i in range(int(self.mofs.value),int(self.ofs.value+1)) :
+            freq_list.append(self.ofs.observation_frequency_list[i])
+        #print("freq list:",freq_list)
+        return freq_list
         
 class ObsFrequencyMDSlider(FancyMDSlider):
 
@@ -613,7 +852,7 @@ class ObsFrequencyMDSlider(FancyMDSlider):
         return "%3g GHz"%(self.observation_frequency())
 
     def hint_box_size(self) :
-        return (dp(50),dp(28))
+        return (dp(50),dp(28))            
 
     
 class SourceSizeMDSlider(FancyMDSlider):

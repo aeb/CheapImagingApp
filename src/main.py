@@ -2228,16 +2228,16 @@ class DataSetSelectionPage(BoxLayout) :
         return True
 
     def check_data_hash(self) :
-        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux) + str(self.dss.its.active and not self.dss.its.disabled),'utf-8')).hexdigest()
+        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency_list()) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux) + str(self.dss.its.active and not self.dss.its.disabled),'utf-8')).hexdigest()
         if ( new_argument_hash == self.argument_hash ) :
             return False
         return True
     
     def produce_selected_data_set(self) :
         if (__main_debug__) :
-            print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency,_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
+            print("DSSP.produce_selected_data_set:",self.ic.selected_data_file(),self.dss.observation_frequency_list(),_source_RA,_source_Dec,self.dss.source_size,self.dss.source_flux)
 
-        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux) + str(self.dss.its.active and not self.dss.its.disabled),'utf-8')).hexdigest()
+        new_argument_hash = hashlib.md5(bytes(str(self.ic.selected_data_file())+str(_statdict_maximum) + str(self.dss.observation_frequency_list()) + str(_source_RA) + str(_source_Dec) + str(self.dss.source_size) + str(self.dss.source_flux) + str(self.dss.its.active and not self.dss.its.disabled),'utf-8')).hexdigest()
         if (__main_debug__) :
             print("New data md5 hash:",new_argument_hash)
             print("Old data md5 hash:",self.argument_hash)
@@ -2248,7 +2248,8 @@ class DataSetSelectionPage(BoxLayout) :
         global _datadict
         _datadict = data.generate_data_from_file( self.ic.selected_data_file(), \
                                                   _statdict_maximum, \
-                                                  freq=self.dss.observation_frequency, \
+                                                  # freq=self.dss.observation_frequency, \
+                                                  freq=self.dss.observation_frequency_list(), \
                                                   ra=_source_RA,dec=_source_Dec, \
                                                   scale=self.dss.source_size, \
                                                   total_flux=self.dss.source_flux, \
