@@ -111,9 +111,9 @@ _off_color = (0.5,0,0,1)
 
 _time_range = [0,24]
 _ngeht_diameter = 6
-_snr_cut = 0
+_snr_cut = 7.0
 _ngeht_diameter_setting = 6
-_snr_cut_setting = 0
+_snr_cut_setting = 1
 _ad_hoc_phasing = False
 
 _existing_arrays = ['EHT 2017','EHT 2022']
@@ -1473,7 +1473,8 @@ class DiameterSliders(BoxLayout) :
         
         self.sns_box = BoxLayout()
         self.sns_box.orientation='horizontal'
-        self.sns_label = Label(text='S/N Limit:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        # self.sns_label = Label(text='S/N Limit:',color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sns_label = Label(text='Bandwidth:',color=(1,1,1,0.75),size_hint=(0.5,1))
         self.sns_box.add_widget(self.sns_label)
         
         self.sns = SNRMDSlider()
@@ -1481,12 +1482,14 @@ class DiameterSliders(BoxLayout) :
         self.sns.color=(1,1,1,0.75)
         self.sns.orientation='horizontal'
         self.sns.size_hint=(0.8,1)
-        self.sns.step=0.25
+        #self.sns.step=0.25
         self.sns.bind(value=self.adjust_snrcut)
         self.sns.bind(active=self.on_active)
         self.sns_box.add_widget(self.sns)
         
-        self.sns_label2 = Label(text="%5.1f"%(10**self.sns.value),color=(1,1,1,0.75),size_hint=(0.5,1))
+        #self.sns_label2 = Label(text="%5.1f"%(10**self.sns.value),color=(1,1,1,0.75),size_hint=(0.5,1))
+        self.sns_label2 = Label(text="%g GHz"%(self.sns.bandwidth_value()),color=(1,1,1,0.75),size_hint=(0.5,1))
+        
         self.sns_box.add_widget(self.sns_label2)
 
         if (__main_perf__) :
@@ -1527,8 +1530,10 @@ class DiameterSliders(BoxLayout) :
             self.plot.set_snr_cut(None)
             self.sns_label2.text = "None"
         else :
-            self.plot.set_snr_cut(10**val)
-            self.sns_label2.text = "%5.1f"%(10**val)
+            # self.plot.set_snr_cut(10**val)
+            # self.sns_label2.text = "%5.1f"%(10**val)
+            self.plot.set_snr_cut(self.sns.snr_value())
+            self.sns_label2.text = "%g GHz"%(self.sns.bandwidth_value())
         
 
 class DiameterMDSlider(FancyMDSlider):
@@ -1547,23 +1552,53 @@ class DiameterMDSlider(FancyMDSlider):
     def hint_box_size(self) :
         return (dp(50),dp(28))
 
+# # Set the SNR directly  
+# class SNRMDSlider(FancyMDSlider):
     
+#     def __init__(self,**kwargs):
+#         super().__init__(**kwargs)
+
+#         self.min = 0
+#         self.max = 3
+#         self.value = 2
+#         self.show_off = True
+
+#     def hint_box_text(self,value) :
+#         return "%5.1f"%(10**value)
+
+#     def hint_box_size(self) :
+#         return (dp(50),dp(28))
+
+# Use the bandwidth to set the SNR    
 class SNRMDSlider(FancyMDSlider):
+
     
     def __init__(self,**kwargs):
+        self.bandwidth_list = [4, 8, 12, 16]
+
         super().__init__(**kwargs)
 
-        self.min = 0
-        self.max = 3
-        self.value = 2
-        self.show_off = True
+        self.min = 0 # 4 GHz
+        self.max = len(self.bandwidth_list)-1 # 16 GHz
+        self.value = 1
+        self.step = 1
+        self.show_off = False
 
+        
     def hint_box_text(self,value) :
-        return "%5.1f"%(10**value)
+        return "%g GHz"%(self.bandwidth_list[int(value)])
 
     def hint_box_size(self) :
         return (dp(50),dp(28))
 
+    def bandwidth_value(self) :
+        return self.bandwidth_list[int(self.value)]
+    
+    def snr_value(self) :
+        return ( 7 * np.sqrt(8.0/self.bandwidth_list[int(self.value)]) )
+
+            
+        
             
 class TargetSelectionMap(BoxLayout) :
 
@@ -2484,7 +2519,7 @@ class SpecificationsPage(BoxLayout) :
     def get_array_parameters(self) :
         self.ngeht_diameter = _ngeht_diameter
         self.time_range = _time_range
-        self.snr_cut = _snr_cut
+        self.snr_cut = float(_snr_cut)
         self.source_RA = self.hr_to_str(_source_RA)
         self.source_Dec = self.deg_to_str(_source_Dec)
 
