@@ -123,7 +123,13 @@ _stationdicts={}
 
 _stationdicts={}
 _stationdicts['ngEHT+']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1.txt')), existing_station_list=_existing_station_list)
-_stationdicts['ngEHT']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1.txt')), existing_station_list=_existing_station_list)
+#_stationdicts['ngEHT']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT 10']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_10.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT  8']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_8.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT  6']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_6.txt')), existing_station_list=_existing_station_list)
+_stationdicts['ngEHT  4']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/ngeht_ref1_4.txt')), existing_station_list=_existing_station_list)
+
+
 _stationdicts['EHT 2017']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2017.txt')),existing_station_list=_existing_station_list)
 _stationdicts['EHT 2022']=ngeht_array.read_array(path.abspath(path.join(path.dirname(__file__),'arrays/eht2022.txt')),existing_station_list=_existing_station_list)
 
