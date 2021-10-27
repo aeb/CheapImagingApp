@@ -106,8 +106,9 @@ def generate_data(freq,ra,dec,imgx,imgy,imgI,statdict,integration_time=10,scan_t
 
     one_over_lambda = freq*1e9 / 2.998e8 / 1e9
 
-    thermal_error_factor = 1.0/np.sqrt( 0.8*2*bandwidth*1e9*integration_time ) * np.sqrt(integration_time/scan_time)
+    thermal_error_factor = 1.0/np.sqrt( 0.8*2*bandwidth*1e9*integration_time ) # * np.sqrt(integration_time/scan_time)
 
+    
     min_cos_zenith = np.cos( (90-min_elev)*np.pi/180.0 )
 
     if (__data_debug__) :

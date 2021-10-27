@@ -114,7 +114,7 @@ _ngeht_diameter = 6
 _snr_cut = 0
 _ngeht_diameter_setting = 6
 _snr_cut_setting = 0
-
+_ad_hoc_phasing = False
 
 _existing_arrays = ['EHT 2017','EHT 2022']
 _existing_station_list = ['PV','AZ','SM','LM','AA','AP','SP','JC','GL','PB','KP','HA']
@@ -2354,6 +2354,13 @@ class SpecificationsPage(BoxLayout) :
     number_of_visibilities_in_timerange = NumericProperty(0)
     number_of_visibilities_above_snrcut = NumericProperty(0)
 
+    est_baseline_sensitivity = StringProperty("0 mJy")
+    est_point_source_sensitivity = StringProperty("0 mJy")
+    est_angular_resolution = StringProperty("0 uas")
+    est_field_of_view = StringProperty("0 mas")
+    est_image_dynamic_range = StringProperty("0")
+    est_snapshot_dynamic_range = StringProperty("0")
+    
     ngeht_diameter = NumericProperty(_ngeht_diameter)
     time_range = ListProperty(_time_range,size=2)
     snr_cut = NumericProperty(_snr_cut)
@@ -2369,6 +2376,9 @@ class SpecificationsPage(BoxLayout) :
         self.get_array_parameters()
         #
         self.estimate_cost()
+        #
+        self.estimate_performance()
+        
         
     def estimate_cost(self) :
         capex,opex = ngeht_array.cost_model(_statdict,_ngeht_diameter,opex_exclude=list(_stationdicts['EHT 2022'].keys()))
@@ -2415,7 +2425,7 @@ class SpecificationsPage(BoxLayout) :
 
         # Get the number of unique baselines
         self.number_of_baselines_total = 0
-        stations = list(np.unique(np.append(_datadict['s1'],_datadict['s2'])))
+        #stations = list(np.unique(np.append(_datadict['s1'],_datadict['s2'])))
         for k,s1 in enumerate(stations) :
             for s2 in stations[(k+1):] :
                 # print("Baseline count:",self.number_of_baselines_total,s1,s2,np.any((ddtmp['s1']==s1)*(ddtmp['s2']==s2)))
@@ -2432,7 +2442,7 @@ class SpecificationsPage(BoxLayout) :
 
         # Get the number of unique baselines
         self.number_of_baselines_in_timerange = 0
-        stations = list(np.unique(np.append(_datadict['s1'],_datadict['s2'])))
+        #stations = list(np.unique(np.append(_datadict['s1'],_datadict['s2'])))
         for k,s1 in enumerate(stations) :
             for s2 in stations[(k+1):] :
                 # print("  time -- Baseline count:",self.number_of_baselines_in_timerange,s1,s2,np.any((ddtmp['s1']==s1)*(ddtmp['s2']==s2)))
@@ -2477,6 +2487,208 @@ class SpecificationsPage(BoxLayout) :
         self.source_RA = self.hr_to_str(_source_RA)
         self.source_Dec = self.deg_to_str(_source_Dec)
 
+
+    def sig_fig(self,val,n) :
+        mag = 10**(int(np.log10(val)-n+1))
+        return int(val/mag+0.5)*mag
+        
+
+    def estimate_performance(self) :
+
+        ### Generate multi-wavelength data
+
+
+        # Cut points with S/N less than the specified minimum value
+        stations = list(np.unique(np.array(list(_statdict.keys()))))
+        if (not _snr_cut is None) and _snr_cut>0 :
+            # Get a list of error adjustments based on stations
+            diameter_correction_factor = {}
+            for s in stations :
+                if (_statdict[s]['exists']) :
+                    diameter_correction_factor[s] = 1.0
+                else :
+                    diameter_correction_factor[s] = _statdict[s]['diameter']/_ngeht_diameter
+        else :
+            diameter_correction_factor = {}
+            for s in stations :
+                diameter_correction_factor[s] = 1.0
+
+                
+        # Get the max sensitivities on various baselines
+        on_station_list = []
+        ngEHT_station_list = []
+        for s in _statdict.keys() :
+            if (_statdict[s]['on']) :
+                on_station_list.append(s)
+                if (_statdict[s]['exists']==False) :
+                    ngEHT_station_list.append(s)
+        err_list_all = []
+        err_list_ngeht = []
+        for j in range(len(_datadict['s1'])) :
+            if ( (_datadict['s1'][j] in on_station_list) and (_datadict['s2'][j] in on_station_list) ) :
+                err_list_all.append( _datadict['err'][j].real * diameter_correction_factor[_datadict['s1'][j]] * diameter_correction_factor[_datadict['s2'][j]] )
+            if ( (_datadict['s1'][j] in on_station_list) and (_datadict['s2'][j] in ngEHT_station_list) ) :
+                err_list_ngeht.append( _datadict['err'][j].real * diameter_correction_factor[_datadict['s1'][j]] * diameter_correction_factor[_datadict['s2'][j]] )
+        err_list_all = np.array(err_list_all)
+        err_list_ngeht = np.array(err_list_ngeht)
+
+        # Get the sensitivity from the most sensitive element of the current arrary to an ngEHT station        
+        if (len(err_list_ngeht)==0) :
+            self.est_baseline_sensitivity = "N/A"
+        else :
+            err_anchor = np.min(err_list_ngeht)
+            print("err anchor:",err_anchor)
+            baseline_sensitivity = 7 * np.max(err_anchor) * 1e3
+            self.est_baseline_sensitivity = "%2g mJy"%(self.sig_fig(baseline_sensitivity,2))
+
+        # Get the sensitivity between two most sensitive elements of the current array            
+        if (len(err_list_all)==0) :
+            self.est_point_source_sensitivity = "N/A"
+        else :
+            err_max = np.min(err_list_all)
+            print("err anchor:",err_max)
+            point_source_sensitivity = 7 * np.max(err_max) * 1e3
+            self.est_point_source_sensitivity = "%2g mJy"%(self.sig_fig(point_source_sensitivity,2))
+            
+        
+        # # Get the sensitivity from the most sensitive element of the current arrary to an ngEHT station
+        # on_station_list = []
+        # on_station_sefd = []
+        # for s in _statdict.keys() :
+        #     if (_statdict[s]['on']) :
+        #         on_station_list.append(s)
+        #         on_station_sefd.append(_statdict[s]['sefd'][0] * diameter_correction_factor[s])
+        # on_station_list = np.array(on_station_list)
+        # on_station_sefd = np.array(on_station_sefd)
+        # on_station_list = on_station_list[np.argsort(on_station_sefd)]
+        # on_station_sefd = on_station_sefd[np.argsort(on_station_sefd)]
+
+        # anchor_station = on_station_list[0]
+        # prototype_station = 'BA'
+        # print("Anchor station:",anchor_station)
+        # if ( not prototype_station in _statdict.keys() ) : # not an ngEHT array
+        #     self.est_baseline_sensitivity = "N/A"
+        # else :
+        #     err_anchor = _datadict['err'][(_datadict['s1']==anchor_station)*(_datadict['s2']==prototype_station)].real * diameter_correction_factor[anchor_station]*diameter_correction_factor[prototype_station]
+        #     print("err anchor:",err_anchor)
+        #     baseline_sensitivity = 7 * np.max(err_anchor) * 1e3
+        #     self.est_baseline_sensitivity = "%2g mJy"%(self.sig_fig(baseline_sensitivity,2))
+
+        # # Get the sensitivity between two most sensitive elements of the current array
+        # err_max = _datadict['err'][(_datadict['s1']==anchor_station)*(_datadict['s2']==on_station_list[1])].real * diameter_correction_factor[anchor_station]*diameter_correction_factor[prototype_station] 
+        # point_source_sensitivity = 7 * np.max(err_max) * 1e3
+        # self.est_point_source_sensitivity = "%2g mJy"%(self.sig_fig(point_source_sensitivity,2))
+        
+        # Exclude stations not in current array
+        keep = np.array([ (_datadict['s1'][j] in stations) and (_datadict['s2'][j] in stations) for j in range(len(_datadict['s1'])) ])
+        ddtmp = {}
+        for key in ['u','v','V','s1','s2','t','err'] :
+            ddtmp[key] = _datadict[key][keep]
+        keep = np.array([ _statdict[ddtmp['s1'][j]]['on'] and _statdict[ddtmp['s2'][j]]['on'] for j in range(len(ddtmp['s1'])) ])
+        for key in ['u','v','V','s1','s2','t','err'] :
+            ddtmp[key] = ddtmp[key][keep]
+            
+        # Cut points with S/N less than the specified minimum value
+        if (not _snr_cut is None) and _snr_cut>0 :
+            ddtmp2 = copy.deepcopy(ddtmp)
+            
+            # Baseline-by-baseline filtering
+            # keep = np.array([ np.abs(ddtmp2['V'][j])/(ddtmp2['err'][j].real * diameter_correction_factor[ddtmp2['s1'][j]] * diameter_correction_factor[ddtmp2['s2'][j]]) > _snr_cut for j in range(len(ddtmp2['s1'])) ])
+
+            # Ad hoc phasing
+            keep = np.array([True]*len(ddtmp2['s1']))
+            jtot = np.arange(ddtmp2['t'].size)
+            for tscan in np.unique(ddtmp2['t']) :
+                inscan = (ddtmp2['t']==tscan)
+                s1_scan = ddtmp2['s1'][inscan]
+                s2_scan = ddtmp2['s2'][inscan]
+                snr_scan = np.array([ ddtmp2['V'][inscan][j]/( ddtmp2['err'][inscan][j] * diameter_correction_factor[s1_scan[j]] * diameter_correction_factor[s2_scan[j]] ) for j in range(len(s1_scan)) ])
+                detection_station_list = []
+                for ss in np.unique(np.append(s1_scan,s2_scan)) :
+                    snr_scan_ss = np.append(snr_scan[s1_scan==ss],snr_scan[s2_scan==ss])
+                    if np.any(snr_scan_ss > _snr_cut ) :
+                        detection_station_list.append(ss)
+                keep[jtot[inscan]] = np.array([ (s1_scan[k] in detection_station_list) and (s2_scan[k] in detection_station_list) for k in range(len(s1_scan)) ])
+
+            ddtmp = {'u':np.array([]),'v':np.array([]),'V':np.array([]),'s1':np.array([]),'s2':np.array([]),'t':np.array([]),'err':np.array([])}
+            for key in ['u','v','V','s1','s2','t','err'] :
+                ddtmp[key] = ddtmp2[key][keep]
+
+
+        # Get the angular resolution
+        uvmax = np.sqrt(np.max( ddtmp['u']**2 + ddtmp['v']**2 ))*1e9
+        angular_resolution = 1.0/uvmax * 180.*3600e6/np.pi
+
+        # Get the fov (shortest non-intrasite baseline)
+        ddtmp2 = {'u':np.array([]),'v':np.array([]),'V':np.array([]),'s1':np.array([]),'s2':np.array([]),'t':np.array([]),'err':np.array([])}
+        keep = np.array([True]*ddtmp['V'].size)
+        for baseline in [['AA','AP'],['SM','JC']] :
+            print("Removing baseline",baseline[0],baseline[1])
+            isbaseline = (ddtmp['s1']==baseline[0])*(ddtmp['s2']==baseline[1]) + (ddtmp['s2']==baseline[0])*(ddtmp['s1']==baseline[1])
+            keep = keep*(isbaseline==False)
+            
+        # for j in np.arange(ddtmp['V'].size) :
+        #     print(ddtmp['s1'][j],ddtmp['s2'][j],keep[j])
+            
+        for key in ['u','v','V','s1','s2','t','err'] :
+            ddtmp2[key] = ddtmp[key][keep]
+        uvmin = np.sqrt(np.min( ddtmp2['u']**2 + ddtmp2['v']**2 )) * 1e9
+        imin = np.argmin( ddtmp2['u']**2 + ddtmp2['v']**2 )
+        field_of_view = 1.0/uvmin * 180.*3600e3/np.pi 
+
+        print("angular resolution:",angular_resolution)
+        print("field of view:",field_of_view,ddtmp2['s1'][imin],ddtmp2['s2'][imin])
+        
+        # self.est_angular_resolution =  "%0.1f uas"%(int(angular_resolution*10+0.5)/10.0)
+        # self.est_field_of_view =  "%0.1f mas"%(int(field_of_view*10+0.5)/10.0)
+
+        self.est_angular_resolution =  "%g \u03BCas"%(self.sig_fig(angular_resolution,1))
+
+        if (field_of_view>=1) :
+            self.est_field_of_view =  "%g mas"%(self.sig_fig(field_of_view,1))
+        else :
+            self.est_field_of_view =  "%g \u03BCas"%(self.sig_fig(field_of_view*1e3,1))
+
+        
+        ### Generate the image
+        img = cheap_image.InteractiveImageReconstructionPlot()
+        # Image dynamic range
+        x,y,I = img.reconstruct_image(_datadict,_statdict,snr_cut=_snr_cut,ngeht_diameter=_ngeht_diameter,ad_hoc_phasing=_ad_hoc_phasing)
+        image_dynamic_range = img.estimate_dynamic_range(x,y,I)
+        # Snapshot dynamic range
+        tscans = np.unique(ddtmp['t'])
+        Nscans = []
+        Iscans = []
+        for ts in tscans :
+            inscan = (ddtmp['t']==ts)
+            uscan = ddtmp['u'][inscan]
+            vscan = ddtmp['v'][inscan]
+            Nscans.append(uscan.size)
+            mu2 = np.mean(uscan**2)
+            mv2 = np.mean(vscan**2)
+            muv = np.mean(uscan*vscan)
+            Iscans.append( 1.0 - np.sqrt( (mu2-mv2)**2 + 4.0*muv**2 )/(mu2+mv2) )
+        Nscans = np.array(Nscans)
+        Iscans = np.array(Iscans)
+        Nscans_max = np.max(Nscans)
+        tscans = tscans[Nscans==Nscans_max]
+        Iscans = Iscans[Nscans==Nscans_max]
+        Nscans = Nscans[Nscans==Nscans_max]
+        tscan_max = tscans[np.argmax(Iscans)]
+
+        x,y,I = img.reconstruct_image(_datadict,_statdict,time_range=[tscan_max-0.03,tscan_max+0.03],snr_cut=_snr_cut,ngeht_diameter=_ngeht_diameter,ad_hoc_phasing=_ad_hoc_phasing)
+        snapshot_dynamic_range = img.estimate_dynamic_range(x,y,I)
+
+
+        print("image dynamic range:",image_dynamic_range,int(np.log10(image_dynamic_range)))
+        print("snapshot dynamic range:",snapshot_dynamic_range)
+
+        # self.est_image_dynamic_range = "%g"%(int(image_dynamic_range/10**(int(np.log10(image_dynamic_range))))*10**(int(np.log10(image_dynamic_range))))
+        # self.est_snapshot_dynamic_range = "%g"%(int(snapshot_dynamic_range/10**(int(np.log10(snapshot_dynamic_range))))*10**(int(np.log10(snapshot_dynamic_range))))
+
+        self.est_image_dynamic_range = "%g"%(self.sig_fig(image_dynamic_range,1))
+        self.est_snapshot_dynamic_range = "%g"%(self.sig_fig(snapshot_dynamic_range,1))
+        
     def hr_to_str(self,RA) :
         hh = int(RA)
         mm = int((RA-hh)*60.0)

@@ -102,7 +102,27 @@ class InteractiveBaselinePlot_kivygraph(ThemableBehavior,FloatLayout) :
                         diameter_correction_factor[s] = 1.0
                     else :
                         diameter_correction_factor[s] = statdict[s]['diameter']/ngeht_diameter
-                keep = np.array([ np.abs(self.ddict['V'][j])/(self.ddict['err'][j].real * diameter_correction_factor[self.ddict['s1'][j]] * diameter_correction_factor[self.ddict['s2'][j]]) > snr_cut for j in range(len(self.ddict['s1'])) ])
+
+                # Baseline-by-baseline filtering
+                # keep = np.array([ np.abs(self.ddict['V'][j])/(self.ddict['err'][j].real * diameter_correction_factor[self.ddict['s1'][j]] * diameter_correction_factor[self.ddict['s2'][j]]) > snr_cut for j in range(len(self.ddict['s1'])) ])
+                # Ad hoc phasing
+                keep = np.array([True]*len(self.ddict['s1']))
+                jtot = np.arange(self.ddict['t'].size)
+                for tscan in np.unique(self.ddict['t']) :
+                    inscan = (self.ddict['t']==tscan)
+                    s1_scan = self.ddict['s1'][inscan]
+                    s2_scan = self.ddict['s2'][inscan]
+                    snr_scan = np.array([ self.ddict['V'][inscan][j]/( self.ddict['err'][inscan][j] * diameter_correction_factor[s1_scan[j]] * diameter_correction_factor[s2_scan[j]] ) for j in range(len(s1_scan)) ])
+                    detection_station_list = []
+                    for ss in np.unique(np.append(s1_scan,s2_scan)) :
+                        snr_scan_ss = np.append(snr_scan[s1_scan==ss],snr_scan[s2_scan==ss])
+                        if np.any(snr_scan_ss > snr_cut ) :
+                            detection_station_list.append(ss)
+                    keep[jtot[inscan]] = np.array([ (s1_scan[k] in detection_station_list) and (s2_scan[k] in detection_station_list) for k in range(len(s1_scan)) ])
+                    
+                        
+                    
+                
                 self.on = self.on*keep
 
 

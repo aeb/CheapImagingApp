@@ -1104,7 +1104,7 @@ Screen :
             #     cols: 1
             BoxLayout:
                 size_hint: 1,None
-                height: specs_cb.height+specs_ap.height+specs_stn.height+specs_dv.height+specs_uv.height+specs_vis.height
+                height: specs_cb.height+specs_ap.height+specs_aperf.height+specs_stn.height+specs_dv.height+specs_uv.height+specs_vis.height
                 orientation: "vertical"
 
                 SpecificationCategory:
@@ -1120,6 +1120,29 @@ Screen :
                     SpecificationItem:
                         name: "Data Management:"
                         value: root.est_datex
+
+                SpecificationCategory:
+                    id: specs_aperf
+                    title: "Array performance"
+                    content_height: sp(20)*6
+                    SpecificationItem:
+                        name: "Baseline sensitivity"
+                        value: root.est_baseline_sensitivity
+                    SpecificationItem:
+                        name: "Limiting point source sensitivity"
+                        value: root.est_point_source_sensitivity
+                    SpecificationItem:
+                        name: "Nominal angular resolution"
+                        value: root.est_angular_resolution
+                    SpecificationItem:
+                        name: "Nominal field of view"
+                        value: root.est_field_of_view
+                    SpecificationItem:
+                        name: "Image dynamic range"
+                        value: root.est_image_dynamic_range
+                    SpecificationItem:
+                        name: "Snapshot dynamic range"
+                        value: root.est_snapshot_dynamic_range
 
                 SpecificationCategory:
                     id: specs_ap
@@ -1143,7 +1166,7 @@ Screen :
                     SpecificationItem:
                         name: "Source Dec:"
                         value: root.source_Dec
-
+                        
                 SpecificationCategory:
                     id: specs_stn
                     title: "Stations"

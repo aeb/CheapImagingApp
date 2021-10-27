@@ -296,7 +296,7 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
         
     ##########
     # Low-level image reconstruction function
-    def reconstruct_image(self,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,f=2,method='cubic',make_hermitian=False) :
+    def reconstruct_image(self,datadict,statdict,time_range=None,snr_cut=None,ngeht_diameter=6,f=2,method='cubic',make_hermitian=False,ad_hoc_phasing=False) :
 
         # print("Started image reconstruction in thread")
         if (__cheap_image_perf__) :
@@ -342,7 +342,26 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
                     diameter_correction_factor[s] = 1.0
                 else :
                     diameter_correction_factor[s] = statdict[s]['diameter']/ngeht_diameter
-            keep = np.array([ np.abs(ddnew['V'][j])/(ddnew['err'][j].real * diameter_correction_factor[ddnew['s1'][j]] * diameter_correction_factor[ddnew['s2'][j]]) > snr_cut for j in range(len(ddnew['s1'])) ])
+
+            # Baseline-by-baseline filtering
+            # keep = np.array([ np.abs(ddnew['V'][j])/(ddnew['err'][j].real * diameter_correction_factor[ddnew['s1'][j]] * diameter_correction_factor[ddnew['s2'][j]]) > snr_cut for j in range(len(ddnew['s1'])) ])
+
+            # Ad hoc phasing
+            keep = np.array([True]*len(ddnew['s1']))
+            jtot = np.arange(ddnew['t'].size)
+            for tscan in np.unique(ddnew['t']) :
+                inscan = (ddnew['t']==tscan)
+                s1_scan = ddnew['s1'][inscan]
+                s2_scan = ddnew['s2'][inscan]
+                snr_scan = np.array([ ddnew['V'][inscan][j]/( ddnew['err'][inscan][j] * diameter_correction_factor[s1_scan[j]] * diameter_correction_factor[s2_scan[j]] ) for j in range(len(s1_scan)) ])
+                detection_station_list = []
+                for ss in np.unique(np.append(s1_scan,s2_scan)) :
+                    snr_scan_ss = np.append(snr_scan[s1_scan==ss],snr_scan[s2_scan==ss])
+                    if np.any(snr_scan_ss > snr_cut ) :
+                        detection_station_list.append(ss)
+                keep[jtot[inscan]] = np.array([ (s1_scan[k] in detection_station_list) and (s2_scan[k] in detection_station_list) for k in range(len(s1_scan)) ])
+            
+            
             for key in ['u','v','V','s1','s2','t','err'] :
                 ddnew[key] = ddnew[key][keep]
 
@@ -394,14 +413,17 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
             print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image interpolation done"%(time.perf_counter()))
 
         
-        # Filter to smooth at edges
-        V2 = V2 * np.cos(u2/umax*0.5*np.pi) * np.cos(v2/vmax*0.5*np.pi)
-
+        ### Filter to smooth at edges
+        # Cosine filter
+        # V2 = V2 * np.cos(u2/umax*0.5*np.pi) * np.cos(v2/vmax*0.5*np.pi)
+        # Blackman filter
         # hu = 0.42 - 0.5*np.cos(2.0*np.pi*(u2+umax)/(2*umax)) + 0.08*np.cos(4.0*np.pi*(u2+umax)/(2*umax))
         # hv = 0.42 - 0.5*np.cos(2.0*np.pi*(v2+umax)/(2*umax)) + 0.08*np.cos(4.0*np.pi*(v2+umax)/(2*umax))
         # V2 = V2*hu*hv
-        
-        
+        # Gaussian beam filter
+        uvmax2 = np.max(ddnew['u']**2+ddnew['v']**2)
+        gaussian_filter = np.exp(-np.pi**2*(u2**2+v2**2)/(4.0*np.log(2.0)*uvmax2))
+        V2 = V2*gaussian_filter
 
         # Generate the x,y grid on which to image
         x1d = np.fft.fftshift(np.fft.fftfreq(u2.shape[0],d=(u2[1,1]-u2[0,0])*1e9)/uas2rad)
@@ -414,13 +436,18 @@ class InteractiveImageReconstructionPlot(InteractivePlotWidget) :
 
         if (__cheap_image_perf__) :
             print("--- %15.8g --- InteractiveImageReconstructionPlot.reconstruct_image iFFT done"%(time.perf_counter()))
-        
 
         # print("Finished image reconstruction in thread")
-
+        
         # Return
         return xarr,yarr,Iarr
 
+
+    def estimate_dynamic_range(self,x,y,I) :
+        peak_flux = np.max(I)
+        peak_negative_flux = np.max(np.maximum(-I,0.0))
+        return peak_flux/peak_negative_flux
+    
     def generate_mpl_plot(self,fig,ax,**kwargs) :
 
         if (__cheap_image_debug__) :
